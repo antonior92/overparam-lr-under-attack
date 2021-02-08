@@ -29,6 +29,10 @@ if __name__ == "__main__":
                         help='input csv.')
     parser.add_argument('--plot_style', nargs='*', default=[],
                         help='plot styles to be used')
+    parser.add_argument('-n', '--num_points', default=1000, type=int,
+                        help='number of points')
+    parser.add_argument('--save', default='',
+                        help='input csv.')
     args, unk = parser.parse_known_args()
     if args.plot_style:
         plt.style.use(args.plot_style)
@@ -38,31 +42,46 @@ if __name__ == "__main__":
     epsilon, risk = zip(*[(float(k.split('-')[1]), np.array(df[k])) for k in df.keys() if 'risk-' in k])
     proportion = np.array(df['proportion'])
     seed = np.array(df['seed'])
-    snr = np.array(df['snr'])
-    noise_std = np.array(df['noise_std'])
+    snr = np.array(df['snr'])[0]  # assuming all snr are the same
+    noise_std = np.array(df['noise_std'])[0] # assuming all noise_std are the same
 
-    i = 0
+    underp = np.logspace(np.log10(min(proportion)), -0.000000001, args.num_points // 2)
+    overp = np.logspace(0.0000000001, np.log10(max(proportion)), args.num_points - args.num_points // 2)
+    proportions_for_ub = np.concatenate((underp, overp))
+
     fig, ax = plt.subplots()
     markers = ['*', 'o', 's', '<', '>', 'h']
-    colors = ['r', 'b', 'g']
+    i = 0
     for r, e in zip(risk, epsilon):
 
         # Plot empirical value
-        l, = ax.plot(proportion, risk[i], markers[i], ms=4, label=e)
+        l, = ax.plot(proportion, risk[i], markers[i], ms=4, label='$\\delta={}$'.format(e))
         ax.set_xscale('log')
         ax.set_yscale('log')
 
         # Plot upper bound
-        ub = adversarial_upper_bound(proportion, snr, noise_std, e)
-        p_index = np.argsort(proportion)
-        p = (proportion[p_index])[seed[p_index] == 0]
-        ub = (ub[p_index])[seed[p_index] == 0]
-        ax.plot(p, ub, '-', color=l.get_color())
+        ub = adversarial_upper_bound(proportions_for_ub, snr, noise_std, e)
+        ax.plot(proportions_for_ub, ub, '-', color=l.get_color(), lw=2)
+
+        # Labels
+        ax.set_xlabel('$\\gamma$')
+        ax.set_ylabel('Risk')
+
+        # Plot vertical line at the interpolation threshold
+        ax.axvline(1, ls='--')
 
         # Increment
         i += 1
+
+    all_risk = np.stack(risk)
+    ax.set_ylim((0.5 * np.min(all_risk), 2 * np.max(all_risk)))
     plt.legend()
-    plt.show()
+
+    if args.save:
+        plt.savefig(args.save)
+    else:
+        plt.show()
+
 
 
 
