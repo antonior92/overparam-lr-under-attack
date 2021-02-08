@@ -1,0 +1,6 @@
+font.family: serif
+font.serif: Times
+text.usetex: True
+figure.autolayout: True
+figure.figsize:  7.7, 4.5
+font.size: 18
