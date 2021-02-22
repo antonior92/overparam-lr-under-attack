@@ -7,7 +7,6 @@ import random
 import scipy.linalg as linalg
 
 
-
 def train_and_evaluate(n_samples, n_features, noise_std, snr, epsilon, seed):
     # Get state
     rng = np.random.RandomState(seed)
