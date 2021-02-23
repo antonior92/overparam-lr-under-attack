@@ -2,12 +2,53 @@ import argparse
 import itertools
 from tqdm import tqdm
 import pandas as pd
-import numpy as np
+import numpy as np  # numpy > 1.10 so we can use np.linalg.norm(...,axis=axis, keepdims=keepdims)
 import random
 import scipy.linalg as linalg
 
 
-def train_and_evaluate(n_samples, n_features, noise_std, snr, epsilon, seed):
+def compute_adv_attack(error, jac, ord=2):
+    """Compute adversarial atack with unitary p-norm.
+
+    :param error:
+        A numpy array of shape = (n_points,) containing (y_pred - y_true)
+    :param jac:
+        A numpy array of shape = (n_points, n_parameters) giving the Jacobian matrix.
+        I.e. the derivative of the error in relation to the parameters. For linear model
+        the Jacobian should be the same for all points. In this case, just use
+        shape = (1, n_parameters) for the same result with less computation.
+    :param ord:
+        The p-norm is bounded in the adversarial attack. `ord` gives which p-norm is used
+        ord = 2 is the euclidean norm. `ord` can a float value grater then 1 or np.inf,
+        (for the infinity norm).
+    :return:
+        An array containing `delta_x` of shape = (n_points, n_parameters)
+        which should perturbate the input. The p-norm of each row is equal to 1.
+        In order to obtain the adversarial attack bounded by `e` just multiply it
+        `delta_x`.
+    """
+    p = ord
+    if p == np.inf:
+        pass
+    elif p == 1:
+        pass
+    elif p > 1:
+        # Given p compute q
+        q = p / (p - 1)
+        # Compute magnitude (this follows from the case the holder inequality hold:
+        # i.e. see Ash p. 96 section 2.4 exercise 4)
+        dx = np.sign(jac) * np.abs(jac) ** (q / p)
+        # rescale
+        dx = dx / np.linalg.norm(dx, ord=p, axis=-1, keepdims=True)
+        # Compute delta_x
+        delta_x = dx * np.sign(error)[:, None]
+    else:
+        raise ValueError('`ord` can a float value grater then 1 or np.inf.'
+                         'ord = {} is not valid'.format(p))
+    return delta_x
+
+
+def train_and_evaluate(n_samples, n_features, noise_std, snr, epsilon, ord, seed):
     # Get state
     rng = np.random.RandomState(seed)
 
@@ -35,12 +76,16 @@ def train_and_evaluate(n_samples, n_features, noise_std, snr, epsilon, seed):
     y_test = X_test @ beta + noise_std * e_test
 
     # Generate adversarial disturbance
-    estim_param_norm = np.linalg.norm(beta_hat, ord=2)
+    estim_param_norm = np.linalg.norm(beta_hat, ord=ord)
 
+    # Compute error = y_pred - y_test
+    test_error = X_test @ beta_hat - y_test
+    jac = beta_hat
+    delta_x = compute_adv_attack(test_error, jac, ord=ord)
     risk = []
     for e in epsilon:
         # Estimate adversarial risk
-        delta_X = - beta_hat[None, :] /estim_param_norm * e * np.sign(y_test - X_test @ beta_hat)[:, None]
+        delta_X = e * delta_x
         r = np.mean((y_test - (X_test + delta_X) @ beta_hat) ** 2)
         risk.append(r)
     return risk, estim_param_norm
@@ -54,6 +99,8 @@ if __name__ == '__main__':
                        help='number of samples in the experiment')
     parser.add_argument('-r', '--repetitions', type=int, default=4,
                         help='number of times each experiment is repeated')
+    parser.add_argument('-p', '--ord', type=float, default=2.0,
+                        help='ord is p norm of the adversarial attack.')
     parser.add_argument('-n', '--num_points', default=60, type=int,
                         help='number of points')
     parser.add_argument('-l', '--lower_proportion', default=-1, type=float,
@@ -82,8 +129,10 @@ if __name__ == '__main__':
     df = pd.DataFrame(columns=['proportion', 'seed', 'norm'] + ['risk-{}'.format(e) for e in args.epsilon])
     for seed, proportion in tqdm(run_instances, smoothing=0.03):
         n_features = max(int(proportion * args.num_samples), 1)
-        risk, estim_param_norm = train_and_evaluate(args.num_samples, n_features, args.noise_std, args.snr, args.epsilon, seed)
-        dict1 = {'proportion': proportion, 'seed': seed, 'norm': estim_param_norm, 'snr': args.snr, 'noise_std': args.noise_std}
+        risk, estim_param_norm = train_and_evaluate(args.num_samples, n_features, args.noise_std, args.snr,
+                                                    args.epsilon, args.ord, seed)
+        dict1 = {'proportion': proportion, 'ord':args.ord, 'seed': seed, 'norm': estim_param_norm, 'snr': args.snr,
+                 'noise_std': args.noise_std}
         dict_risks = {'risk-{}'.format(e): r for e, r in zip(args.epsilon, risk)}
         df = df.append({**dict1, **dict_risks}, ignore_index=True)
         df.to_csv(args.output, index=False)
