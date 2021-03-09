@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="11d0ac74-f689-4a45-969d-d002f20f79e9" name="hydra3">
+        <fileTransfer accessType="SFTP" host="hydra3" port="22" sshConfigId="e9625946-439f-4dbb-b87a-b23036754d01" sshConfig="code@hydra3:22 agent" authAgent="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

@@ -6,6 +6,11 @@
 -----
 
 # Experiments
-- [ ] For different p-norms see what is the effect of changing the number of samples. By the derived upper bound,
+- [x] For different p-norms see what is the effect of changing the number of samples. By the derived upper bound,
       for p != 2 the risk might depend not only on the ratio (num_parameters / num_samples) but also on the 
       (num_parameters). With the risk increasing with it for p > 2 and decreasing wiht it for p < 2.
+  
+----
+
+# Now running
+- [ ] Different orders and different training sizes (hydra3:10014.interpolators-under-attack)
