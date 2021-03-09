@@ -51,7 +51,7 @@ def compute_adv_attack(error, jac, ord = 2.0):
     return delta_x
 
 
-def train_and_evaluate(n_samples, n_features, noise_std, snr, epsilon, ord, seed):
+def train_and_evaluate(n_samples, n_features, noise_std, snr, epsilon, ord, n_test_samples, seed):
     # Get state
     rng = np.random.RandomState(seed)
 
@@ -72,9 +72,9 @@ def train_and_evaluate(n_samples, n_features, noise_std, snr, epsilon, ord, seed
 
     # Test data
     # Get X matrix
-    X_test = np.random.randn(n_samples, n_features)
+    X_test = np.random.randn(n_test_samples, n_features)
     # Get error
-    e_test = np.random.randn(n_samples)
+    e_test = np.random.randn(n_test_samples)
     # Compute output
     y_test = X_test @ beta + noise_std * e_test
 
@@ -98,7 +98,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Double descent for l-2 adversarial attack')
     parser.add_argument('-o', '--output', default='./performance.csv',
                         help='output csv file.')
-    parser.add_argument('--num_samples', type=int, default=100,
+    parser.add_argument('--num_train_samples', type=int, default=100,
+                       help='number of samples in the experiment')
+    parser.add_argument('--num_test_samples', type=int, default=100,
                        help='number of samples in the experiment')
     parser.add_argument('-r', '--repetitions', type=int, default=4,
                         help='number of times each experiment is repeated')
@@ -131,9 +133,9 @@ if __name__ == '__main__':
     prev_mdl = None  # used only if reuse_weights is True
     df = pd.DataFrame(columns=['proportion', 'seed', 'norm'] + ['risk-{}'.format(e) for e in args.epsilon])
     for seed, proportion in tqdm(run_instances, smoothing=0.03):
-        n_features = max(int(proportion * args.num_samples), 1)
-        risk, estim_param_norm = train_and_evaluate(args.num_samples, n_features, args.noise_std, args.snr,
-                                                    args.epsilon, args.ord, seed)
+        n_features = max(int(proportion * args.num_train_samples), 1)
+        risk, estim_param_norm = train_and_evaluate(args.num_train_samples, n_features, args.noise_std, args.snr,
+                                                    args.epsilon, args.ord, args.num_test_samples, seed)
         dict1 = {'proportion': proportion, 'ord':args.ord, 'seed': seed, 'norm': estim_param_norm, 'snr': args.snr,
                  'noise_std': args.noise_std}
         dict_risks = {'risk-{}'.format(e): r for e, r in zip(args.epsilon, risk)}

@@ -1,7 +1,7 @@
 # Implementation
-- [ ] Add p = inf to compute adv attack
-- [ ] Add p = 1 to compute adv attack
-- [ ] Allow number of test samples to be different from the number of training samples
+- [x] Add p = inf to compute adv attack
+- [x] Add p = 1 to compute adv attack
+- [x] Allow number of test samples to be different from the number of training samples
 
 -----
 
