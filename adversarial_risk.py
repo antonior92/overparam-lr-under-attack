@@ -7,7 +7,7 @@ import random
 import scipy.linalg as linalg
 
 
-def compute_adv_attack(error, jac, ord=2):
+def compute_adv_attack(error, jac, ord = 2.0):
     """Compute adversarial atack with unitary p-norm.
 
     :param error:
@@ -28,23 +28,26 @@ def compute_adv_attack(error, jac, ord=2):
         `delta_x`.
     """
     p = ord
+    if p < 1:
+        raise ValueError('`ord` is float value. 1<=ord<=np.inf.'
+                         'ord = {} is not valid'.format(p))
+
+    # Given p compute q
     if p == np.inf:
-        pass
+        magnitude = np.ones_like(jac)
     elif p == 1:
-        pass
-    elif p > 1:
-        # Given p compute q
-        q = p / (p - 1)
+        magnitude = np.array(np.max(jac, axis=-1, keepdims=True) == jac, dtype=np.float)
+    else:
         # Compute magnitude (this follows from the case the holder inequality hold:
         # i.e. see Ash p. 96 section 2.4 exercise 4)
-        dx = np.sign(jac) * np.abs(jac) ** (q / p)
-        # rescale
-        dx = dx / np.linalg.norm(dx, ord=p, axis=-1, keepdims=True)
-        # Compute delta_x
-        delta_x = dx * np.sign(error)[:, None]
-    else:
-        raise ValueError('`ord` can a float value grater then 1 or np.inf.'
-                         'ord = {} is not valid'.format(p))
+        q = p / (p - 1)
+        magnitude = np.abs(jac) ** (q / p)
+    dx = np.sign(jac) * magnitude
+    # rescale
+    dx = dx / np.linalg.norm(dx, ord=p, axis=-1, keepdims=True)
+    # Compute delta_x
+    delta_x = dx * np.sign(error)[:, None]
+
     return delta_x
 
 
