@@ -136,8 +136,9 @@ if __name__ == '__main__':
         n_features = max(int(proportion * args.num_train_samples), 1)
         risk, estim_param_norm = train_and_evaluate(args.num_train_samples, n_features, args.noise_std, args.snr,
                                                     args.epsilon, args.ord, args.num_test_samples, seed)
-        dict1 = {'proportion': proportion, 'ord':args.ord, 'seed': seed, 'norm': estim_param_norm, 'snr': args.snr,
-                 'noise_std': args.noise_std}
+        dict1 = {'proportion': proportion, 'n_features': n_features, 'n_train':args.num_train_samples,
+                 'n_test': args.num_test_samples, 'ord': args.ord, 'seed': seed,
+                 'norm': estim_param_norm, 'snr': args.snr, 'noise_std': args.noise_std}
         dict_risks = {'risk-{}'.format(e): r for e, r in zip(args.epsilon, risk)}
         df = df.append({**dict1, **dict_risks}, ignore_index=True)
         df.to_csv(args.output, index=False)

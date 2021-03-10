@@ -16,10 +16,18 @@ def assymptotic_l2_norm(proportion, snr, noise_std=1.0):
     return noise_std ** 2 * ((proportion < 1) * underparametrized + (proportion > 1) * overparametrized)
 
 
-def adversarial_upper_bound(proportion, snr, noise_std, eps):
+def adversarial_upper_bound(proportion, snr, noise_std, eps, ord, n_features):
     arisk = asymptotic_risk(proportion, snr, 1.0)
     anorm = assymptotic_l2_norm(proportion, snr, 1.0)
-    return (np.sqrt(arisk) + eps * np.sqrt(anorm))**2 + noise_std ** 2
+
+    # Generalize to other norms,
+    # using https://math.stackexchange.com/questions/218046/relations-between-p-norms
+    if ord == np.inf:
+        factor = n_features ** 1/2
+    else:
+        factor = n_features ** (1/2-1/ord)
+
+    return (np.sqrt(arisk) + eps * factor * np.sqrt(anorm))**2 + noise_std ** 2
 
 
 if __name__ == "__main__":
@@ -47,6 +55,8 @@ if __name__ == "__main__":
     proportion = np.array(df['proportion'])
     seed = np.array(df['seed'])
     snr = np.array(df['snr'])[0]  # assuming all snr are the same
+    ord = np.array(df['ord'])[0]  # assuming all ord are the same
+    n_train = np.array(df['n_train'])[0]  # assuming a fixed n_train
     noise_std = np.array(df['noise_std'])[0] # assuming all noise_std are the same
 
     underp = np.logspace(np.log10(min(proportion)), -0.000000001, args.num_points // 2)
@@ -64,7 +74,7 @@ if __name__ == "__main__":
         ax.set_yscale('log')
 
         # Plot upper bound
-        ub = adversarial_upper_bound(proportions_for_ub, snr, noise_std, e)
+        ub = adversarial_upper_bound(proportions_for_ub, snr, noise_std, e, ord, n_train * proportions_for_ub)
         ax.plot(proportions_for_ub, ub, '-', color=l.get_color(), lw=2)
 
         # Labels

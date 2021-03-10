@@ -3,7 +3,13 @@
 - [x] Add p = 1 to compute adv attack
 - [x] Allow number of test samples to be different from the number of training samples
 - [x] Double check the boundaries for the case there is no attack
-- [ ] Add asymptotics for other p-norms
+- [x] Add asymptotics for other p-norms
+- [ ] Plot parameter norm
+- [ ] Double check the bounds. Sometimes the upper bound does not seems like 
+      an upper bound. Increase the sample size even further to be able to draw
+      conclusions.
+- [ ] The assumption in plot_double_descent.py that ord, snr... 
+      are constant is not very elegant... Fix it latter...
 
 -----
 
