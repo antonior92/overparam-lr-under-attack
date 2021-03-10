@@ -31,6 +31,10 @@ if __name__ == "__main__":
                         help='plot styles to be used')
     parser.add_argument('-n', '--num_points', default=1000, type=int,
                         help='number of points')
+    parser.add_argument('--y_min', default=None, type=float,
+                        help='inferior limit to y-axis in the plot.')
+    parser.add_argument('--y_max', default=None, type=float,
+                        help='superior limit to y-axis in the plot.')
     parser.add_argument('--save', default='',
                         help='input csv.')
     args, unk = parser.parse_known_args()
@@ -74,7 +78,9 @@ if __name__ == "__main__":
         i += 1
 
     all_risk = np.stack(risk)
-    ax.set_ylim((0.5 * np.min(all_risk), 2 * np.max(all_risk)))
+    y_min = 0.5 * np.min(all_risk) if args.y_min is None else args.y_min
+    y_max = 2 * np.max(all_risk) if args.y_max is None else args.y_max
+    ax.set_ylim((y_min, y_max))
     plt.legend()
 
     if args.save:
