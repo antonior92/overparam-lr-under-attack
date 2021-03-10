@@ -6,13 +6,13 @@ import argparse
 
 def asymptotic_risk(proportion, snr, noise_std):
     underparametrized = proportion / (1 - proportion)
-    overparametrized = snr**2 * (1 - 1 / proportion) + 1 / (proportion - 1)
+    overparametrized = snr * (1 - 1 / proportion) + 1 / (proportion - 1)
     return noise_std ** 2 * ((proportion < 1) * underparametrized + (proportion > 1) * overparametrized)
 
 
 def assymptotic_l2_norm(proportion, snr, noise_std=1.0):
-    underparametrized = snr**2 + proportion / (1 - proportion)
-    overparametrized = snr**2 * 1 / proportion + 1 / (proportion - 1)
+    underparametrized = snr + proportion / (1 - proportion)
+    overparametrized = snr * 1 / proportion + 1 / (proportion - 1)
     return noise_std ** 2 * ((proportion < 1) * underparametrized + (proportion > 1) * overparametrized)
 
 
