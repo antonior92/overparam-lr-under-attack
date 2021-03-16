@@ -16,7 +16,7 @@ def assymptotic_l2_norm(proportion, snr, noise_std=1.0):
     return noise_std ** 2 * ((proportion < 1) * underparametrized + (proportion > 1) * overparametrized)
 
 
-def adversarial_upper_bound(proportion, snr, noise_std, eps, ord, n_features):
+def adversarial_bounds(proportion, snr, noise_std, eps, ord, n_features):
     arisk = asymptotic_risk(proportion, snr, 1.0)
     anorm = assymptotic_l2_norm(proportion, snr, 1.0)
 
@@ -27,7 +27,9 @@ def adversarial_upper_bound(proportion, snr, noise_std, eps, ord, n_features):
     else:
         factor = n_features ** (1/2-1/ord)
 
-    return (np.sqrt(arisk) + eps * factor * np.sqrt(anorm))**2 + noise_std ** 2
+    upper_bound = (np.sqrt(arisk) + eps * factor * np.sqrt(anorm))**2 + noise_std ** 2
+    lower_bound = arisk + (eps * factor)**2 * anorm + noise_std ** 2
+    return lower_bound, upper_bound
 
 
 if __name__ == "__main__":
@@ -61,7 +63,7 @@ if __name__ == "__main__":
 
     underp = np.logspace(np.log10(min(proportion)), -0.000000001, args.num_points // 2)
     overp = np.logspace(0.0000000001, np.log10(max(proportion)), args.num_points - args.num_points // 2)
-    proportions_for_ub = np.concatenate((underp, overp))
+    proportions_for_bounds = np.concatenate((underp, overp))
 
     fig, ax = plt.subplots()
     markers = ['*', 'o', 's', '<', '>', 'h']
@@ -74,8 +76,13 @@ if __name__ == "__main__":
         ax.set_yscale('log')
 
         # Plot upper bound
-        ub = adversarial_upper_bound(proportions_for_ub, snr, noise_std, e, ord, n_train * proportions_for_ub)
-        ax.plot(proportions_for_ub, ub, '-', color=l.get_color(), lw=2)
+        ub, lb = adversarial_bounds(proportions_for_bounds, snr, noise_std, e, ord, n_train * proportions_for_bounds)
+        if e == 0:
+            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
+        else:
+            ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
+            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
+            ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
 
         # Labels
         ax.set_xlabel('$\\gamma$')
