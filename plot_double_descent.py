@@ -27,8 +27,11 @@ def adversarial_bounds(proportion, snr, noise_std, eps, ord, n_features):
     else:
         factor = n_features ** (1/2-1/ord)
 
-    upper_bound = (np.sqrt(arisk) + eps * factor * np.sqrt(anorm))**2 + noise_std ** 2
-    lower_bound = arisk + (eps * factor)**2 * anorm + noise_std ** 2
+    lower_eps = eps if ord >= 2 else eps * factor
+    upper_eps = eps if ord <= 2 else eps * factor
+
+    upper_bound = (np.sqrt(arisk) + upper_eps * np.sqrt(anorm))**2 + noise_std ** 2
+    lower_bound = arisk + (eps * lower_eps)**2 * anorm + noise_std ** 2
     return lower_bound, upper_bound
 
 
