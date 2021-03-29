@@ -51,7 +51,24 @@ def compute_adv_attack(error, jac, ord = 2.0):
     return delta_x
 
 
-def train_and_evaluate(n_samples, n_features, noise_std, snr, epsilon, ord, n_test_samples, seed):
+def generate_features(n_samples, n_features, rng, kind, off_diag):
+    # Get random components
+    z = rng.randn(n_samples, n_features)
+    if kind == 'isotropic':
+        return z
+    elif kind == 'equicorrelated':
+        s = (n_features, n_features)
+        cov = (1 - off_diag) * np.eye(*s) + off_diag * np.ones(s)
+        # take square root
+        u, s, vh = np.linalg.svd(cov)
+        cov_sqr = np.dot(u * np.sqrt(s), vh)
+        # return
+        return z @ cov_sqr
+    else:
+        raise ValueError('Invalid kind of feature generation')
+
+
+def train_and_evaluate(n_samples, n_features, noise_std, snr, epsilon, ord, n_test_samples, kind, off_diag, seed):
     # Get state
     rng = np.random.RandomState(seed)
 
@@ -61,9 +78,9 @@ def train_and_evaluate(n_samples, n_features, noise_std, snr, epsilon, ord, n_te
 
     # Generate training data
     # Get X matrix
-    X = np.random.randn(n_samples, n_features)
+    X = generate_features(n_samples, n_features, rng, kind, off_diag)
     # Get error
-    e = np.random.randn(n_samples)
+    e = rng.randn(n_samples)
     # Compute output
     y = X @ beta + noise_std * e
 
@@ -72,9 +89,9 @@ def train_and_evaluate(n_samples, n_features, noise_std, snr, epsilon, ord, n_te
 
     # Test data
     # Get X matrix
-    X_test = np.random.randn(n_test_samples, n_features)
+    X_test = generate_features(n_test_samples, n_features, rng, kind, off_diag)
     # Get error
-    e_test = np.random.randn(n_test_samples)
+    e_test = rng.randn(n_test_samples)
     # Compute output
     y_test = X_test @ beta + noise_std * e_test
 
@@ -116,6 +133,11 @@ if __name__ == '__main__':
                         help='the epsilon values used when computing the adversarial ttack')
     parser.add_argument('-s', '--noise_std', type=float, default=1.0,
                         help='standard deviation of the additive noise added.')
+    parser.add_argument('-f', '--features_kind', choices=['isotropic', 'equicorrelated'], default='isotropic',
+                        help='how the features are generated')
+    parser.add_argument('--off_diag', default=0.5, type=float,
+                        help='value of diagonal values. Default is 0.5. Only take effect when '
+                             'features_kind = equicorrelated.')
     parser.add_argument('--snr', type=float, default=2.0,
                          help='signal-to-noise ratio `snr = |signal|^2 / |noise|^2')
     args, unk = parser.parse_known_args()
@@ -135,10 +157,13 @@ if __name__ == '__main__':
     for seed, proportion in tqdm(run_instances, smoothing=0.03):
         n_features = max(int(proportion * args.num_train_samples), 1)
         risk, estim_param_norm = train_and_evaluate(args.num_train_samples, n_features, args.noise_std, args.snr,
-                                                    args.epsilon, args.ord, args.num_test_samples, seed)
+                                                    args.epsilon, args.ord, args.num_test_samples, args.features_kind,
+                                                    args.off_diag, seed)
         dict1 = {'proportion': proportion, 'n_features': n_features, 'n_train':args.num_train_samples,
-                 'n_test': args.num_test_samples, 'ord': args.ord, 'seed': seed,
+                 'n_test': args.num_test_samples, 'ord': args.ord, 'features_kind': args.features_kind, 'seed': seed,
                  'norm': estim_param_norm, 'snr': args.snr, 'noise_std': args.noise_std}
+        if args.features_kind =='equicorrelated':
+            dict1['off_diag'] = args.off_diag
         dict_risks = {'risk-{}'.format(e): r for e, r in zip(args.epsilon, risk)}
         df = df.append({**dict1, **dict_risks}, ignore_index=True)
         df.to_csv(args.output, index=False)

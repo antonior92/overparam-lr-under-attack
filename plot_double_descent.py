@@ -4,21 +4,26 @@ import numpy as np
 import argparse
 
 
-def asymptotic_risk(proportion, snr, noise_std):
+def asymptotic_risk(proportion, snr, features_kind, off_diag, noise_std=1.0):
+    # This follows from Hastie Thm.1 (p.7) and is the same regardless of the covariance matrix
     underparametrized = proportion / (1 - proportion)
-    overparametrized = snr * (1 - 1 / proportion) + 1 / (proportion - 1)
+    if features_kind == 'isotropic':
+        overparametrized = snr * (1 - 1 / proportion) + 1 / (proportion - 1)
+    elif features_kind == 'equicorrelated':
+        overparametrized = snr * (1 - off_diag) * (1 - 1 / proportion) + 1 / (proportion - 1)
     return noise_std ** 2 * ((proportion < 1) * underparametrized + (proportion > 1) * overparametrized)
 
 
-def assymptotic_l2_norm(proportion, snr, noise_std=1.0):
+def assymptotic_l2_norm(proportion, snr, features_kind, off_diag, noise_std=1.0):
+    # todo: get the close formula for the equicorrelated case.
     underparametrized = snr + proportion / (1 - proportion)
     overparametrized = snr * 1 / proportion + 1 / (proportion - 1)
     return noise_std ** 2 * ((proportion < 1) * underparametrized + (proportion > 1) * overparametrized)
 
 
-def adversarial_bounds(proportion, snr, noise_std, eps, ord, n_features):
-    arisk = asymptotic_risk(proportion, snr, 1.0)
-    anorm = assymptotic_l2_norm(proportion, snr, 1.0)
+def adversarial_bounds(proportion, snr, noise_std, eps, ord, n_features, features_kind, off_diag):
+    arisk = asymptotic_risk(proportion, snr, features_kind, off_diag)
+    anorm = assymptotic_l2_norm(proportion, snr, features_kind, off_diag)
 
     # Generalize to other norms,
     # using https://math.stackexchange.com/questions/218046/relations-between-p-norms
@@ -62,7 +67,10 @@ if __name__ == "__main__":
     snr = np.array(df['snr'])[0]  # assuming all snr are the same
     ord = np.array(df['ord'])[0]  # assuming all ord are the same
     n_train = np.array(df['n_train'])[0]  # assuming a fixed n_train
-    noise_std = np.array(df['noise_std'])[0] # assuming all noise_std are the same
+    noise_std = np.array(df['noise_std'])[0]  # assuming all noise_std are the same
+    features_kind = np.array(df['features_kind'])[0]  # assuming all features_kind are the same
+    if features_kind == 'equicorrelated':
+        off_diag = np.array(df['off_diag'])[0] # assuming all off_diag are the same
 
     underp = np.logspace(np.log10(min(proportion)), -0.000000001, args.num_points // 2)
     overp = np.logspace(0.0000000001, np.log10(max(proportion)), args.num_points - args.num_points // 2)
@@ -79,7 +87,8 @@ if __name__ == "__main__":
         ax.set_yscale('log')
 
         # Plot upper bound
-        ub, lb = adversarial_bounds(proportions_for_bounds, snr, noise_std, e, ord, n_train * proportions_for_bounds)
+        ub, lb = adversarial_bounds(proportions_for_bounds, snr, noise_std, e, ord,
+                                    n_train * proportions_for_bounds, features_kind, off_diag)
         if e == 0:
             ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
         else:
