@@ -14,16 +14,20 @@ def asymptotic_risk(proportion, snr, features_kind, off_diag, noise_std=1.0):
     return noise_std ** 2 * ((proportion < 1) * underparametrized + (proportion > 1) * overparametrized)
 
 
-def assymptotic_l2_norm(proportion, snr, features_kind, off_diag, noise_std=1.0):
+def assymptotic_l2_norm_squared(proportion, snr, features_kind, off_diag, noise_std=1.0):
     # todo: get the close formula for the equicorrelated case.
-    underparametrized = snr + proportion / (1 - proportion)
-    overparametrized = snr * 1 / proportion + 1 / (proportion - 1)
+    if features_kind == 'isotropic':
+        underparametrized = snr + proportion / (1 - proportion)
+        overparametrized = snr * 1 / proportion + 1 / (proportion - 1)
+    elif features_kind == 'equicorrelated':
+        underparametrized = snr + proportion / ((1 - proportion)*(1 - off_diag))
+        overparametrized = snr * 1 / proportion + 1 / ((proportion - 1)*(1 - off_diag))
     return noise_std ** 2 * ((proportion < 1) * underparametrized + (proportion > 1) * overparametrized)
 
 
 def adversarial_bounds(proportion, snr, noise_std, eps, ord, n_features, features_kind, off_diag):
     arisk = asymptotic_risk(proportion, snr, features_kind, off_diag)
-    anorm = assymptotic_l2_norm(proportion, snr, features_kind, off_diag)
+    anorm = assymptotic_l2_norm_squared(proportion, snr, features_kind, off_diag)
 
     # Generalize to other norms,
     # using https://math.stackexchange.com/questions/218046/relations-between-p-norms
@@ -37,6 +41,19 @@ def adversarial_bounds(proportion, snr, noise_std, eps, ord, n_features, feature
 
     upper_bound = (np.sqrt(arisk) + upper_eps * np.sqrt(anorm))**2 + noise_std ** 2
     lower_bound = arisk + (eps * lower_eps)**2 * anorm + noise_std ** 2
+    return lower_bound, upper_bound
+
+
+def assymptotic_lp_norm_squared(proportion, snr, features_kind, off_diag, ord, n_features, noise_std):
+    anorm = assymptotic_l2_norm_squared(proportion, snr, features_kind, off_diag, noise_std)
+
+    if ord == np.inf:
+        factor = n_features ** 1/2
+    else:
+        factor = n_features ** (1/2-1/ord)
+
+    lower_bound = anorm if ord >= 2 else anorm * factor**2
+    upper_bound = anorm if ord <= 2 else anorm * factor**2
     return lower_bound, upper_bound
 
 
@@ -63,24 +80,26 @@ if __name__ == "__main__":
 
     epsilon, risk = zip(*[(float(k.split('-')[1]), np.array(df[k])) for k in df.keys() if 'risk-' in k])
     proportion = np.array(df['proportion'])
+    l2_parameter_norm = np.array(df['l2_param_norm'])
+    lq_parameter_norm = np.array(df['lq_param_norm'])
     seed = np.array(df['seed'])
     snr = np.array(df['snr'])[0]  # assuming all snr are the same
     ord = np.array(df['ord'])[0]  # assuming all ord are the same
     n_train = np.array(df['n_train'])[0]  # assuming a fixed n_train
     noise_std = np.array(df['noise_std'])[0]  # assuming all noise_std are the same
     features_kind = np.array(df['features_kind'])[0]  # assuming all features_kind are the same
-    if features_kind == 'equicorrelated':
-        off_diag = np.array(df['off_diag'])[0] # assuming all off_diag are the same
+    # assuming all off_diag are the same
+    off_diag = np.array(df['off_diag'])[0] if features_kind == 'equicorrelated' else None
 
     underp = np.logspace(np.log10(min(proportion)), -0.000000001, args.num_points // 2)
     overp = np.logspace(0.0000000001, np.log10(max(proportion)), args.num_points - args.num_points // 2)
     proportions_for_bounds = np.concatenate((underp, overp))
 
+    # Plot risk
     fig, ax = plt.subplots()
     markers = ['*', 'o', 's', '<', '>', 'h']
     i = 0
     for r, e in zip(risk, epsilon):
-
         # Plot empirical value
         l, = ax.plot(proportion, risk[i], markers[i], ms=4, label='$\\delta={}$'.format(e))
         ax.set_xscale('log')
@@ -116,6 +135,27 @@ if __name__ == "__main__":
         plt.savefig(args.save)
     else:
         plt.show()
+
+    # Get asymptotics for the parameter norm
+    b = assymptotic_l2_norm_squared(proportions_for_bounds, snr, features_kind, off_diag, noise_std)
+    # Plot l2 parameter norm
+    fig, ax = plt.subplots()
+    l, = ax.plot(proportion, l2_parameter_norm, '*', ms=4, label='$$l_2~~{\\rm norm}$$')
+    ax.plot(proportions_for_bounds, np.sqrt(b), '-', color=l.get_color(), lw=2)
+    # Plot lp parameter norm when available
+    if ord != 2:
+        l, = ax.plot(proportion, lq_parameter_norm, 'o', ms=4, label='$$l_q~~{\\rm norm}$$')
+        ub, lb = assymptotic_lp_norm_squared(proportions_for_bounds, snr, features_kind, off_diag, ord,
+                                             n_train * proportions_for_bounds, noise_std)
+        ax.fill_between(proportions_for_bounds, np.sqrt(lb), np.sqrt(ub), color=l.get_color(), alpha=0.2)
+        ax.plot(proportions_for_bounds, np.sqrt(ub), '-', color=l.get_color(), lw=1)
+        ax.plot(proportions_for_bounds, np.sqrt(lb), '-', color=l.get_color(), lw=1)
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('$\\gamma$')
+    ax.set_ylabel('Parameter Norm')
+    plt.legend()
+    plt.show()
 
 
 

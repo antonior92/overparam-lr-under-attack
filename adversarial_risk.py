@@ -58,7 +58,7 @@ def generate_features(n_samples, n_features, rng, kind, off_diag):
         return z
     elif kind == 'equicorrelated':
         s = (n_features, n_features)
-        cov = (1 - off_diag) * np.eye(*s) + off_diag * np.ones(s)
+        cov = (1-off_diag) * np.eye(*s) + off_diag * np.ones(s)
         # take square root
         u, s, vh = np.linalg.svd(cov)
         cov_sqr = np.dot(u * np.sqrt(s), vh)
@@ -96,7 +96,9 @@ def train_and_evaluate(n_samples, n_features, noise_std, snr, epsilon, ord, n_te
     y_test = X_test @ beta + noise_std * e_test
 
     # Generate adversarial disturbance
-    estim_param_norm = np.linalg.norm(beta_hat, ord=ord)
+    l2_param_norm = np.linalg.norm(beta_hat, ord=2)
+    q = ord / (ord - 1) if ord != np.Inf else 1
+    lq_param_norm = np.linalg.norm(beta_hat, ord=q)
 
     # Compute error = y_pred - y_test
     test_error = X_test @ beta_hat - y_test
@@ -108,7 +110,7 @@ def train_and_evaluate(n_samples, n_features, noise_std, snr, epsilon, ord, n_te
         delta_X = e * delta_x
         r = np.mean((y_test - (X_test + delta_X) @ beta_hat) ** 2)
         risk.append(r)
-    return risk, estim_param_norm
+    return risk, l2_param_norm, lq_param_norm
 
 
 if __name__ == '__main__':
@@ -153,15 +155,16 @@ if __name__ == '__main__':
     # so the progress bar can give a more accurate notion of the time to completion
     random.shuffle(run_instances)
     prev_mdl = None  # used only if reuse_weights is True
-    df = pd.DataFrame(columns=['proportion', 'seed', 'norm'] + ['risk-{}'.format(e) for e in args.epsilon])
+    df = pd.DataFrame(columns=['proportion', 'seed', 'l2_param_norm', 'lq_param_norm'] + ['risk-{}'.format(e) for e in args.epsilon])
     for seed, proportion in tqdm(run_instances, smoothing=0.03):
         n_features = max(int(proportion * args.num_train_samples), 1)
-        risk, estim_param_norm = train_and_evaluate(args.num_train_samples, n_features, args.noise_std, args.snr,
+        risk, l2_param_norm, lq_param_norm = train_and_evaluate(args.num_train_samples, n_features, args.noise_std, args.snr,
                                                     args.epsilon, args.ord, args.num_test_samples, args.features_kind,
                                                     args.off_diag, seed)
         dict1 = {'proportion': proportion, 'n_features': n_features, 'n_train':args.num_train_samples,
                  'n_test': args.num_test_samples, 'ord': args.ord, 'features_kind': args.features_kind, 'seed': seed,
-                 'norm': estim_param_norm, 'snr': args.snr, 'noise_std': args.noise_std}
+                 'l2_param_norm': l2_param_norm, 'lq_param_norm': lq_param_norm,
+                 'snr': args.snr, 'noise_std': args.noise_std}
         if args.features_kind =='equicorrelated':
             dict1['off_diag'] = args.off_diag
         dict_risks = {'risk-{}'.format(e): r for e, r in zip(args.epsilon, risk)}
