@@ -158,7 +158,7 @@ if __name__ == "__main__":
     ax.set_ylabel('Parameter Norm')
     plt.legend()
     if args.save_norm_plot:
-        plt.savefig(args.save)
+        plt.savefig(args.save_norm_plot)
     else:
         plt.show()
 

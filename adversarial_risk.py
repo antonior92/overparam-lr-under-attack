@@ -97,7 +97,12 @@ def train_and_evaluate(n_samples, n_features, noise_std, snr, epsilon, ord, n_te
 
     # Generate adversarial disturbance
     l2_param_norm = np.linalg.norm(beta_hat, ord=2)
-    q = ord / (ord - 1) if ord != np.Inf else 1
+    if ord != np.Inf and ord > 1:
+        q = ord / (ord - 1)
+    elif ord == 1:
+        q = np.Inf
+    else:
+        q = 1
     lq_param_norm = np.linalg.norm(beta_hat, ord=q)
 
     # Compute error = y_pred - y_test
