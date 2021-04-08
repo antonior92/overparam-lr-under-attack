@@ -40,7 +40,7 @@ def adversarial_bounds(proportion, snr, noise_std, eps, ord, n_features, feature
     upper_eps = eps if ord <= 2 else eps * factor
 
     upper_bound = (np.sqrt(arisk) + upper_eps * np.sqrt(anorm))**2 + noise_std ** 2
-    lower_bound = arisk + (eps * lower_eps)**2 * anorm + noise_std ** 2
+    lower_bound = arisk + lower_eps**2 * anorm + noise_std ** 2
     return lower_bound, upper_bound
 
 
@@ -71,7 +71,9 @@ if __name__ == "__main__":
     parser.add_argument('--y_max', default=None, type=float,
                         help='superior limit to y-axis in the plot.')
     parser.add_argument('--save', default='',
-                        help='input csv.')
+                        help='save plot in the given file. By default just show it.')
+    parser.add_argument('--save_norm_plot', default='',
+                        help='save norm plot in the given file. By default just show it.')
     args, unk = parser.parse_known_args()
     if args.plot_style:
         plt.style.use(args.plot_style)
@@ -106,7 +108,7 @@ if __name__ == "__main__":
         ax.set_yscale('log')
 
         # Plot upper bound
-        ub, lb = adversarial_bounds(proportions_for_bounds, snr, noise_std, e, ord,
+        lb, ub = adversarial_bounds(proportions_for_bounds, snr, noise_std, e, ord,
                                     n_train * proportions_for_bounds, features_kind, off_diag)
         if e == 0:
             ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
@@ -145,7 +147,7 @@ if __name__ == "__main__":
     # Plot lp parameter norm when available
     if ord != 2:
         l, = ax.plot(proportion, lq_parameter_norm, 'o', ms=4, label='$$l_q~~{\\rm norm}$$')
-        ub, lb = assymptotic_lp_norm_squared(proportions_for_bounds, snr, features_kind, off_diag, ord,
+        lb, ub = assymptotic_lp_norm_squared(proportions_for_bounds, snr, features_kind, off_diag, ord,
                                              n_train * proportions_for_bounds, noise_std)
         ax.fill_between(proportions_for_bounds, np.sqrt(lb), np.sqrt(ub), color=l.get_color(), alpha=0.2)
         ax.plot(proportions_for_bounds, np.sqrt(ub), '-', color=l.get_color(), lw=1)
@@ -155,7 +157,11 @@ if __name__ == "__main__":
     ax.set_xlabel('$\\gamma$')
     ax.set_ylabel('Parameter Norm')
     plt.legend()
-    plt.show()
+    if args.save_norm_plot:
+        plt.savefig(args.save)
+    else:
+        plt.show()
+
 
 
 
