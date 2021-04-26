@@ -151,9 +151,7 @@ if __name__ == '__main__':
 
     tqdm.write("Estimating performance as a function of proportion...")
     list_dict = []
-    underp = np.logspace(args.lower_proportion, 0, args.num_points // 2)
-    overp = np.logspace(0.00001, args.upper_proportion, args.num_points - args.num_points // 2)
-    proportions = np.concatenate((underp, overp))
+    proportions = np.logspace(args.lower_proportion, args.upper_proportion, args.num_points)
     run_instances = list(itertools.product(range(args.repetitions), proportions))
 
     # Some of the executions are computationally heavy and others are not. We shuffle the configurations
