@@ -92,10 +92,7 @@ if __name__ == "__main__":
     features_kind = np.array(df['features_kind'])[0]  # assuming all features_kind are the same
     # assuming all off_diag are the same
     off_diag = np.array(df['off_diag'])[0] if features_kind == 'equicorrelated' else None
-
-    underp = np.logspace(np.log10(min(proportion)), -0.000000001, args.num_points // 2)
-    overp = np.logspace(0.0000000001, np.log10(max(proportion)), args.num_points - args.num_points // 2)
-    proportions_for_bounds = np.concatenate((underp, overp))
+    proportions_for_bounds = np.logspace(np.log10(min(proportion)), np.log10(max(proportion)), args.num_points)
 
     # Plot risk
     fig, ax = plt.subplots()
