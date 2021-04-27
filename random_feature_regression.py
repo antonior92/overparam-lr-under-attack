@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.linalg as linalg
-
+from scipy.optimize import root
 
 def uniform_distribution_over_the_sphere(n_samples: int, dimension: int, rng):
     """Generate i.i.d. samples. Each uniformly distributed over the sphere."""
@@ -102,3 +102,52 @@ if __name__ == '__main__':
     ax.set_yscale('log')
     plt.show()
 
+    # Compute bounds
+    features_over_input_dim = n_features / input_dim
+    samples_over_input_dim = n_samples / input_dim
+    corrected_regularizaton = regularization * 1  # Latter should depend on the activation
+    zeta = 1
+    xi = np.imag(np.sqrt(features_over_input_dim * samples_over_input_dim * corrected_regularizaton))
+
+    def analytical_function(inp):
+        """Implement equation (15) from Mei and Montanary"""
+        # Get input
+        vs_real, vs_imag, vf_real, vf_imag = inp
+        # Convert to complex number
+        vf = complex(vf_real, vf_imag)  # v1 in eq (15)
+        vs = complex(vs_real, vs_imag)  # v2 in eq (15)
+        # Do complex calculations
+        den = 1 - zeta ** 2 * vs * vf
+        eq1 = vf - features_over_input_dim * (-xi - vs - zeta ** 2 * vs / den)
+        eq2 = vs - samples_over_input_dim * (-xi - vf - zeta ** 2 * vf / den)
+        # Return real and imaginary parts
+        return np.array([eq1.real, eq1.imag, eq2.real, eq2.imag])
+
+    sol = root(analytical_function, [0, 1000, 0, 1000])
+
+    vs = complex(sol['x'][0], sol['x'][1])
+    vf = complex(sol['x'][2], sol['x'][3])
+    chi = vs * vf  # Implements eq (16) of Mei and Montanari
+
+    psi1 = features_over_input_dim
+    psi2 = samples_over_input_dim
+
+    def m(p, q):
+        """implement chi zeta monomial in compact format."""
+        return chi ** p * zeta ** q
+
+    # Implements eq (17) of Mei and Montanari
+    E0 = - m(5, 6) + 3 * m(4, 4) + (psi1*psi2 - psi1 - psi2 + 1) * m(3, 6) +\
+        (psi1 + psi2 - 3 * psi1 * psi2 + 1) * m(2, 4) + 2 * m(2, 2) + m(2, 0) + \
+        3 * psi1 * psi2 * m(1, 2) - psi1 * psi2
+    E1 = psi2 * m(3, 4) - psi2 * m(2, 2) + psi1 * psi2 * m(1, 2) - psi1 * psi2
+    E2 = m(5, 6) + 3 * m(4, 4) + (psi1 - 1) * m(3, 6) + 2 * m(3, 4) + 3 * m(3, 2) + \
+         (-psi1 - 1) * m(2, 4) - 2 * m(2, 2) - m(2, 0)
+
+    B = E1 / E0  # Implements Eq (18) of Mei and Montanari
+    V = E2 / E0  # Implements Eq (19) of Mei and Montanari
+    R = snr / (1 + snr) * B + 1 / (1 + snr) * V  # Implements Eq (20) of Mei and Montanari
+
+    predicted_risk = noise_std ** 2 * (snr ** 2 + 1) * R  # Implements LHS of Eq (5) of Mei and Montanari
+
+    # Compute activation
