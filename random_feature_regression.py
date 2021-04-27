@@ -64,8 +64,11 @@ def train_and_evaluate(n_samples, n_features, input_dim, noise_std, snr, n_test_
 
 
 if __name__ == '__main__':
+    import itertools
+    from tqdm import tqdm
+    import pandas as pd
+
     input_dim = 10
-    n_features = 100
     n_samples = 200
     n_test_samples = 100
     seed = 1
@@ -73,9 +76,28 @@ if __name__ == '__main__':
     noise_std = 1
     activation_function = np.tanh
     regularization = 1e-7
+    repetitions = 3
+    lower_proportion = -1
+    upper_proportion = 1
+    num_points = 60
 
-    mse, estim_param_l2norm = \
-    train_and_evaluate(n_samples, n_features, input_dim, noise_std, snr, n_test_samples, activation_function,
-                       regularization, seed)
-    print(mse, estim_param_l2norm)
+    # Compute performance for varying number of features
+    df = pd.DataFrame(columns=['proportion', 'seed', 'l2_param_norm', 'risk'])
+    proportions = np.logspace(lower_proportion, upper_proportion, num_points)
+    run_instances = list(itertools.product(range(repetitions), proportions))
+    for seed, proportion in tqdm(run_instances, smoothing=0.03):
+        n_features = max(int(proportion * n_samples), 1)
+        mse, estim_param_l2norm = \
+            train_and_evaluate(n_samples, n_features, input_dim, noise_std, snr, n_test_samples, activation_function,
+                               regularization, seed)
+        df = df.append({'proportion': proportion, 'seed': seed,
+                        'l2_param_norm': estim_param_l2norm, 'risk': mse}, ignore_index=True)
 
+
+    # Plot
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+    ax.plot(df['proportion'], df['risk'], '*')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    plt.show()
