@@ -149,5 +149,3 @@ if __name__ == '__main__':
     R = snr / (1 + snr) * B + 1 / (1 + snr) * V  # Implements Eq (20) of Mei and Montanari
 
     predicted_risk = noise_std ** 2 * (snr ** 2 + 1) * R  # Implements LHS of Eq (5) of Mei and Montanari
-
-    # Compute activation
