@@ -72,7 +72,7 @@ def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activat
 
     zeta = activation_params['E{G*fn(G)}'] / mu_star
     corrected_regularizaton = regularization / mu_star ** 2
-    xi = np.imag(np.sqrt(features_over_input_dim * samples_over_input_dim * corrected_regularizaton))
+    xi = complex(0, np.sqrt(features_over_input_dim * samples_over_input_dim * corrected_regularizaton))
 
     def analytical_function(inp):
         """Implement equation (15) from Mei and Montanary"""
@@ -82,17 +82,28 @@ def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activat
         vf = complex(vf_real, vf_imag)  # v1 in eq (15)
         vs = complex(vs_real, vs_imag)  # v2 in eq (15)
         # Do complex calculations
-        den = 1 - zeta ** 2 * vs * vf
-        eq1 = vf - features_over_input_dim * (-xi - vs - zeta ** 2 * vs / den)
-        eq2 = vs - samples_over_input_dim * (-xi - vf - zeta ** 2 * vf / den)
-        # Return real and imaginary parts
+        den = 1 - (zeta ** 2) * vs * vf
+        eq1 = vf * (xi + vs + (zeta ** 2) * vs / den) + features_over_input_dim
+        eq2 = vs * (xi + vf + (zeta ** 2) * vf / den) + samples_over_input_dim
+        # Return real and imaginary parts - samples_over_input_dim /
         return np.array([eq1.real, eq1.imag, eq2.real, eq2.imag])
 
-    sol = root(analytical_function, [0, 1000, 0, 1000])
-
+    sol = root(analytical_function, [0.1, 0.1, 0.1, 0.1],
+               method='broyden1')  # We start from zero because we want the solution closest to zero
+                                   # so we can satisfy the conditions bellow...
     vs = complex(sol['x'][0], sol['x'][1])
     vf = complex(sol['x'][2], sol['x'][3])
-    chi = vs * vf  # Implements Eq (16) of Mei and Montanari
+    # Check solution
+    assert np.abs(vs) <= samples_over_input_dim / np.imag(xi)  # Conditions from Def. 1 on Mei and montanari
+    assert np.abs(vf) <= features_over_input_dim / np.imag(xi)
+    assert np.imag(vs) >= 0
+    assert np.imag(vf) >= 0
+
+    # Implements Eq (16) of Mei and Montanari
+    # I am assuming here that chi is a real number. And that, except for numerical errors
+    # imag(vs * vf) was supposed to be zero
+    chi = np.real(vs * vf)
+
     psi1 = features_over_input_dim  # as used in Mei and Montanari - to make equations bellow easier to read!
     psi2 = samples_over_input_dim  # as used in Mei and Montanari - to make equations bellow easier to read!
 
@@ -127,10 +138,10 @@ if __name__ == '__main__':
     seed = 1
     snr = 1
     noise_std = 1
-    activation_function = get_activation('tanh')
-    activation_params = activation_function_parameters('tanh')
+    activation_function = get_activation('relu')
+    activation_params = activation_function_parameters('relu')
     regularization = 1e-7
-    repetitions = 3
+    repetitions = 1
     lower_proportion = -1
     upper_proportion = 1
     num_points = 60
@@ -149,8 +160,6 @@ if __name__ == '__main__':
         df = df.append({'proportion': proportion, 'seed': seed,
                         'l2_param_norm': estim_param_l2norm, 'risk': mse}, ignore_index=True)
 
-
-
     # Compute bounds
     features_over_input_dim = n_features / input_dim
     samples_over_input_dim = n_samples / input_dim
@@ -167,6 +176,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots()
     ax.plot(df['proportion'], df['risk'], '*')
+    ax.plot(proportions2, predicted_risk)
     ax.set_xscale('log')
     ax.set_yscale('log')
     plt.show()
