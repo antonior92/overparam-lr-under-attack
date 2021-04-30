@@ -30,7 +30,7 @@ def activation_function_parameters(name):
         parameters["E{G*fn(G)}"] = 1 / 2
         parameters["E{fn(G)**2}"] = 1 / 2
     elif name == 'tanh':
-        parameters["E{fn(G)}"] =  0  # from the symmetry
+        parameters["E{fn(G)}"] = 0  # from the symmetry
         # The next two results are harder to come by analitically. I just wrote down
         # the results I obtained for a large experiment
         parameters["E{G*fn(G)}"] = 0.60583
