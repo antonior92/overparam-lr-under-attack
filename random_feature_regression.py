@@ -2,6 +2,7 @@ import numpy as np
 import scipy.linalg as linalg
 from scipy.optimize import root
 from activation_function_parameters import *
+from analitic_functions_v import AnaliticalVFunctions
 
 def uniform_distribution_over_the_sphere(n_samples: int, dimension: int, rng):
     """Generate i.i.d. samples. Each uniformly distributed over the sphere."""
@@ -65,47 +66,24 @@ def train_and_evaluate(n_samples, n_features, input_dim, noise_std, snr, n_test_
 
 
 def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activation_params,
-                        regularization, snr, noise_std):
+                        regularization, snr, noise_std, compute_vs):
     # As defined in Eq (8) of Mei and Montanari
     mu_star = np.sqrt(activation_params['E{fn(G)**2}'] -
                       activation_params['E{fn(G)}']**2 - activation_params['E{G*fn(G)}']**2)
 
     zeta = activation_params['E{G*fn(G)}'] / mu_star
     corrected_regularizaton = regularization / mu_star ** 2
-    xi = complex(0, np.sqrt(features_over_input_dim * samples_over_input_dim * corrected_regularizaton))
+    xi_imag = np.sqrt(features_over_input_dim * samples_over_input_dim * corrected_regularizaton)
 
-    def analytical_function(inp):
-        """Implement equation (15) from Mei and Montanary"""
-        # Get input
-        vs_real, vs_imag, vf_real, vf_imag = inp
-        # Convert to complex number
-        vf = complex(vf_real, vf_imag)  # v1 in eq (15)
-        vs = complex(vs_real, vs_imag)  # v2 in eq (15)
-        # Do complex calculations
-        den = 1 - (zeta ** 2) * vs * vf
-        eq1 = vf * (xi + vs + (zeta ** 2) * vs / den) + features_over_input_dim
-        eq2 = vs * (xi + vf + (zeta ** 2) * vf / den) + samples_over_input_dim
-        # Return real and imaginary parts - samples_over_input_dim /
-        return np.array([eq1.real, eq1.imag, eq2.real, eq2.imag])
+    psi1 = features_over_input_dim  # as used in Mei and Montanari - to make equations bellow easier to read!
+    psi2 = samples_over_input_dim  # as used in Mei and Montanari - to make equations bellow easier to read!
 
-    sol = root(analytical_function, [0.1, 0.1, 0.1, 0.1],
-               method='broyden1')  # We start from zero because we want the solution closest to zero
-                                   # so we can satisfy the conditions bellow...
-    vs = complex(sol['x'][0], sol['x'][1])
-    vf = complex(sol['x'][2], sol['x'][3])
-    # Check solution
-    assert np.abs(vs) <= samples_over_input_dim / np.imag(xi)  # Conditions from Def. 1 on Mei and montanari
-    assert np.abs(vf) <= features_over_input_dim / np.imag(xi)
-    assert np.imag(vs) >= 0
-    assert np.imag(vf) >= 0
+    vf, vs = compute_vs(psi1, psi2, zeta, 1j*xi_imag)
 
     # Implements Eq (16) of Mei and Montanari
     # I am assuming here that chi is a real number. And that, except for numerical errors
     # imag(vs * vf) was supposed to be zero
-    chi = np.real(vs * vf)
-
-    psi1 = features_over_input_dim  # as used in Mei and Montanari - to make equations bellow easier to read!
-    psi2 = samples_over_input_dim  # as used in Mei and Montanari - to make equations bellow easier to read!
+    chi = np.real(vf * vs)
 
     def m(p, q):
         """implement chi zeta monomial in compact format."""
@@ -146,8 +124,6 @@ if __name__ == '__main__':
     upper_proportion = 1
     num_points = 60
 
-
-
     # Compute performance for varying number of features
     df = pd.DataFrame(columns=['proportion', 'seed', 'l2_param_norm', 'risk'])
     proportions = np.logspace(lower_proportion, upper_proportion, num_points)
@@ -163,13 +139,15 @@ if __name__ == '__main__':
     # Compute bounds
     features_over_input_dim = n_features / input_dim
     samples_over_input_dim = n_samples / input_dim
+    compute_vs = AnaliticalVFunctions()
 
     proportions2 = np.logspace(lower_proportion, upper_proportion, 100)
     predicted_risk = []
-    for proportion in proportions2:
+    for proportion in tqdm(proportions2):
         n_features = max(int(proportion * n_samples), 1)
         r = compute_asymptotics(n_features/input_dim, n_samples/input_dim,
-                                activation_params, regularization, snr, noise_std)
+                                activation_params, regularization, snr, noise_std,
+                                compute_vs)
         predicted_risk.append(r)
 
     # Plot
