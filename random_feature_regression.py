@@ -4,6 +4,7 @@ from scipy.optimize import root
 from activation_function_parameters import *
 from analitic_functions_v import AnaliticalVFunctions
 
+
 def uniform_distribution_over_the_sphere(n_samples: int, dimension: int, rng):
     """Generate i.i.d. samples. Each uniformly distributed over the sphere."""
     sphere_radius = np.sqrt(dimension)
@@ -27,7 +28,7 @@ def train_and_evaluate(n_samples, n_features, input_dim, noise_std, snr, n_test_
     rng = np.random.RandomState(seed)
 
     # Get parameter
-    beta = np.sqrt(snr) * noise_std / np.sqrt(input_dim) * rng.randn(input_dim)
+    beta = snr * noise_std / np.sqrt(input_dim) * rng.randn(input_dim)
 
     # Generate training data
     # Get inputs
@@ -71,8 +72,8 @@ def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activat
     mu_star = np.sqrt(activation_params['E{fn(G)**2}'] -
                       activation_params['E{fn(G)}']**2 - activation_params['E{G*fn(G)}']**2)
 
-    zeta = activation_params['E{G*fn(G)}'] / mu_star
-    corrected_regularizaton = regularization / mu_star ** 2
+    zeta = activation_params['E{G*fn(G)}']**2 / mu_star**2
+    corrected_regularizaton = regularization / mu_star**2
     xi_imag = np.sqrt(features_over_input_dim * samples_over_input_dim * corrected_regularizaton)
 
     psi1 = features_over_input_dim  # as used in Mei and Montanari - to make equations bellow easier to read!
@@ -83,25 +84,25 @@ def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activat
     # Implements Eq (16) of Mei and Montanari
     # I am assuming here that chi is a real number. And that, except for numerical errors
     # imag(vs * vf) was supposed to be zero
-    chi = np.real(vf * vs)
+    chi = np.abs(vf * vs)
 
     def m(p, q):
         """implement chi zeta monomial in compact format."""
         return chi ** p * zeta ** q
 
     # Implements eq (17) of Mei and Montanari
-    E0 = - m(5, 6) + 3 * m(4, 4) + (psi1*psi2 - psi1 - psi2 + 1) * m(3, 6) +\
+    E0 = - m(5, 6) + 3 * m(4, 4) + (psi1*psi2 - psi1 - psi2 + 1) * m(3, 6) - 2 * m(3, 4) - 3 * m(3, 2) + \
         (psi1 + psi2 - 3 * psi1 * psi2 + 1) * m(2, 4) + 2 * m(2, 2) + m(2, 0) + \
         3 * psi1 * psi2 * m(1, 2) - psi1 * psi2
     E1 = psi2 * m(3, 4) - psi2 * m(2, 2) + psi1 * psi2 * m(1, 2) - psi1 * psi2
-    E2 = m(5, 6) + 3 * m(4, 4) + (psi1 - 1) * m(3, 6) + 2 * m(3, 4) + 3 * m(3, 2) + \
+    E2 = m(5, 6) - 3 * m(4, 4) + (psi1 - 1) * m(3, 6) + 2 * m(3, 4) + 3 * m(3, 2) + \
          (-psi1 - 1) * m(2, 4) - 2 * m(2, 2) - m(2, 0)
 
-    B = E1 / E0  # Implements Eq (18) of Mei and Montanari
+    B = E1 / E0  * 0  # Implements Eq (18) of Mei and Montanari
     V = E2 / E0  # Implements Eq (19) of Mei and Montanari
-    R = snr / (1 + snr) * B + 1 / (1 + snr) * V  # Implements Eq (20) of Mei and Montanari
+    R = snr**2 / (1 + snr**2) * B + 1 / (1 + snr**2) * V  # Implements Eq (20) of Mei and Montanari
 
-    predicted_risk = noise_std ** 2 * (snr ** 2 + 1) * R  # Implements LHS of Eq (5) of Mei and Montanari
+    predicted_risk = noise_std ** 2 * ((snr ** 2 + 1) * R + 1)  # Implements LHS of Eq (5) of Mei and Montanari
     return predicted_risk
 
 
@@ -112,15 +113,15 @@ if __name__ == '__main__':
 
     input_dim = 10
     n_samples = 200
-    n_test_samples = 100
-    seed = 1
+    n_test_samples = 500
+    seed = 2
     snr = 1
     noise_std = 1
     activation_function = get_activation('relu')
     activation_params = activation_function_parameters('relu')
-    regularization = 1e-7
-    repetitions = 1
-    lower_proportion = -1
+    regularization = 1e-8
+    repetitions = 3
+    lower_proportion = -0.99
     upper_proportion = 1
     num_points = 60
 
