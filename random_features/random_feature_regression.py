@@ -74,9 +74,9 @@ if __name__ == '__main__':
                         help='output csv file.')
     parser.add_argument('--num_train_samples', type=int, default=300,
                         help='number of samples in the experiment.')
-    parser.add_argument('--num_test_samples', type=int, default=100,
+    parser.add_argument('--num_test_samples', type=int, default=500,
                         help='number of samples in the experiment.')
-    parser.add_argument('--input_dim', type=int, default=10,
+    parser.add_argument('--input_dim', type=int, default=50,
                         help='dimension of the input vector.')
     parser.add_argument('-r', '--repetitions', type=int, default=4,
                         help='number of times each experiment is repeated')
@@ -92,7 +92,7 @@ if __name__ == '__main__':
                         help='the epsilon values used when computing the adversarial ttack')
     parser.add_argument('-s', '--noise_std', type=float, default=1.0,
                         help='standard deviation of the additive noise added.')
-    parser.add_argument('--regularization', type=float, default=1e-8,
+    parser.add_argument('--regularization', type=float, default=1e-7,
                         help='type of ridge regularization.')
     parser.add_argument('--activation', choices=implemented_activations, default='relu',
                         help='activations function')
