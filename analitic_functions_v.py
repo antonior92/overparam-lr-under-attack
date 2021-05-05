@@ -1,8 +1,6 @@
 import sympy
-import itertools
 import numpy as np
-import tqdm
-
+from warnings import warn
 
 class AnaliticalVFunctions(object):
     """Compute v1 and v2 defined as in equation (16)."""
@@ -48,6 +46,8 @@ class AnaliticalVFunctions(object):
 
     def get_solution(self, vf, vs):
         valid_sol = (np.imag(vf) > 0) & (np.imag(vs) > 0)
+        if sum(valid_sol) > 1:
+            warn('multiple solutions are valid!')
         return vf[valid_sol][0], vs[valid_sol][0]
 
     def __call__(self, phi1_v, phi2_v, zeta_v, xi_v):

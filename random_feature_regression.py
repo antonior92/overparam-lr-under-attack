@@ -72,8 +72,8 @@ def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activat
     mu_star = np.sqrt(activation_params['E{fn(G)**2}'] -
                       activation_params['E{fn(G)}']**2 - activation_params['E{G*fn(G)}']**2)
 
-    zeta = activation_params['E{G*fn(G)}']**2 / mu_star**2
-    corrected_regularizaton = regularization / mu_star **2
+    zeta = activation_params['E{G*fn(G)}'] / mu_star
+    corrected_regularizaton = regularization / mu_star ** 2
     xi_imag = np.sqrt(features_over_input_dim * samples_over_input_dim * corrected_regularizaton)
     rho = snr**2
     psi1 = features_over_input_dim  # as used in Mei and Montanari - to make equations bellow easier to read!
@@ -110,7 +110,7 @@ def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activat
          + 1 / (1 + rho) * m(2, 0) * (m(1, 2) - 1) * (m(2, 4) - 2 * m(1, 2) + m(0, 2) + 1)
     A0 = E0
     A = A1 / A0
-    parameter_norm = noise_std * np.sqrt((snr**2 + 1) * A) / mu_star
+    parameter_norm = noise_std * np.sqrt((snr**2 + 1) * A) / (mu_star)
 
     return predicted_risk, parameter_norm
 
@@ -120,15 +120,15 @@ if __name__ == '__main__':
     from tqdm import tqdm
     import pandas as pd
 
-    input_dim = 400
-    n_samples = 300
+    input_dim = 100
+    n_samples = 100
     n_test_samples = 500
     seed = 2
-    snr = 4
+    snr = 0.002
     noise_std = 1
     activation_function = get_activation('relu')
     activation_params = activation_function_parameters('relu')
-    regularization = 1e-7
+    regularization = 1e-2
     repetitions = 4
     lower_proportion = -0.99
     upper_proportion = 1
