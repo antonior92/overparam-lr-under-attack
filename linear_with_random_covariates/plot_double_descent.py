@@ -71,9 +71,7 @@ if __name__ == "__main__":
     parser.add_argument('--y_max', default=None, type=float,
                         help='superior limit to y-axis in the plot.')
     parser.add_argument('--save', default='',
-                        help='save plot in the given file. By default just show it.')
-    parser.add_argument('--save_norm_plot', default='',
-                        help='save norm plot in the given file. By default just show it.')
+                        help='save plot in the given file (do not write extension). By default just show it.')
     args, unk = parser.parse_known_args()
     if args.plot_style:
         plt.style.use(args.plot_style)
@@ -131,7 +129,7 @@ if __name__ == "__main__":
     plt.legend()
 
     if args.save:
-        plt.savefig(args.save)
+        plt.savefig(args.save + '.png')
     else:
         plt.show()
 
@@ -154,8 +152,8 @@ if __name__ == "__main__":
     ax.set_xlabel('$\\gamma$')
     ax.set_ylabel('Parameter Norm')
     plt.legend()
-    if args.save_norm_plot:
-        plt.savefig(args.save_norm_plot)
+    if args.save:
+        plt.savefig(args.save+'-norm.png')
     else:
         plt.show()
 
