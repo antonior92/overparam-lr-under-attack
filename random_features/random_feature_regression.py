@@ -2,6 +2,7 @@ import scipy.linalg as linalg
 import numpy as np
 from activation_function_parameters import get_activation, implemented_activations
 
+
 def uniform_distribution_over_the_sphere(n_samples: int, dimension: int, rng):
     """Generate i.i.d. samples. Each uniformly distributed over the sphere."""
     sphere_radius = np.sqrt(dimension)
