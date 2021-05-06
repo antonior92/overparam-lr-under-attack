@@ -1,6 +1,7 @@
 import scipy.linalg as linalg
 import numpy as np
-from activation_function_parameters import get_activation, implemented_activations
+from activation_function_parameters import get_activation, implemented_activations, get_activation_grad
+from adversarial_attack import compute_pgd_attack
 
 
 def uniform_distribution_over_the_sphere(n_samples: int, dimension: int, rng):
@@ -20,13 +21,15 @@ def ridge_regression(X, y, ridge):
     return estim_param
 
 
-def train_and_evaluate(n_samples, n_features, input_dim, noise_std, snr, n_test_samples, activation_function,
-                       regularization, seed):
+def train_and_evaluate(n_samples, n_features, input_dim, noise_std, snr, n_test_samples, activation,
+                       regularization, ord, epsilon, seed):
     # Get state
     rng = np.random.RandomState(seed)
-
     # Get parameter
     beta = snr * noise_std / np.sqrt(input_dim) * rng.randn(input_dim)
+    # Get activation
+    activation_function = get_activation(activation)
+    activation_function_grad = get_activation_grad(activation)  # To be used by the adversarial attack
 
     # Generate training data
     # Get inputs
@@ -52,16 +55,41 @@ def train_and_evaluate(n_samples, n_features, input_dim, noise_std, snr, n_test_
     # Compute output
     y_test = X_test @ beta + noise_std * e_test
 
-    # Test
-    # Get Features
-    Z_test = activation_function(1 / np.sqrt(input_dim) * X_test @ Theta.T)
-    test_error = Z_test @ estim_param - y_test
-
-    # Get mean square test error
-    mse = np.mean(test_error ** 2)
     # Get parameter norm
     estim_param_l2norm = np.linalg.norm(estim_param, ord=2)
-    return mse, estim_param_l2norm
+    if ord != np.Inf and ord > 1:
+        q = ord / (ord - 1)
+    elif ord == 1:
+        q = np.Inf
+    else:
+        q = 1
+    estim_param_lqnorm = np.linalg.norm(estim_param, ord=q)
+
+    # Function that computes prediction and derivative. It will be used to compute the adversarial attack.
+    # Since the function is simple, we just compute the derivative by hand. For more complex models it would
+    # make sense to use an autograd tool...
+    def mdl(x):
+        # Compute prediction
+        a = 1 / np.sqrt(input_dim) * x @ Theta.T
+        z = activation_function(a)
+        y_pred = z @ estim_param
+        # Compute derivative
+        jac = 1 / np.sqrt(input_dim) * np.einsum('ij,jk,j->ik', activation_function_grad(z), Theta, estim_param)
+        return y_pred, jac
+
+    risk = []
+    for e in epsilon:
+        # Estimate adversarial risk
+        if e > 0:
+            delta_X = compute_pgd_attack(X_test, y_test, mdl, max_perturb=e)
+            X_adv = X_test + delta_X
+        else:
+            X_adv = X_test  # i.e. there is no disturbance
+        z = activation_function(1 / np.sqrt(input_dim) * X_adv @ Theta.T)
+        r = np.mean((y_test - z @ estim_param) ** 2)
+        risk.append(r)
+
+    return risk, estim_param_l2norm, estim_param_lqnorm
 
 
 if __name__ == '__main__':
@@ -89,19 +117,18 @@ if __name__ == '__main__':
                         help='the lowest value for the proportion (n features / n samples) is 10^l.')
     parser.add_argument('-u', '--upper_proportion', default=1, type=float,
                         help='the upper value for the proportion (n features / n samples) is 10^u.')
-    parser.add_argument('-e', '--epsilon', default=[0, 0.1, 0.5, 1, 2], type=float, nargs='+',
-                        help='the epsilon values used when computing the adversarial ttack')
     parser.add_argument('-s', '--noise_std', type=float, default=1.0,
                         help='standard deviation of the additive noise added.')
     parser.add_argument('--regularization', type=float, default=1e-7,
                         help='type of ridge regularization.')
     parser.add_argument('--activation', choices=implemented_activations, default='relu',
                         help='activations function')
+    parser.add_argument('-e', '--epsilon', default=[0,], type=float, nargs='+',
+                        help='the epsilon values used when computing the adversarial attack')
     parser.add_argument('--snr', type=float, default=2.0,
                         help='signal-to-noise ratio `snr = |signal| / |noise|')
     args, unk = parser.parse_known_args()
 
-    activation_function = get_activation(args.activation)
     regularization = 1e-2
     repetitions = 4
     lower_proportion = -0.99
@@ -115,10 +142,13 @@ if __name__ == '__main__':
     run_instances = list(itertools.product(range(repetitions), proportions))
     for seed, proportion in tqdm(run_instances, smoothing=0.03):
         n_features = max(int(proportion * args.num_train_samples), 1)
-        mse, estim_param_l2norm = \
+        risk, estim_param_l2norm, estim_param_lq_norm = \
             train_and_evaluate(args.num_train_samples, n_features, args.input_dim, args.noise_std, args.snr,
-                               args.num_test_samples, activation_function, args.regularization, seed)
-        df = df.append({'proportion': proportion, 'seed': seed, 'n_features': n_features,
-                        'l2_param_norm': estim_param_l2norm, 'risk': mse, **vars(args)}, ignore_index=True)
+                               args.num_test_samples, args.activation, args.regularization, args.ord,
+                               args.epsilon, seed)
+        dict1 = {'proportion': proportion, 'seed': seed, 'n_features': n_features,
+                        'l2_param_norm': estim_param_l2norm, 'lq_param_norm': estim_param_lq_norm}
+        dict_risks = {'risk-{}'.format(e): r for e, r in zip(args.epsilon, risk)}
+        df = df.append({**dict1, **dict_risks, **vars(args)}, ignore_index=True)
         df.to_csv(args.output, index=False)
     tqdm.write("Done")

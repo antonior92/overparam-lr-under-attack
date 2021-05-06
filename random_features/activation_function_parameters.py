@@ -12,6 +12,15 @@ def get_activation(name):
         raise ValueError("Activation function not available!")
 
 
+def get_activation_grad(name):
+    if name == 'relu':
+        return lambda x: np.where(x > 0, 1, 0)
+    elif name == 'tanh':
+        return lambda x:  1 - np.tanh(x)**2
+    else:
+        raise ValueError("Activation function not available!")
+
+
 def activation_function_parameters(name):
     """Compute the parameters caracterizing an activation function.
 
@@ -63,6 +72,19 @@ if __name__ == "__main__":
               .format(parameters_estimated['E{fn(G)}'],
                       parameters_estimated['E{G*fn(G)}'],
                       parameters_estimated['E{fn(G)**2}']))
+
+        print('   Checking derivative:'.format(name))
+        x = np.random.randn(100)
+        dx = 1e-8
+        y = fn(x)
+        dy = fn(x+dx) - y
+        finite_diferences_approx = (fn(x+dx) - fn(x)) / dx
+        gn = get_activation_grad(name)
+        analytical_value = gn(x)
+        print('       The maximum difference between analytical and finite differences approx. is {:e}.'
+              .format(np.max(finite_diferences_approx - analytical_value)))
+
+
 
 
 

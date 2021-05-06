@@ -53,7 +53,8 @@ def compute_pgd_attack(x, y, mdl,  max_perturb, step_size=1/100, ord=2.0, steps=
     :param y:
         A numpy array of shape = (n_points,) containing the target.
     :param fn:
-        Function with signature `mdl(X, y)-> y_pred, jac`.
+        Function with signature `mdl(X)-> y_pred, jac`. Where `y_pred` has shape = (n_points,) and and
+        `jac` has shape (n_points, input_dim).
     :param max_perturb:
         The maximum lp norm allowed for the perturbation
     :param step_size:
@@ -74,7 +75,7 @@ def compute_pgd_attack(x, y, mdl,  max_perturb, step_size=1/100, ord=2.0, steps=
     # Iterations
     for i in range(steps):
         # Compute jacobian and error
-        y_pred, jac = mdl(x+delta_x, y)
+        y_pred, jac = mdl(x+delta_x)
         error = y_pred - y
         # First order update
         delta_x += step_size * compute_adv_attack(error, jac, ord=ord)

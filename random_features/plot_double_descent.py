@@ -113,7 +113,7 @@ if __name__ == "__main__":
     # Plot
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots()
-    ax.plot(df['proportion'], df['risk'], '*')
+    ax.plot(df['proportion'], df['risk-0'], '*')
     ax.plot(proportions2, predicted_risk)
     ax.set_xscale('log')
     ax.set_yscale('log')
