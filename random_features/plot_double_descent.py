@@ -51,6 +51,10 @@ def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activat
     return predicted_risk, parameter_norm
 
 
+def adversarial_bounds(eps, ord, predicted_risk, parameter_norm):
+    return predicted_risk + eps**2 * parameter_norm, (np.sqrt(predicted_risk) + eps * parameter_norm)**2
+
+
 if __name__ == "__main__":
     # TODO: double check!
     import matplotlib.pyplot as plt
@@ -90,8 +94,7 @@ if __name__ == "__main__":
     regularization = np.array(df['regularization'])[0]  # assuming all features_kind are the same
     lower_proportion = np.log10(min(proportion))
     upper_proportion = np.log10(max(proportion))
-    # assuming all off_diag are the same
-    proportions_for_bounds = np.logspace(lower_proportion, upper_proportion, args.num_points)
+    epsilon, adversarial_risk = zip(*[(float(k.split('-')[1]), np.array(df[k])) for k in df.keys() if 'risk-' in k])
 
     # Compute bounds
     activation_params = activation_function_parameters(activation)
@@ -99,30 +102,54 @@ if __name__ == "__main__":
     samples_over_input_dim = n_samples / input_dim
     compute_vs = AnaliticalVFunctions()
 
-    proportions2 = np.logspace(lower_proportion, upper_proportion, 100)
-    predicted_risk = []
-    parameter_norm = []
-    for proportion in tqdm(proportions2):
-        n_features = max(int(proportion * n_samples), 1)
-        r, n = compute_asymptotics(n_features / input_dim, n_samples / input_dim,
-                                   activation_params, regularization, snr, noise_std,
-                                   compute_vs)
-        predicted_risk.append(r)
-        parameter_norm.append(n)
+    # compute assymptotics
+    proportions_for_bounds = np.logspace(lower_proportion, upper_proportion, args.num_points)
+    parameter_norm = np.zeros(len(proportions_for_bounds))
+    risk = np.zeros(len(proportions_for_bounds))
+    for i, p2b in enumerate(tqdm(proportions_for_bounds)):
+        n_features_i = max(int(p2b * n_samples), 1)
+        risk[i], parameter_norm[i] = compute_asymptotics(n_features_i / input_dim, n_samples / input_dim,
+                                   activation_params, regularization, snr, noise_std, compute_vs)
 
-    # Plot
-    import matplotlib.pyplot as plt
+    # Plot risk
     fig, ax = plt.subplots()
-    ax.plot(df['proportion'], df['risk-0'], '*')
-    ax.plot(proportions2, predicted_risk)
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_title('prediction risk')
+    markers = ['*', 'o', 's', '<', '>', 'h']
+    i = 0
+    for r, e in zip(adversarial_risk, epsilon):
+        # Plot empirical value
+        l, = ax.plot(proportion, r, markers[i], ms=4, label='$\\delta={}$'.format(e))
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+
+        # Plot upper bound
+        lb, ub = adversarial_bounds(e, 2.0, risk, parameter_norm)
+        if e == 0:
+            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
+        else:
+            ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
+            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
+            ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
+
+        # Labels
+        ax.set_xlabel('$\\gamma$')
+        ax.set_ylabel('Risk')
+
+        # Plot vertical line at the interpolation threshold
+        ax.axvline(1, ls='--')
+
+        # Increment
+        i += 1
+    all_risk = np.stack(risk)
+    y_min = 0.5 * np.min(all_risk) if args.y_min is None else args.y_min
+    y_max = 2 * np.max(all_risk) if args.y_max is None else args.y_max
+    ax.set_ylim((y_min, y_max))
+    plt.legend()
+    ax.set_title('risk')
     plt.show()
 
     fig, ax = plt.subplots()
     ax.plot(df['proportion'], df['l2_param_norm'], '*')
-    ax.plot(proportions2, np.array(parameter_norm))
+    ax.plot(proportions_for_bounds, np.array(parameter_norm))
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_title('parameter norm')
