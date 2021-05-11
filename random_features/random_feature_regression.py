@@ -44,7 +44,6 @@ def train_and_evaluate(n_samples, n_features, input_dim, noise_std, snr, n_test_
     beta = snr * noise_std / np.sqrt(input_dim) * rng.randn(input_dim)
     # Get activation
     activation_function = get_activation(activation)
-    activation_function_grad = get_activation_grad(activation)  # To be used by the adversarial attack
 
     # Generate training data
     # Get inputs
