@@ -113,7 +113,7 @@ if __name__ == "__main__":
         n_features_i = max(int(p2b * n_samples), 1)
         risk[i], parameter_norm[i] = compute_asymptotics(n_features_i / input_dim, n_samples / input_dim,
                                                          activation_params, regularization, snr, noise_std, compute_vs)
-        norm[i] = rand_matrix_asymptotic_l2_norm(n_features_i, input_dim) / np.sqrt(n_features_i)  # why???
+        mnorm[i] = rand_matrix_asymptotic_l2_norm(n_features_i, input_dim) / np.sqrt(n_features_i) # why???
 
     # Plot risk
     fig, ax = plt.subplots()
