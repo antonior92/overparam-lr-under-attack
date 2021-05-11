@@ -52,8 +52,8 @@ def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activat
     return predicted_risk, parameter_norm
 
 
-def adversarial_bounds(eps, ord, predicted_risk, parameter_norm, mnorm):
-    return predicted_risk + (eps * mnorm * parameter_norm)**2, \
+def adversarial_bounds(eps, ord, predicted_risk, parameter_norm, mnorm, eps_over_max_amplitude):
+    return predicted_risk + (1-eps_over_max_amplitude)*(eps * mnorm * parameter_norm)**2, \
            (np.sqrt(predicted_risk) + eps * mnorm * parameter_norm) ** 2
 
 
@@ -113,7 +113,9 @@ if __name__ == "__main__":
         n_features_i = max(int(p2b * n_samples), 1)
         risk[i], parameter_norm[i] = compute_asymptotics(n_features_i / input_dim, n_samples / input_dim,
                                                          activation_params, regularization, snr, noise_std, compute_vs)
-        mnorm[i] = rand_matrix_asymptotic_l2_norm(n_features_i, input_dim) / np.sqrt(n_features_i) # why???
+        # we divide by np.sqrt(input_dim) because this factor appears in Mei and Montanri Eq. (1)
+        mnorm[i] = rand_matrix_asymptotic_l2_norm(n_features_i, input_dim) / np.sqrt(input_dim)
+    eps_over_max_amplitude = np.minimum(1/mnorm, 1)
 
     # Plot risk
     fig, ax = plt.subplots()
@@ -126,7 +128,7 @@ if __name__ == "__main__":
         ax.set_yscale('log')
 
         # Plot upper bound
-        lb, ub = adversarial_bounds(e, 2.0, risk, parameter_norm, mnorm)
+        lb, ub = adversarial_bounds(e, 2.0, risk, parameter_norm, mnorm, eps_over_max_amplitude)
         if e == 0:
             ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
         else:
