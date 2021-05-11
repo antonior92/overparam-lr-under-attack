@@ -1,5 +1,6 @@
 from activation_function_parameters import *
 from analitic_functions_v import AnaliticalVFunctions
+from uniform_distribution_over_the_sphere import rand_matrix_asymptotic_l2_norm
 
 
 def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activation_params,
@@ -51,8 +52,9 @@ def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activat
     return predicted_risk, parameter_norm
 
 
-def adversarial_bounds(eps, ord, predicted_risk, parameter_norm):
-    return predicted_risk + eps**2 * parameter_norm, (np.sqrt(predicted_risk) + eps * parameter_norm)**2
+def adversarial_bounds(eps, ord, predicted_risk, parameter_norm, mnorm):
+    return predicted_risk + (eps * mnorm * parameter_norm)**2, \
+           (np.sqrt(predicted_risk) + eps * mnorm * parameter_norm) ** 2
 
 
 if __name__ == "__main__":
@@ -106,10 +108,12 @@ if __name__ == "__main__":
     proportions_for_bounds = np.logspace(lower_proportion, upper_proportion, args.num_points)
     parameter_norm = np.zeros(len(proportions_for_bounds))
     risk = np.zeros(len(proportions_for_bounds))
+    mnorm = np.zeros(len(proportions_for_bounds))
     for i, p2b in enumerate(tqdm(proportions_for_bounds)):
         n_features_i = max(int(p2b * n_samples), 1)
         risk[i], parameter_norm[i] = compute_asymptotics(n_features_i / input_dim, n_samples / input_dim,
-                                   activation_params, regularization, snr, noise_std, compute_vs)
+                                                         activation_params, regularization, snr, noise_std, compute_vs)
+        norm[i] = rand_matrix_asymptotic_l2_norm(n_features_i, input_dim) / np.sqrt(n_features_i)  # why???
 
     # Plot risk
     fig, ax = plt.subplots()
@@ -122,7 +126,7 @@ if __name__ == "__main__":
         ax.set_yscale('log')
 
         # Plot upper bound
-        lb, ub = adversarial_bounds(e, 2.0, risk, parameter_norm)
+        lb, ub = adversarial_bounds(e, 2.0, risk, parameter_norm, mnorm)
         if e == 0:
             ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
         else:
@@ -142,7 +146,7 @@ if __name__ == "__main__":
     all_risk = np.stack(risk)
     y_min = 0.5 * np.min(all_risk) if args.y_min is None else args.y_min
     y_max = 2 * np.max(all_risk) if args.y_max is None else args.y_max
-    ax.set_ylim((y_min, y_max))
+    #ax.set_ylim((y_min, y_max))
     plt.legend()
     ax.set_title('risk')
     plt.show()

@@ -15,7 +15,7 @@ def rand_matrix_asymptotic_l2_norm(n_rows, n_cols):
 
 
 # The matrix of uniform distribution over the sphere behaves exactly the same
-# as a random matrix with gaussian entries for large enought values.
+# as a random matrix with gaussian entries for large enough values.
 # The close formula for the l2 norm arise naturally from Marchenco-Pastur law.
 # The example bellow illustrate the idea. We show that in the example bellow.
 if __name__ == '__main__':

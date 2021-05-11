@@ -44,7 +44,25 @@ def activation_function_parameters(name):
         # the results I obtained for a large experiment
         parameters["E{G*fn(G)}"] = 0.60583
         parameters["E{fn(G)**2}"] = 0.39436
+    else:
+        raise ValueError("Activation function not available!")
     return parameters
+
+
+def lipshitz(name):
+    if name == 'relu' or name == 'tanh':
+        return 1
+    else:
+        raise ValueError("Activation function not available!")
+
+
+def minimum_variation(name, input_max=1):
+    if name == 'relu':
+        return 1
+    elif name == 'tanh':
+        return 2 * np.tanh(input_max)
+    else:
+        raise ValueError("Activation function not available!")
 
 
 def estimate_function_parameters(fn, experiment_size=1000000, seed=0):
