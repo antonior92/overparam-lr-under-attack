@@ -53,8 +53,8 @@ def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activat
 
 
 def adversarial_bounds(eps, ord, predicted_risk, parameter_norm, mnorm, eps_over_max_amplitude):
-    return predicted_risk + (1-eps_over_max_amplitude)*(eps * mnorm * parameter_norm)**2, \
-           (np.sqrt(predicted_risk) + eps * mnorm * parameter_norm) ** 2
+    return predicted_risk + (1-eps_over_max_amplitude)*(eps * mnorm / 2 * parameter_norm)**2, \
+           (np.sqrt(predicted_risk) + eps * mnorm  * parameter_norm) ** 2
 
 
 if __name__ == "__main__":
