@@ -1,7 +1,7 @@
 from activation_function_parameters import *
 from analitic_functions_v import AnaliticalVFunctions
 from uniform_distribution_over_the_sphere import rand_matrix_asymptotic_l2_norm
-
+from random_feature_regression import frac2int
 
 def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activation_params,
                         regularization, snr, noise_std, compute_vs):
@@ -52,13 +52,18 @@ def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activat
     return predicted_risk, parameter_norm
 
 
-def adversarial_bounds(eps, ord, predicted_risk, parameter_norm, mnorm, eps_over_max_amplitude):
-    return predicted_risk + (1-eps_over_max_amplitude)*(eps * mnorm / 2 * parameter_norm)**2, \
-           (np.sqrt(predicted_risk) + eps * mnorm  * parameter_norm) ** 2
+def adversarial_bounds(eps, ord, predicted_risk, parameter_norm, mnorm):
+    return predicted_risk, \
+           (np.sqrt(predicted_risk) + eps * mnorm * parameter_norm) ** 2
+
+
+def log_interp(x, num_points=1000):
+    x_min = min(x)
+    x_max = max(x)
+    return np.logspace(np.log10(x_min), np.log10(x_max), num_points)
 
 
 if __name__ == "__main__":
-    # TODO: double check!
     import matplotlib.pyplot as plt
     import pandas as pd
     import argparse
@@ -71,7 +76,7 @@ if __name__ == "__main__":
     parser.add_argument('--plot_style', nargs='*', default=[],
                         help='plot styles to be used')
     parser.add_argument('-n', '--num_points', default=1000, type=int,
-                        help='number of points')
+                        help='number of points in the asymptotics')
     parser.add_argument('--y_min', default=None, type=float,
                         help='inferior limit to y-axis in the plot.')
     parser.add_argument('--y_max', default=None, type=float,
@@ -84,40 +89,47 @@ if __name__ == "__main__":
 
     df = pd.read_csv(args.file)
 
-    proportion = np.array(df['proportion'])
+    inputdim_over_datasize = np.array(df['inputdim_over_datasize'])
+    nfeatures_over_datasize = np.array(df['nfeatures_over_datasize'])
     l2_parameter_norm = np.array(df['l2_param_norm'])
     seed = np.array(df['seed'])
     snr = np.array(df['snr'])[0]  # assuming all snr are the same
     n_samples = np.array(df['num_train_samples'])[0]  # assuming a fixed n_train
-    n_features = np.array(df['n_features'])[0]  # assuming a fixed n_train
-    input_dim = np.array(df['input_dim'])[0]  # assuming a fixed n_train
     noise_std = np.array(df['noise_std'])[0]  # assuming all noise_std are the same
     activation = np.array(df['activation'])[0]  # assuming all features_kind are the same
     regularization = np.array(df['regularization'])[0]  # assuming all features_kind are the same
-    lower_proportion = np.log10(min(proportion))
-    upper_proportion = np.log10(max(proportion))
+    fixed = np.array(df['fixed'])[0]  # assuming all features_kind are the same
     epsilon, adversarial_risk = zip(*[(float(k.split('-')[1]), np.array(df[k])) for k in df.keys() if 'risk-' in k])
 
     # Compute bounds
     activation_params = activation_function_parameters(activation)
-    features_over_input_dim = n_features / input_dim
-    samples_over_input_dim = n_samples / input_dim
     compute_vs = AnaliticalVFunctions()
 
     # compute assymptotics
-    proportions_for_bounds = np.logspace(lower_proportion, upper_proportion, args.num_points)
-    parameter_norm = np.zeros(len(proportions_for_bounds))
-    risk = np.zeros(len(proportions_for_bounds))
-    mnorm = np.zeros(len(proportions_for_bounds))
-    for i, p2b in enumerate(tqdm(proportions_for_bounds)):
-        n_features_i = max(int(p2b * n_samples), 1)
-        risk[i], parameter_norm[i] = compute_asymptotics(n_features_i / input_dim, n_samples / input_dim,
+    inputdim_over_datasize_for_bounds = log_interp(df['inputdim_over_datasize'], args.num_points)
+    nfeatures_over_datasize_for_bounds = log_interp(df['nfeatures_over_datasize'], args.num_points)
+    risk = np.zeros(args.num_points)
+    mnorm = np.zeros(args.num_points)
+    parameter_norm = np.zeros(args.num_points)
+    for i in tqdm(range(args.num_points)):
+        risk[i], parameter_norm[i] = compute_asymptotics(nfeatures_over_datasize_for_bounds[i] / inputdim_over_datasize_for_bounds[i],
+                                                         1 / inputdim_over_datasize_for_bounds[i],
                                                          activation_params, regularization, snr, noise_std, compute_vs)
         # we divide by np.sqrt(input_dim) because this factor appears in Mei and Montanri Eq. (1)
-        mnorm[i] = rand_matrix_asymptotic_l2_norm(n_features_i, input_dim) / np.sqrt(input_dim)
-    eps_over_max_amplitude = np.minimum(1/mnorm, 1)
+        mnorm[i] = rand_matrix_asymptotic_l2_norm(nfeatures_over_datasize_for_bounds[i] / inputdim_over_datasize_for_bounds[i])
 
     # Plot risk
+    if fixed == 'inputdim_over_datasize':
+        proportion = inputdim_over_datasize
+        proportions_for_bounds = inputdim_over_datasize_for_bounds
+    elif fixed == 'nfeatures_over_datasize':
+        proportion = nfeatures_over_datasize
+        proportions_for_bounds = nfeatures_over_datasize_for_bounds
+    elif fixed == 'nfeatures_over_inputdim':
+        proportion = nfeatures_over_datasize / inputdim_over_datasize
+        proportions_for_bounds = nfeatures_over_datasize_for_bounds / inputdim_over_datasize_for_bounds
+    else:
+        raise ValueError('Invalid argument --fixed = {}.'.format(args.fixed))
     fig, ax = plt.subplots()
     markers = ['*', 'o', 's', '<', '>', 'h']
     i = 0
@@ -128,7 +140,7 @@ if __name__ == "__main__":
         ax.set_yscale('log')
 
         # Plot upper bound
-        lb, ub = adversarial_bounds(e, 2.0, risk, parameter_norm, mnorm, eps_over_max_amplitude)
+        lb, ub = adversarial_bounds(e, 2.0, risk, parameter_norm, mnorm)
         if e == 0:
             ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
         else:
@@ -154,7 +166,7 @@ if __name__ == "__main__":
     plt.show()
 
     fig, ax = plt.subplots()
-    ax.plot(df['proportion'], df['l2_param_norm'], '*')
+    ax.plot(proportion, l2_parameter_norm, '*')
     ax.plot(proportions_for_bounds, np.array(parameter_norm))
     ax.set_xscale('log')
     ax.set_yscale('log')

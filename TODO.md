@@ -1,3 +1,7 @@
-TODO:
-- [ ] Check why the bounds for random feature regression are not working as expected.
-   - [ ] There seem to be something weird with how I am using the matrix norm.
+TODO
+- Random features
+  - [x] use proportions rather then fixed input dimension
+  - [ ] check why the adversarial error is not growing.
+  - [ ] make it possible to establish the bounds for all the ord norms
+- Linear with random covariates
+  - [ ] Allow snr to vary with number of features

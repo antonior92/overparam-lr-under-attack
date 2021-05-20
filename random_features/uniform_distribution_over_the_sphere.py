@@ -9,9 +9,8 @@ def uniform_distribution_over_the_sphere(n_samples: int, dimension: int, rng):
     return X
 
 
-def rand_matrix_asymptotic_l2_norm(n_rows, n_cols):
-    proportion = n_rows / n_cols
-    return np.sqrt(n_cols) * (1 + np.sqrt(proportion))
+def rand_matrix_asymptotic_l2_norm(proportion):
+    return 1 + np.sqrt(proportion)
 
 
 # The matrix of uniform distribution over the sphere behaves exactly the same

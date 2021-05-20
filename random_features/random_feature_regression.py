@@ -96,6 +96,9 @@ def train_and_evaluate(n_samples, n_features, input_dim, noise_std, snr, n_test_
     return risk, estim_param_l2norm, estim_param_lqnorm
 
 
+def frac2int(proportion, denominator):
+    return max(int(proportion * denominator), 1)
+
 if __name__ == '__main__':
     import itertools
     from tqdm import tqdm
@@ -105,12 +108,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Double descent for l-2 adversarial attack')
     parser.add_argument('-o', '--output', default='./performance.csv',
                         help='output csv file.')
-    parser.add_argument('--num_train_samples', type=int, default=300,
+    parser.add_argument('--num_train_samples', type=int, default=200,
                         help='number of samples in the experiment.')
-    parser.add_argument('--num_test_samples', type=int, default=500,
+    parser.add_argument('--num_test_samples', type=int, default=300,
                         help='number of samples in the experiment.')
-    parser.add_argument('--input_dim', type=int, default=50,
-                        help='dimension of the input vector.')
     parser.add_argument('-r', '--repetitions', type=int, default=1,
                         help='number of times each experiment is repeated')
     parser.add_argument('-p', '--ord', type=float, default=2.0,
@@ -121,15 +122,20 @@ if __name__ == '__main__':
                         help='the lowest value for the proportion (n features / n samples) is 10^l.')
     parser.add_argument('-u', '--upper_proportion', default=1, type=float,
                         help='the upper value for the proportion (n features / n samples) is 10^u.')
+    parser.add_argument('--fixed_proportion', default=0.3, type=float,
+                        help='the value of the proportion that is fixed')
+    parser.add_argument('--fixed', choices=['inputdim_over_datasize', 'nfeatures_over_datasize',
+                                            'nfeatures_over_inputdim'], default='nfeatures_over_datasize',
+                        help='what is fixed in the problem.')
     parser.add_argument('-s', '--noise_std', type=float, default=1.0,
                         help='standard deviation of the additive noise added.')
     parser.add_argument('--regularization', type=float, default=1e-7,
                         help='type of ridge regularization.')
     parser.add_argument('--activation', choices=implemented_activations, default='relu',
                         help='activations function')
-    parser.add_argument('-e', '--epsilon', default=[0, 0.5], type=float, nargs='+',
+    parser.add_argument('-e', '--epsilon', default=[0, 0.1, 0.5, 1.0, 2.0], type=float, nargs='+',
                         help='the epsilon values used when computing the adversarial attack')
-    parser.add_argument('--snr', type=float, default=2.0,
+    parser.add_argument('--snr', type=float, default=0.00001,
                         help='signal-to-noise ratio `snr = |signal| / |noise|')
     args, unk = parser.parse_known_args()
 
@@ -139,13 +145,26 @@ if __name__ == '__main__':
     proportions = np.logspace(args.lower_proportion, args.upper_proportion, args.num_points)
     run_instances = list(itertools.product(range(args.repetitions), proportions))
     for seed, proportion in tqdm(run_instances, smoothing=0.03):
-        n_features = max(int(proportion * args.num_train_samples), 1)
+        # Get problem type
+        if args.fixed == 'inputdim_over_datasize':
+             inputdim_over_datasize = args.fixed_proportion
+             nfeatures_over_datasize = proportion
+        elif args.fixed == 'nfeatures_over_datasize':
+            inputdim_over_datasize = args.fixed_proportion
+            nfeatures_over_datasize =  proportion
+        elif args.fixed == 'nfeatures_over_inputdim':
+            inputdim_over_datasize = proportion
+            nfeatures_over_datasize = args.fixed_proportion * proportion
+        else:
+            raise ValueError('Invalid argument --fixed = {}.'.format(args.fixed))
+        n_features = frac2int(nfeatures_over_datasize, args.num_train_samples)
+        input_dim = frac2int(inputdim_over_datasize, args.num_train_samples)
         risk, estim_param_l2norm, estim_param_lq_norm = \
-            train_and_evaluate(args.num_train_samples, n_features, args.input_dim, args.noise_std, args.snr,
+            train_and_evaluate(args.num_train_samples, n_features, input_dim, args.noise_std, args.snr,
                                args.num_test_samples, args.activation, args.regularization, args.ord,
                                args.epsilon, seed)
-        dict1 = {'proportion': proportion, 'seed': seed, 'n_features': n_features,
-                        'l2_param_norm': estim_param_l2norm, 'lq_param_norm': estim_param_lq_norm}
+        dict1 = {'inputdim_over_datasize': inputdim_over_datasize, 'nfeatures_over_datasize': nfeatures_over_datasize,
+                 'seed': seed, 'datasize': args.num_train_samples, 'l2_param_norm': estim_param_l2norm, 'lq_param_norm': estim_param_lq_norm}
         dict_risks = {'risk-{}'.format(e): r for e, r in zip(args.epsilon, risk)}
         df = df.append({**dict1, **dict_risks, **vars(args)}, ignore_index=True)
         df.to_csv(args.output, index=False)
