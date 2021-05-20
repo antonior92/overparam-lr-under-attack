@@ -26,7 +26,7 @@ class Mdl(object):
     # make sense to use an autograd tool...
     def __call__(self, x):
         # Compute prediction
-        input_dim = self.Theta.shape[0]
+        input_dim = self.Theta.shape[1]
         a = 1 / np.sqrt(input_dim) * x @ self.Theta.T
         z = self.activation_function(a)
         y_pred = z @ self.estim_param
@@ -135,7 +135,7 @@ if __name__ == '__main__':
                         help='activations function')
     parser.add_argument('-e', '--epsilon', default=[0, 0.1, 0.5, 1.0, 2.0], type=float, nargs='+',
                         help='the epsilon values used when computing the adversarial attack')
-    parser.add_argument('--snr', type=float, default=0.00001,
+    parser.add_argument('--snr', type=float, default=1,
                         help='signal-to-noise ratio `snr = |signal| / |noise|')
     args, unk = parser.parse_known_args()
 
