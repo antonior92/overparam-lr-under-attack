@@ -64,9 +64,9 @@ if __name__ == '__main__':
     assert (singular_values2[::-1] ** 2 / d - nonzero_eigvals2 < EPS).all()
 
     # It follows the value for the norm above
-    print('assymptotic matrix norm = {}'.format(rand_matrix_asymptotic_l2_norm(n, d)))
-    print('matrix norm, normal entries = {}'.format(np.linalg.norm(X, ord=2)))
-    print('matrix norm, uniform over the sphere entries = {}'.format(np.linalg.norm(X2, ord=2)))
+    print('assymptotic matrix norm = {}'.format(rand_matrix_asymptotic_l2_norm(n/d)))
+    print('matrix norm, normal entries = {}'.format(np.linalg.norm(1/np.sqrt(d) * X, ord=2)))
+    print('matrix norm, uniform over the sphere entries = {}'.format(1/np.sqrt(d) * np.linalg.norm(X2, ord=2)))
 
 
 
