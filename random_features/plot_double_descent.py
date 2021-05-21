@@ -1,7 +1,7 @@
 from activation_function_parameters import *
 from analitic_functions_v import AnaliticalVFunctions
 from uniform_distribution_over_the_sphere import rand_matrix_asymptotic_l2_norm
-from random_feature_regression import frac2int
+from random_feature_regression import frac2int, frac2int_vec
 
 def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activation_params,
                         regularization, snr, noise_std, compute_vs):
@@ -52,9 +52,16 @@ def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activat
     return predicted_risk, parameter_norm
 
 
-def adversarial_bounds(eps, ord, predicted_risk, parameter_norm, mnorm):
-    return predicted_risk, \
-           (np.sqrt(predicted_risk) + eps * mnorm * parameter_norm) ** 2
+def adversarial_bounds(eps, ord, predicted_risk, parameter_norm, mnorm, bottleneck):
+
+    if ord == np.inf:
+        factor = bottleneck ** 1/2
+    else:
+        factor = bottleneck ** (1/2-1/ord)
+
+    upper_eps = eps if ord <= 2 else eps * factor
+
+    return predicted_risk, (np.sqrt(predicted_risk) + upper_eps * mnorm * parameter_norm) ** 2
 
 
 def log_interp(x, num_points=1000):
@@ -92,8 +99,10 @@ if __name__ == "__main__":
     inputdim_over_datasize = np.array(df['inputdim_over_datasize'])
     nfeatures_over_datasize = np.array(df['nfeatures_over_datasize'])
     l2_parameter_norm = np.array(df['l2_param_norm'])
+    lq_parameter_norm = np.array(df['lq_param_norm'])
     seed = np.array(df['seed'])
     snr = np.array(df['snr'])[0]  # assuming all snr are the same
+    ord = np.array(df['ord'])[0]  # assuming all snr are the same
     n_samples = np.array(df['num_train_samples'])[0]  # assuming a fixed n_train
     noise_std = np.array(df['noise_std'])[0]  # assuming all noise_std are the same
     activation = np.array(df['activation'])[0]  # assuming all features_kind are the same
@@ -117,6 +126,10 @@ if __name__ == "__main__":
                                                          activation_params, regularization, snr, noise_std, compute_vs)
         # we divide by np.sqrt(input_dim) because this factor appears in Mei and Montanri Eq. (1)
         mnorm[i] = rand_matrix_asymptotic_l2_norm(nfeatures_over_datasize_for_bounds[i] / inputdim_over_datasize_for_bounds[i])
+    # compute bottleneck
+    number_of_features = frac2int_vec(nfeatures_over_datasize_for_bounds, args.num_points)
+    input_dimension = frac2int_vec(inputdim_over_datasize_for_bounds, args.num_points)
+    bottleneck = np.minimum(number_of_features, input_dimension)
 
     # Plot risk
     if fixed == 'inputdim_over_datasize':
@@ -140,13 +153,12 @@ if __name__ == "__main__":
         ax.set_yscale('log')
 
         # Plot upper bound
-        lb, ub = adversarial_bounds(e, 2.0, risk, parameter_norm, mnorm)
+        lb, ub = adversarial_bounds(e, ord, risk, parameter_norm, mnorm, bottleneck)
         if e == 0:
             ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
         else:
             ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
             ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
-            ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
 
         # Labels
         ax.set_xlabel('$\\gamma$')
@@ -160,7 +172,7 @@ if __name__ == "__main__":
     all_risk = np.stack(risk)
     y_min = 0.5 * np.min(all_risk) if args.y_min is None else args.y_min
     y_max = 2 * np.max(all_risk) if args.y_max is None else args.y_max
-    #ax.set_ylim((y_min, y_max))
+    ax.set_ylim((y_min, y_max))
     plt.legend()
     ax.set_title('risk')
     plt.show()
@@ -170,5 +182,5 @@ if __name__ == "__main__":
     ax.plot(proportions_for_bounds, np.array(parameter_norm))
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_title('parameter norm')
+    ax.set_title('l2 parameter norm')
     plt.show()

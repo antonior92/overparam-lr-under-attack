@@ -85,7 +85,7 @@ def train_and_evaluate(n_samples, n_features, input_dim, noise_std, snr, n_test_
     for e in epsilon:
         # Estimate adversarial risk
         if e > 0:
-            delta_X = compute_pgd_attack(X_test, y_test, mdl, max_perturb=e)
+            delta_X = compute_pgd_attack(X_test, y_test, mdl, max_perturb=e, ord=ord)
             X_adv = X_test + delta_X
         else:
             X_adv = X_test  # i.e. there is no disturbance
@@ -98,6 +98,8 @@ def train_and_evaluate(n_samples, n_features, input_dim, noise_std, snr, n_test_
 
 def frac2int(proportion, denominator):
     return max(int(proportion * denominator), 1)
+
+frac2int_vec = np.vectorize(frac2int)
 
 if __name__ == '__main__':
     import itertools
@@ -135,7 +137,7 @@ if __name__ == '__main__':
                         help='activations function')
     parser.add_argument('-e', '--epsilon', default=[0, 0.1, 0.5, 1.0, 2.0], type=float, nargs='+',
                         help='the epsilon values used when computing the adversarial attack')
-    parser.add_argument('--snr', type=float, default=1,
+    parser.add_argument('--snr', type=float, default=5,
                         help='signal-to-noise ratio `snr = |signal| / |noise|')
     args, unk = parser.parse_known_args()
 
