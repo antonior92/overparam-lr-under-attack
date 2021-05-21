@@ -8,5 +8,5 @@ export PYTHONPATH="${PYTHONPATH}::../"
 
 
 echo "Generating Figure..."
-python random_feature_regression.py -e 0.0 0.1 0.5 1.0 2.0 -o results/test.csv
-python plot_double_descent.py --file results/test.csv --plot_style $STYLE
+python random_feature_regression.py -e 0.0 0.1 0.5 1.0 2.0 -o results/test.csv -n 10
+python plot_double_descent.py --file results/test.csv --plot_style $STYLE --save figures/test

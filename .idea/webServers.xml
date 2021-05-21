@@ -3,7 +3,14 @@
   <component name="WebServers">
     <option name="servers">
       <webServer id="11d0ac74-f689-4a45-969d-d002f20f79e9" name="hydra3">
-        <fileTransfer accessType="SFTP" host="hydra3" port="22" sshConfigId="e9625946-439f-4dbb-b87a-b23036754d01" sshConfig="code@hydra3:22 agent" authAgent="true">
+        <fileTransfer accessType="SFTP" sshConfigId="e9625946-439f-4dbb-b87a-b23036754d01" sshConfig="code@hydra3:22 agent">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="af2abbc3-395d-41d1-9c2e-97d7ead7cc66" name="hyperion">
+        <fileTransfer accessType="SFTP" host="hyperion.it.uu.se" port="22" sshConfigId="31bf3990-93cd-4fb8-8738-4f32e7415318" sshConfig="aribeiro@hyperion.it.uu.se:22 password">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>

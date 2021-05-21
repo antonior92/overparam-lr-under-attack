@@ -37,7 +37,7 @@ class Mdl(object):
 
 
 def train_and_evaluate(n_samples, n_features, input_dim, noise_std, snr, n_test_samples, activation,
-                       regularization, ord, epsilon, seed):
+                       regularization, ord, epsilon, n_adv_steps, seed):
     # Get state
     rng = np.random.RandomState(seed)
     # Get parameter
@@ -85,7 +85,7 @@ def train_and_evaluate(n_samples, n_features, input_dim, noise_std, snr, n_test_
     for e in epsilon:
         # Estimate adversarial risk
         if e > 0:
-            delta_X = compute_pgd_attack(X_test, y_test, mdl, max_perturb=e, ord=ord)
+            delta_X = compute_pgd_attack(X_test, y_test, mdl, max_perturb=e, ord=ord, steps=n_adv_steps)
             X_adv = X_test + delta_X
         else:
             X_adv = X_test  # i.e. there is no disturbance
@@ -120,6 +120,8 @@ if __name__ == '__main__':
                         help='ord is p norm of the adversarial attack.')
     parser.add_argument('-n', '--num_points', default=60, type=int,
                         help='number of points')
+    parser.add_argument('--n_adv_steps', default=100, type=int,
+                        help='number of steps used in the adversarial attack')
     parser.add_argument('-l', '--lower_proportion', default=-1, type=float,
                         help='the lowest value for the proportion (n features / n samples) is 10^l.')
     parser.add_argument('-u', '--upper_proportion', default=1, type=float,
@@ -140,6 +142,7 @@ if __name__ == '__main__':
     parser.add_argument('--snr', type=float, default=5,
                         help='signal-to-noise ratio `snr = |signal| / |noise|')
     args, unk = parser.parse_known_args()
+    print(args)
 
     # Compute performance for varying number of features
     tqdm.write("Estimating performance as a function of proportion...")
@@ -164,7 +167,7 @@ if __name__ == '__main__':
         risk, estim_param_l2norm, estim_param_lq_norm = \
             train_and_evaluate(args.num_train_samples, n_features, input_dim, args.noise_std, args.snr,
                                args.num_test_samples, args.activation, args.regularization, args.ord,
-                               args.epsilon, seed)
+                               args.epsilon, args.n_adv_steps, seed)
         dict1 = {'inputdim_over_datasize': inputdim_over_datasize, 'nfeatures_over_datasize': nfeatures_over_datasize,
                  'seed': seed, 'datasize': args.num_train_samples, 'l2_param_norm': estim_param_l2norm, 'lq_param_norm': estim_param_lq_norm}
         dict_risks = {'risk-{}'.format(e): r for e, r in zip(args.epsilon, risk)}

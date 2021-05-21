@@ -172,10 +172,12 @@ if __name__ == "__main__":
     all_risk = np.stack(risk)
     y_min = 0.5 * np.min(all_risk) if args.y_min is None else args.y_min
     y_max = 2 * np.max(all_risk) if args.y_max is None else args.y_max
-    ax.set_ylim((y_min, y_max))
     plt.legend()
     ax.set_title('risk')
-    plt.show()
+    if args.save:
+        plt.savefig(args.save+'.png')
+    else:
+        plt.show()
 
     fig, ax = plt.subplots()
     ax.plot(proportion, l2_parameter_norm, '*')
@@ -183,4 +185,7 @@ if __name__ == "__main__":
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_title('l2 parameter norm')
-    plt.show()
+    if args.save:
+        plt.savefig(args.save+'-norm.png')
+    else:
+        plt.show()
