@@ -72,7 +72,6 @@ def compute_pgd_attack(x, y, mdl,  max_perturb, step_size=None, ord=2.0, steps=1
     """
     if step_size is None:
         step_size = 1.4 * max_perturb / steps
-        print(steps)
     # initialize perturbation with zeros
     n_points, input_dim = x.shape
     delta_x = np.zeros((n_points, input_dim))

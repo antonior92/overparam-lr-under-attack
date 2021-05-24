@@ -36,12 +36,12 @@ class Mdl(object):
         return y_pred, jac
 
 
-def train_and_evaluate(n_samples, n_features, input_dim, noise_std, snr, n_test_samples, activation,
+def train_and_evaluate(n_samples, n_features, input_dim, noise_std, parameter_norm, n_test_samples, activation,
                        regularization, ord, epsilon, n_adv_steps, seed):
     # Get state
     rng = np.random.RandomState(seed)
     # Get parameter
-    beta = snr * noise_std / np.sqrt(input_dim) * rng.randn(input_dim)
+    beta = parameter_norm / np.sqrt(input_dim) * rng.randn(input_dim)
     # Get activation
     activation_function = get_activation(activation)
 
@@ -120,7 +120,7 @@ if __name__ == '__main__':
                         help='ord is p norm of the adversarial attack.')
     parser.add_argument('-n', '--num_points', default=60, type=int,
                         help='number of points')
-    parser.add_argument('--n_adv_steps', default=100, type=int,
+    parser.add_argument('--n_adv_steps', default=200, type=int,
                         help='number of steps used in the adversarial attack')
     parser.add_argument('-l', '--lower_proportion', default=-1, type=float,
                         help='the lowest value for the proportion (n features / n samples) is 10^l.')
@@ -131,7 +131,7 @@ if __name__ == '__main__':
     parser.add_argument('--fixed', choices=['inputdim_over_datasize', 'nfeatures_over_datasize',
                                             'nfeatures_over_inputdim'], default='nfeatures_over_datasize',
                         help='what is fixed in the problem.')
-    parser.add_argument('-s', '--noise_std', type=float, default=1.0,
+    parser.add_argument('-s', '--noise_std', type=float, default=1,
                         help='standard deviation of the additive noise added.')
     parser.add_argument('--regularization', type=float, default=1e-7,
                         help='type of ridge regularization.')
@@ -139,8 +139,8 @@ if __name__ == '__main__':
                         help='activations function')
     parser.add_argument('-e', '--epsilon', default=[0, 0.1, 0.5, 1.0, 2.0], type=float, nargs='+',
                         help='the epsilon values used when computing the adversarial attack')
-    parser.add_argument('--snr', type=float, default=5,
-                        help='signal-to-noise ratio `snr = |signal| / |noise|')
+    parser.add_argument('--signal_amplitude', type=float, default=1,
+                        help='signal amplitude. I.e. \|beta*\|_2')
     args, unk = parser.parse_known_args()
     print(args)
 
@@ -165,7 +165,7 @@ if __name__ == '__main__':
         n_features = frac2int(nfeatures_over_datasize, args.num_train_samples)
         input_dim = frac2int(inputdim_over_datasize, args.num_train_samples)
         risk, estim_param_l2norm, estim_param_lq_norm = \
-            train_and_evaluate(args.num_train_samples, n_features, input_dim, args.noise_std, args.snr,
+            train_and_evaluate(args.num_train_samples, n_features, input_dim, args.noise_std, args.signal_amplitude,
                                args.num_test_samples, args.activation, args.regularization, args.ord,
                                args.epsilon, args.n_adv_steps, seed)
         dict1 = {'inputdim_over_datasize': inputdim_over_datasize, 'nfeatures_over_datasize': nfeatures_over_datasize,
