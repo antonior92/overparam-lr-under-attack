@@ -44,8 +44,7 @@ def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activat
     # Implements Eq (48) of Mei and Montanari
     A1 = - signal_amplitude**2 * m(2, 0) * ((1 - psi2) * m(1, 4) - m(1, 2) + (1 + psi2) * m(0, 2) + 1) + \
          +  noise_std**2 * m(2, 0) * (m(1, 2) - 1) * (m(2, 4) - 2 * m(1, 2) + m(0, 2) + 1)
-    A0 = E0
-    A = A1 / A0
+    A = A1 / E0
     parameter_norm = np.sqrt(A) / mu_star
 
     return predicted_risk, parameter_norm
@@ -187,15 +186,5 @@ if __name__ == "__main__":
     ax.set_title('l2 parameter norm')
     if args.save:
         plt.savefig(args.save+'-norm.png')
-    else:
-        plt.show()
-
-    fig, ax = plt.subplots()
-    ax.plot(proportions_for_bounds, np.array(mnorm))
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_title('l2 parameter norm')
-    if args.save:
-        plt.savefig(args.save + '-matrix-norm.png')
     else:
         plt.show()
