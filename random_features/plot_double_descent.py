@@ -138,8 +138,8 @@ if __name__ == "__main__":
         proportion = nfeatures_over_datasize
         proportions_for_bounds = nfeatures_over_datasize_for_bounds
     elif fixed == 'nfeatures_over_inputdim':
-        proportion = nfeatures_over_datasize / inputdim_over_datasize
-        proportions_for_bounds = nfeatures_over_datasize_for_bounds / inputdim_over_datasize_for_bounds
+        proportion = nfeatures_over_datasize
+        proportions_for_bounds = nfeatures_over_datasize_for_bounds
     else:
         raise ValueError('Invalid argument --fixed = {}.'.format(args.fixed))
     fig, ax = plt.subplots()

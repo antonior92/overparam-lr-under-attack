@@ -156,7 +156,7 @@ if __name__ == '__main__':
              nfeatures_over_datasize = proportion
         elif args.fixed == 'nfeatures_over_datasize':
             inputdim_over_datasize = args.fixed_proportion
-            nfeatures_over_datasize =  proportion
+            nfeatures_over_datasize = proportion
         elif args.fixed == 'nfeatures_over_inputdim':
             inputdim_over_datasize = proportion
             nfeatures_over_datasize = args.fixed_proportion * proportion

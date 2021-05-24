@@ -7,6 +7,9 @@ STYLE="ggplot ../mystyle.mplsty"
 export PYTHONPATH="${PYTHONPATH}::../"
 
 
+for $ORD in 2;
+do
 echo "Generating Figure..."
-python random_feature_regression.py -e 0.0 0.1 0.5 1.0 2.0 -o results/test.csv -n 10
-python plot_double_descent.py --file results/test.csv --plot_style $STYLE --save figures/test
+python random_feature_regression.py -n 20 -u 1 -l -1 --epsilon 0.1 --ord $ORD --noise_std 0 -o results/l"$ORD"-attack.csv
+python plot_double_descent.py --file results/l"$ORD"-attack.csv --plot_style $STYLE --save figures/l"$ORD"-attack
+done;
