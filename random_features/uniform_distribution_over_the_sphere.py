@@ -23,7 +23,7 @@ if __name__ == '__main__':
     import seaborn as sns
     EPS = 1e-8
     seed = 0
-    d = 3000
+    d = 600
     proportion = 0.1
 
     rng = np.random.RandomState()
@@ -69,5 +69,12 @@ if __name__ == '__main__':
     print('matrix norm, uniform over the sphere entries = {}'.format(1/np.sqrt(d) * np.linalg.norm(X2, ord=2)))
 
 
-
-
+    # plot
+    proportions = np.logspace(-1, 1, 20)
+    l2_norm_pred = [rand_matrix_asymptotic_l2_norm(p) for p in proportions]
+    l2_norm_obs = [np.linalg.norm(1/np.sqrt(d) * rng.randn(int(d * p), d), ord=2) for p in proportions]
+    l2_norm_obs2 = [np.linalg.norm(1/np.sqrt(d) * uniform_distribution_over_the_sphere(int(d * p), d, rng), ord=2) for p in proportions]
+    plt.plot(proportions, l2_norm_pred)
+    plt.plot(proportions, l2_norm_obs, '*')
+    plt.plot(proportions, l2_norm_obs2, 'o')
+    plt.show()
