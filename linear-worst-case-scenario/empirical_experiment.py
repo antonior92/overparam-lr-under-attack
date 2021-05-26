@@ -23,7 +23,7 @@ def train_and_evaluate(n_samples, n_features, feature_scaling, feature_std, epsi
 
     # Get training data
     y = rng.randn(n_samples)
-    X = feature_std * rng.randn(n_samples, n_features) + 1 / feature_scaling * y[:, None]
+    X = feature_std / feature_scaling * rng.randn(n_samples, n_features) + 1 / feature_scaling * y[:, None]
 
     # Train
     beta_hat = ridge_regression(X, y)
@@ -31,7 +31,7 @@ def train_and_evaluate(n_samples, n_features, feature_scaling, feature_std, epsi
     # Test data
     # Get X matrix
     y_test = rng.randn(n_test_samples)
-    X_test = feature_std * rng.randn(n_test_samples, n_features) + 1 / feature_scaling * y_test[:, None]
+    X_test = feature_std / feature_scaling * rng.randn(n_test_samples, n_features) + 1 / feature_scaling * y_test[:, None]
 
     # Generate adversarial disturbance
     l2_param_norm = np.linalg.norm(beta_hat, ord=2)
