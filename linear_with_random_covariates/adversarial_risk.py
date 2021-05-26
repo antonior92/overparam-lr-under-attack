@@ -56,26 +56,31 @@ def train_and_evaluate(n_samples, n_features, noise_std, parameter_norm, epsilon
     y_test = X_test @ beta + noise_std * e_test
 
     # Generate adversarial disturbance
-    l2_param_norm = np.linalg.norm(beta_hat, ord=2)
-    if ord != np.Inf and ord > 1:
-        q = ord / (ord - 1)
-    elif ord == 1:
-        q = np.Inf
-    else:
-        q = 1
-    lq_param_norm = np.linalg.norm(beta_hat, ord=q)
+    pnorms = {}
+    pnorms['norm-2.0'] = np.linalg.norm(beta_hat, ord=2)
 
     # Compute error = y_pred - y_test
+    risk = {}
     test_error = X_test @ beta_hat - y_test
-    jac = beta_hat
-    delta_x = compute_adv_attack(test_error, jac, ord=ord)
-    risk = []
-    for e in epsilon:
-        # Estimate adversarial risk
-        delta_X = e * delta_x
-        r = np.mean((y_test - (X_test + delta_X) @ beta_hat) ** 2)
-        risk.append(r)
-    return risk, l2_param_norm, lq_param_norm
+    risk['predrisk'] = np.mean(test_error** 2)
+    for p in ord:
+        # Compute ord
+        if p != np.Inf and p > 1:
+            q = p / (p - 1)
+        elif p == 1:
+            q = np.Inf
+        else:
+            q = 1
+        pnorms['norm-{:.1f}'.format(p)] = np.linalg.norm(beta_hat, ord=q)
+
+        jac = beta_hat
+        delta_x = compute_adv_attack(test_error, jac, ord=p)
+        for e in epsilon:
+            # Estimate adversarial risk
+            delta_X = e * delta_x
+            r = np.mean((y_test - (X_test + delta_X) @ beta_hat) ** 2)
+            risk['advrisk-{:.1f}-{:.1f}'.format(p, e)] = r
+    return risk, pnorms
 
 
 if __name__ == '__main__':
@@ -88,7 +93,7 @@ if __name__ == '__main__':
                        help='number of samples in the experiment')
     parser.add_argument('-r', '--repetitions', type=int, default=4,
                         help='number of times each experiment is repeated')
-    parser.add_argument('-p', '--ord', type=float, default=2.0,
+    parser.add_argument('-p', '--ord',  default=[2.0], type=float, nargs='+',
                         help='ord is p norm of the adversarial attack.')
     parser.add_argument('-n', '--num_points', default=60, type=int,
                         help='number of points')
@@ -121,21 +126,20 @@ if __name__ == '__main__':
     # so the progress bar can give a more accurate notion of the time to completion
     random.shuffle(run_instances)
     prev_mdl = None  # used only if reuse_weights is True
-    df = pd.DataFrame(columns=['proportion', 'seed', 'l2_param_norm', 'lq_param_norm'] + ['risk-{}'.format(e) for e in args.epsilon])
+    df = pd.DataFrame(columns=['proportion', 'seed'] + ['norm-{:.1f}'.format(p) for p in args.ord] +
+                              ['advrisk-{:.1f}-{:.1f}'.format(p, e) for p, e in itertools.product(args.ord, args.epsilon)])
     for seed, proportion in tqdm(run_instances, smoothing=0.03):
         n_features = max(int(proportion * args.num_train_samples), 1)
-        risk, l2_param_norm, lq_param_norm = train_and_evaluate(
+        risk, pnorms = train_and_evaluate(
             args.num_train_samples, n_features, args.noise_std, args.signal_amplitude,
             args.epsilon, args.ord, args.num_test_samples, args.features_kind,
             args.off_diag, args.datagen_parameter, seed)
         dict1 = {'proportion': proportion, 'n_features': n_features, 'n_train':args.num_train_samples,
                  'n_test': args.num_test_samples, 'ord': args.ord, 'features_kind': args.features_kind, 'seed': seed,
-                 'l2_param_norm': l2_param_norm, 'lq_param_norm': lq_param_norm,
                  'signal_amplitude': args.signal_amplitude, 'noise_std': args.noise_std,
                  'datagen_parameter': args.datagen_parameter}
         if args.features_kind =='equicorrelated':
             dict1['off_diag'] = args.off_diag
-        dict_risks = {'risk-{}'.format(e): r for e, r in zip(args.epsilon, risk)}
-        df = df.append({**dict1, **dict_risks}, ignore_index=True)
+        df = df.append({**risk, **pnorms, **dict1}, ignore_index=True)
         df.to_csv(args.output, index=False)
     tqdm.write("Done")

@@ -89,13 +89,13 @@ if __name__ == "__main__":
 
     df = pd.read_csv(args.file)
 
-    epsilon, risk = zip(*[(float(k.split('-')[1]), np.array(df[k])) for k in df.keys() if 'risk-' in k])
+    ord, epsilon = zip(*[(float(k.split('-')[1]), float(k.split('-')[2])) for k in df.keys() if 'risk-' in k])
+    epsilon = np.unique(epsilon)
+    ord = np.unique(ord)
     proportion = np.array(df['proportion'])
-    l2_parameter_norm = np.array(df['l2_param_norm'])
-    lq_parameter_norm = np.array(df['lq_param_norm'])
+
     seed = np.array(df['seed'])
     signal_amplitude = np.array(df['signal_amplitude'])[0]  # assuming all snr are the same
-    ord = np.array(df['ord'])[0]  # assuming all ord are the same
     n_train = np.array(df['n_train'])[0]  # assuming a fixed n_train
     noise_std = np.array(df['noise_std'])[0]  # assuming all noise_std are the same
     features_kind = np.array(df['features_kind'])[0]  # assuming all features_kind are the same
@@ -109,59 +109,65 @@ if __name__ == "__main__":
     anorm = assymptotic_l2_norm_squared(proportions_for_bounds, snr, features_kind, off_diag)
 
     # Plot risk
-    fig, ax = plt.subplots()
-    markers = ['*', 'o', 's', '<', '>', 'h']
-    i = 0
-    for r, e in zip(risk, epsilon):
-        # Plot empirical value
-        l, = ax.plot(proportion, risk[i], markers[i], ms=4, label='$\\delta={}$'.format(e))
-        ax.set_xscale('log')
-        ax.set_yscale('log')
+    for p in ord:
+        fig, ax = plt.subplots()
+        markers = ['*', 'o', 's', '<', '>', 'h']
+        i = 0
+        risk = []
+        for e in epsilon:
+            r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
+            risk.append(r)
+            # Plot empirical value
+            l, = ax.plot(proportion, r, markers[i], ms=4, label='$\\delta={}$'.format(e))
+            ax.set_xscale('log')
+            ax.set_yscale('log')
 
-        # Plot upper bound
-        lb, ub = adversarial_bounds(arisk, anorm, noise_std, e, ord, proportions_for_bounds * n_train)
-        if e == 0:
-            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
+            # Plot upper bound
+            lb, ub = adversarial_bounds(arisk, anorm, noise_std, e, p, proportions_for_bounds * n_train)
+            if e == 0:
+                ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
+            else:
+                ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
+                ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
+                ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
+
+            # Labels
+            ax.set_xlabel('$\\gamma$')
+            ax.set_ylabel('Risk')
+
+            # Plot vertical line at the interpolation threshold
+            ax.axvline(1, ls='--')
+
+            # Increment
+            i += 1
+
+        all_risk = np.stack(risk)
+        y_min = 0.5 * np.min(all_risk) if args.y_min is None else args.y_min
+        y_max = 2 * np.max(all_risk) if args.y_max is None else args.y_max
+        ax.set_ylim((y_min, y_max))
+        plt.legend()
+
+        if args.save:
+            plt.savefig(args.save + 'l{}.png'.format(p))
         else:
-            ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
-            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
-            ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
-
-        # Labels
-        ax.set_xlabel('$\\gamma$')
-        ax.set_ylabel('Risk')
-
-        # Plot vertical line at the interpolation threshold
-        ax.axvline(1, ls='--')
-
-        # Increment
-        i += 1
-
-    all_risk = np.stack(risk)
-    y_min = 0.5 * np.min(all_risk) if args.y_min is None else args.y_min
-    y_max = 2 * np.max(all_risk) if args.y_max is None else args.y_max
-    ax.set_ylim((y_min, y_max))
-    plt.legend()
-
-    if args.save:
-        plt.savefig(args.save + '.png')
-    else:
-        plt.show()
+            plt.show()
 
     # Plot l2 parameter norm
     fig, ax = plt.subplots()
-    l, = ax.plot(proportion, l2_parameter_norm, '*', ms=4, label='$$l_2~~{\\rm norm}$$')
-    ax.plot(proportions_for_bounds, np.sqrt(anorm), '-', color=l.get_color(), lw=2)
-    # Plot lp parameter norm when available
-    if ord != 2:
-        l, = ax.plot(proportion, lq_parameter_norm, 'o', ms=4, label='$$l_q~~{\\rm norm}$$')
-        lb, ub = assymptotic_lp_norm_squared(anorm, ord, proportions_for_bounds * n_train)
-        ax.fill_between(proportions_for_bounds, np.sqrt(lb), np.sqrt(ub), color=l.get_color(), alpha=0.2)
-        ax.plot(proportions_for_bounds, np.sqrt(ub), '-', color=l.get_color(), lw=1)
-        ax.plot(proportions_for_bounds, np.sqrt(lb), '-', color=l.get_color(), lw=1)
+    for p in ord:
+        pnorm = df['norm-{:.1f}'.format(p)]
+        l, = ax.plot(proportion, pnorm, 'o', ms=4, label=p)
+        if p == 2:
+            ax.plot(proportions_for_bounds, np.sqrt(anorm), '-', color=l.get_color(), lw=2)
+        else:
+            lb, ub = assymptotic_lp_norm_squared(anorm, p, proportions_for_bounds * n_train)
+            ax.fill_between(proportions_for_bounds, np.sqrt(lb), np.sqrt(ub), color=l.get_color(), alpha=0.2)
+            ax.plot(proportions_for_bounds, np.sqrt(ub), '-', color=l.get_color(), lw=1)
+            ax.plot(proportions_for_bounds, np.sqrt(lb), '-', color=l.get_color(), lw=1)
+
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_xlabel('$\\gamma$')
+    ax.set_xlabel('\gamma')
     ax.set_ylabel('Parameter Norm')
     plt.legend()
     if args.save:
