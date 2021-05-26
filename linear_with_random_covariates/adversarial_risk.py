@@ -25,12 +25,16 @@ def generate_features(n_samples, n_features, rng, kind, off_diag):
         raise ValueError('Invalid kind of feature generation')
 
 
-def train_and_evaluate(n_samples, n_features, noise_std, parameter_norm, epsilon, ord, n_test_samples, kind, off_diag, seed):
+def train_and_evaluate(n_samples, n_features, noise_std, parameter_norm, epsilon, ord,
+                       n_test_samples, kind, off_diag, datagen_parameter, seed):
     # Get state
     rng = np.random.RandomState(seed)
 
     # Get parameter
-    beta = parameter_norm / np.sqrt(n_features) * rng.randn(n_features)
+    if datagen_parameter == 'gaussian_prior':
+        beta = parameter_norm / np.sqrt(n_features) * rng.randn(n_features)
+    elif datagen_parameter == 'constant':
+        beta = parameter_norm / np.sqrt(n_features) * np.ones(n_features)
 
     # Generate training data
     # Get X matrix
@@ -98,6 +102,8 @@ if __name__ == '__main__':
                         help='standard deviation of the additive noise added.')
     parser.add_argument('-f', '--features_kind', choices=['isotropic', 'equicorrelated'], default='isotropic',
                         help='how the features are generated')
+    parser.add_argument('--datagen_parameter', choices=['gaussian_prior', 'constant'], default='gaussian_prior',
+                        help='how the features are generated')
     parser.add_argument('--off_diag', default=0.5, type=float,
                         help='value of diagonal values. Default is 0.5. Only take effect when '
                              'features_kind = equicorrelated.')
@@ -118,13 +124,15 @@ if __name__ == '__main__':
     df = pd.DataFrame(columns=['proportion', 'seed', 'l2_param_norm', 'lq_param_norm'] + ['risk-{}'.format(e) for e in args.epsilon])
     for seed, proportion in tqdm(run_instances, smoothing=0.03):
         n_features = max(int(proportion * args.num_train_samples), 1)
-        risk, l2_param_norm, lq_param_norm = train_and_evaluate(args.num_train_samples, n_features, args.noise_std, args.signal_amplitude,
-                                                    args.epsilon, args.ord, args.num_test_samples, args.features_kind,
-                                                    args.off_diag, seed)
+        risk, l2_param_norm, lq_param_norm = train_and_evaluate(
+            args.num_train_samples, n_features, args.noise_std, args.signal_amplitude,
+            args.epsilon, args.ord, args.num_test_samples, args.features_kind,
+            args.off_diag, args.datagen_parameter, seed)
         dict1 = {'proportion': proportion, 'n_features': n_features, 'n_train':args.num_train_samples,
                  'n_test': args.num_test_samples, 'ord': args.ord, 'features_kind': args.features_kind, 'seed': seed,
                  'l2_param_norm': l2_param_norm, 'lq_param_norm': lq_param_norm,
-                 'signal_amplitude': args.signal_amplitude, 'noise_std': args.noise_std}
+                 'signal_amplitude': args.signal_amplitude, 'noise_std': args.noise_std,
+                 'datagen_parameter': args.datagen_parameter}
         if args.features_kind =='equicorrelated':
             dict1['off_diag'] = args.off_diag
         dict_risks = {'risk-{}'.format(e): r for e, r in zip(args.epsilon, risk)}
