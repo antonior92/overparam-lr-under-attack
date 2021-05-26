@@ -40,7 +40,7 @@ def assymptotic_l2_norm_squared(proportion, signal_amplitude, features_kind, off
     return noise_std ** 2 * v + signal_amplitude ** 2 * b
 
 
-def adversarial_bounds(arisk, anorm, noise_std, eps, ord, n_features):
+def adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, eps, ord, n_features, datagen_parameter):
 
     # Generalize to other norms,
     # using https://math.stackexchange.com/questions/218046/relations-between-p-norms
@@ -52,8 +52,15 @@ def adversarial_bounds(arisk, anorm, noise_std, eps, ord, n_features):
     lower_eps = eps if ord >= 2 else eps * factor
     upper_eps = eps if ord <= 2 else eps * factor
 
+    if datagen_parameter == 'constant' and ord > 2:
+        n = signal_amplitude * n_features ** (1/2-1/ord)
+        upper_bound = (np.sqrt(arisk) + eps * (n+upper_eps * np.sqrt(arisk))) ** 2 + noise_std ** 2
+        lower_bound = arisk + eps ** 2 * (n-np.sqrt(arisk)) ** 2 + noise_std ** 2
+        return lower_bound, upper_bound
+
     upper_bound = (np.sqrt(arisk) + upper_eps * np.sqrt(anorm))**2 + noise_std ** 2
     lower_bound = arisk + lower_eps**2 * anorm + noise_std ** 2
+
     return lower_bound, upper_bound
 
 
@@ -98,7 +105,9 @@ if __name__ == "__main__":
     signal_amplitude = np.array(df['signal_amplitude'])[0]  # assuming all snr are the same
     n_train = np.array(df['n_train'])[0]  # assuming a fixed n_train
     noise_std = np.array(df['noise_std'])[0]  # assuming all noise_std are the same
-    features_kind = np.array(df['features_kind'])[0]  # assuming all features_kind are the same
+    features_kind = np.array(df['features_kind'])[0]  # assuming all features_kind are the
+    datagen_parameter = np.array(df['datagen_parameter'])[0]  # assuming all features_kind are the same
+
     # assuming all off_diag are the same
     off_diag = np.array(df['off_diag'])[0] if features_kind == 'equicorrelated' else None
     proportions_for_bounds = np.logspace(np.log10(min(proportion)), np.log10(max(proportion)), args.num_points)
@@ -123,7 +132,7 @@ if __name__ == "__main__":
             ax.set_yscale('log')
 
             # Plot upper bound
-            lb, ub = adversarial_bounds(arisk, anorm, noise_std, e, p, proportions_for_bounds * n_train)
+            lb, ub = adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, e, p, proportions_for_bounds * n_train,  datagen_parameter)
             if e == 0:
                 ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
             else:
