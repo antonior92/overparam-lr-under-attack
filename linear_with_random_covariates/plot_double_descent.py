@@ -42,7 +42,7 @@ def assymptotic_l2_norm_squared(proportion, signal_amplitude, features_kind, off
     return noise_std ** 2 * v + signal_amplitude ** 2 * b
 
 
-def assymptotic_lp_norm_squared(anorm, ord, n_features):
+def assymptotic_lp_norm_squared(arisk, anorm, ord, n_features, signal_amplitude, datagen_parameter):
     # Generalize to other norms,
     # using https://math.stackexchange.com/questions/218046/relations-between-p-norms
     if ord == np.inf:
@@ -50,19 +50,22 @@ def assymptotic_lp_norm_squared(anorm, ord, n_features):
     else:
         factor = n_features ** (1/2-1/ord)
 
-    lower_bound = anorm if ord >= 2 else anorm * factor**2
-    upper_bound = anorm if ord <= 2 else anorm * factor**2
+    lfactor = 1 if ord >= 2 else factor
+    ufactor = 1 if ord <= 2 else factor
+
+    if datagen_parameter == 'constant':
+        n = signal_amplitude * n_features ** (1/2-1/ord)
+        upper_bound = (n + ufactor * np.sqrt(arisk)) ** 2
+        lower_bound = (n - lfactor * np.sqrt(arisk)) ** 2
+        return lower_bound, upper_bound
+
+    lower_bound = anorm * lfactor ** 2
+    upper_bound = anorm * ufactor ** 2
     return lower_bound, upper_bound
 
 
 def adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, eps, ord, n_features, datagen_parameter):
-    lqnorm_lb, lqnorm_ub = assymptotic_lp_norm_squared(anorm, ord, n_features)
-
-    if datagen_parameter == 'constant' and ord > 2:
-        n = signal_amplitude * n_features ** (1/2-1/ord)
-        upper_bound = (np.sqrt(arisk) + eps * (n+upper_eps * np.sqrt(arisk))) ** 2 + noise_std ** 2
-        lower_bound = arisk + eps ** 2 * (n-np.sqrt(arisk)) ** 2 + noise_std ** 2
-        return lower_bound, upper_bound
+    lqnorm_lb, lqnorm_ub = assymptotic_lp_norm_squared(arisk, anorm, ord, n_features, signal_amplitude, datagen_parameter)
 
     upper_bound = (np.sqrt(arisk) + eps * np.sqrt(lqnorm_ub))**2 + noise_std ** 2
     lower_bound = arisk + eps**2 * lqnorm_lb + noise_std ** 2
@@ -97,7 +100,8 @@ def plot_risk_per_eps(ax, e):
         r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
         risk.append(r)
         # Plot empirical value
-        l, = ax.plot(proportion, r, markers[i], ms=4, label='$p={}$'.format(p))
+
+        l, = ax.plot(proportion, r, markers[i], ms=4, label='$\\ell_{}$'.format('\\infty' if p == np.Inf else int(p)))
         # Plot upper bound
         lb, ub = adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, e, p,
                                     proportions_for_bounds * n_train, datagen_parameter)
@@ -112,14 +116,14 @@ def plot_risk_per_eps(ax, e):
         i += 1
 
 
-def plot_norm():
+def plot_norm(ax):
     for p in ord:
         pnorm = df['norm-{:.1f}'.format(p)]
         l, = ax.plot(proportion, pnorm, 'o', ms=4, label=p)
         if p == 2:
             ax.plot(proportions_for_bounds, np.sqrt(anorm), '-', color=l.get_color(), lw=2)
         else:
-            lb, ub = assymptotic_lp_norm_squared(anorm, p, proportions_for_bounds * n_train)
+            lb, ub = assymptotic_lp_norm_squared(arisk, anorm, p, proportions_for_bounds * n_train, signal_amplitude, datagen_parameter)
             ax.fill_between(proportions_for_bounds, np.sqrt(lb), np.sqrt(ub), color=l.get_color(), alpha=0.2)
             ax.plot(proportions_for_bounds, np.sqrt(ub), '-', color=l.get_color(), lw=1)
             ax.plot(proportions_for_bounds, np.sqrt(lb), '-', color=l.get_color(), lw=1)

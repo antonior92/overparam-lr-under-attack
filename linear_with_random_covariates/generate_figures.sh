@@ -8,7 +8,7 @@ export PYTHONPATH="${PYTHONPATH}::../"
 echo "Generate data for Figures 1..."
 python adversarial_risk.py --num_test_samples 100 --num_train_samples 100 -o results/equicorrelated-constant.csv \
     --features_kind equicorrelated --ord 2 inf --datagen_param constant -e 0.1 -u 1.5
-python plot_double_descent.py --file results/equicorrelated-constant.csv --save figures/equicorrelated-constant --plot_style $STYLE --plot_type risk_per_eps
+python plot_double_descent.py --file results/equicorrelated-constant.csv --save figures/equicorrelated-constant.png --plot_style $STYLE ../one_half.mplsty   --plot_type risk_per_eps
 
 
 echo "Generate data for Figures 2..."
