@@ -1,13 +1,13 @@
 echo "Create directories..."
 mkdir results  # if it does not exist already
 mkdir figures  # if it does not exist already
-STYLE="ggplot ../mystyle.mplsty"
+STYLE="../mystyle.mplsty"
 export PYTHONPATH="${PYTHONPATH}::../"
 
 
 echo "Generate data for Figures 1..."
 python adversarial_risk.py --num_test_samples 100 --num_train_samples 100 -o results/equicorrelated-constant.csv \
-    --features_kind equicorrelated --ord 2 inf --datagen_param constant -e 0.1
+    --features_kind equicorrelated --ord 2 inf --datagen_param constant -e 0.1 -u 1.5
 python plot_double_descent.py --file results/equicorrelated-constant.csv --save figures/equicorrelated-constant
 
 

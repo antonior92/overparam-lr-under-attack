@@ -75,49 +75,7 @@ def assymptotic_lp_norm_squared(anorm, ord, n_features):
     return lower_bound, upper_bound
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Plot performance as a function of the proportion '
-                                                 'n features / n samples rate.')
-    parser.add_argument('--file', default='performance.csv',
-                        help='input csv.')
-    parser.add_argument('--plot_style', nargs='*', default=[],
-                        help='plot styles to be used')
-    parser.add_argument('-n', '--num_points', default=1000, type=int,
-                        help='number of points')
-    parser.add_argument('--y_min', default=None, type=float,
-                        help='inferior limit to y-axis in the plot.')
-    parser.add_argument('--y_max', default=None, type=float,
-                        help='superior limit to y-axis in the plot.')
-    parser.add_argument('--save', default='',
-                        help='save plot in the given file (do not write extension). By default just show it.')
-    args, unk = parser.parse_known_args()
-    if args.plot_style:
-        plt.style.use(args.plot_style)
-
-    df = pd.read_csv(args.file)
-
-    ord, epsilon = zip(*[(float(k.split('-')[1]), float(k.split('-')[2])) for k in df.keys() if 'risk-' in k])
-    epsilon = np.unique(epsilon)
-    ord = np.unique(ord)
-    proportion = np.array(df['proportion'])
-
-    seed = np.array(df['seed'])
-    signal_amplitude = np.array(df['signal_amplitude'])[0]  # assuming all snr are the same
-    n_train = np.array(df['n_train'])[0]  # assuming a fixed n_train
-    noise_std = np.array(df['noise_std'])[0]  # assuming all noise_std are the same
-    features_kind = np.array(df['features_kind'])[0]  # assuming all features_kind are the
-    datagen_parameter = np.array(df['datagen_parameter'])[0]  # assuming all features_kind are the same
-
-    # assuming all off_diag are the same
-    off_diag = np.array(df['off_diag'])[0] if features_kind == 'equicorrelated' else None
-    proportions_for_bounds = np.logspace(np.log10(min(proportion)), np.log10(max(proportion)), args.num_points)
-    snr = signal_amplitude / noise_std
-
-    # compute standard risk
-    arisk = asymptotic_risk(proportions_for_bounds, signal_amplitude, features_kind, off_diag)
-    anorm = assymptotic_l2_norm_squared(proportions_for_bounds, snr, features_kind, off_diag)
-
-    # Plot risk
+def plot_risk_per_ord():
     for p in ord:
         fig, ax = plt.subplots()
         markers = ['*', 'o', 's', '<', '>', 'h']
@@ -161,7 +119,53 @@ if __name__ == "__main__":
         else:
             plt.show()
 
-    # Plot l2 parameter norm
+def plot_risk_per_eps():
+    for e in epsilon:
+        fig, ax = plt.subplots()
+        markers = ['*', 'o', 's', '<', '>', 'h']
+        i = 0
+        risk = []
+        for p in ord:
+            r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
+            risk.append(r)
+            # Plot empirical value
+            l, = ax.plot(proportion, r, markers[i], ms=4, label='$p={}$'.format(p))
+            ax.set_xscale('log')
+            ax.set_yscale('log')
+
+            # Plot upper bound
+            lb, ub = adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, e, p,
+                                        proportions_for_bounds * n_train, datagen_parameter)
+            if e == 0:
+                ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
+            else:
+                ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
+                ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
+                ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
+
+            # Labels
+            ax.set_xlabel('$\\gamma$')
+            ax.set_ylabel('Risk')
+
+            # Plot vertical line at the interpolation threshold
+            ax.axvline(1, ls='--')
+
+            # Increment
+            i += 1
+
+        all_risk = np.stack(risk)
+        y_min = 0.5 * np.min(all_risk) if args.y_min is None else args.y_min
+        y_max = 2 * np.max(all_risk) if args.y_max is None else args.y_max
+        ax.set_ylim((y_min, y_max))
+        plt.legend()
+
+        if args.save:
+            plt.savefig(args.save + 'eps{}.png'.format(p))
+        else:
+            plt.show()
+
+
+def plot_norm():
     fig, ax = plt.subplots()
     for p in ord:
         pnorm = df['norm-{:.1f}'.format(p)]
@@ -180,9 +184,62 @@ if __name__ == "__main__":
     ax.set_ylabel('Parameter Norm')
     plt.legend()
     if args.save:
-        plt.savefig(args.save+'-norm.png')
+        plt.savefig(args.save + '-norm.png')
     else:
         plt.show()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Plot performance as a function of the proportion '
+                                                 'n features / n samples rate.')
+    parser.add_argument('--file', default='performance.csv',
+                        help='input csv.')
+    parser.add_argument('--plot_type', choices=['risk_per_ord', 'risk_per_eps', 'norm'], default='risk_per_ord',
+                        help='plot styles to be used')
+    parser.add_argument('--plot_style', nargs='*', default=[],
+                        help='plot styles to be used')
+    parser.add_argument('-n', '--num_points', default=1000, type=int,
+                        help='number of points')
+    parser.add_argument('--y_min', default=None, type=float,
+                        help='inferior limit to y-axis in the plot.')
+    parser.add_argument('--y_max', default=None, type=float,
+                        help='superior limit to y-axis in the plot.')
+    parser.add_argument('--save', default='',
+                        help='save plot in the given file (do not write extension). By default just show it.')
+    args, unk = parser.parse_known_args()
+    if args.plot_style:
+        plt.style.use(args.plot_style)
+
+    df = pd.read_csv(args.file)
+
+    ord, epsilon = zip(*[(float(k.split('-')[1]), float(k.split('-')[2])) for k in df.keys() if 'risk-' in k])
+    epsilon = np.unique(epsilon)
+    ord = np.unique(ord)
+    proportion = np.array(df['proportion'])
+
+    seed = np.array(df['seed'])
+    signal_amplitude = np.array(df['signal_amplitude'])[0]  # assuming all snr are the same
+    n_train = np.array(df['n_train'])[0]  # assuming a fixed n_train
+    noise_std = np.array(df['noise_std'])[0]  # assuming all noise_std are the same
+    features_kind = np.array(df['features_kind'])[0]  # assuming all features_kind are the
+    datagen_parameter = np.array(df['datagen_parameter'])[0]  # assuming all features_kind are the same
+
+    # assuming all off_diag are the same
+    off_diag = np.array(df['off_diag'])[0] if features_kind == 'equicorrelated' else None
+    proportions_for_bounds = np.logspace(np.log10(min(proportion)), np.log10(max(proportion)), args.num_points)
+    snr = signal_amplitude / noise_std
+
+    # compute standard risk
+    arisk = asymptotic_risk(proportions_for_bounds, signal_amplitude, features_kind, off_diag)
+    anorm = assymptotic_l2_norm_squared(proportions_for_bounds, snr, features_kind, off_diag)
+
+    # Plot risk (one subplot per order)
+    if args.plot_type == 'risk_per_ord':
+        plot_risk_per_ord()
+    elif args.plot_type == 'risk_per_eps':
+        plot_risk_per_eps()
+    elif args.plot_type == 'norm':
+        plot_norm()
 
 
 

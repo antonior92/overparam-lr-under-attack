@@ -62,7 +62,7 @@ def train_and_evaluate(n_samples, n_features, noise_std, parameter_norm, epsilon
     # Compute error = y_pred - y_test
     risk = {}
     test_error = X_test @ beta_hat - y_test
-    risk['predrisk'] = np.mean(test_error** 2)
+    risk['predrisk'] = np.mean(test_error ** 2)
     for p in ord:
         # Compute ord
         if p != np.Inf and p > 1:
