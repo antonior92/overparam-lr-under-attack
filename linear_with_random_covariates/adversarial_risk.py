@@ -76,7 +76,7 @@ def train_and_evaluate(n_samples, n_features, noise_std, parameter_norm, epsilon
         jac = beta_hat
         delta_x = compute_adv_attack(test_error, jac, ord=p)
         for e in epsilon:
-            # Estimate adversarial risk
+            # Estimate adversarial arisk
             delta_X = e * delta_x
             r = np.mean((y_test - (X_test + delta_X) @ beta_hat) ** 2)
             risk['advrisk-{:.1f}-{:.1f}'.format(p, e)] = r

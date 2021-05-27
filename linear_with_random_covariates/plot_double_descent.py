@@ -3,8 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import argparse
 
-markers = ['*', 'o', 's', '<', '>', 'h']
-
 
 def asymptotic_risk(proportion, signal_amplitude, features_kind, off_diag, noise_std=1.0):
     # This follows from Hastie Thm.1 (p.7) and is the same regardless of the covariance matrix
@@ -160,7 +158,7 @@ if __name__ == "__main__":
 
     df = pd.read_csv(args.file)
 
-    ord, epsilon = zip(*[(float(k.split('-')[1]), float(k.split('-')[2])) for k in df.keys() if 'risk-' in k])
+    ord, epsilon = zip(*[(float(k.split('-')[1]), float(k.split('-')[2])) for k in df.keys() if 'arisk-' in k])
     epsilon = np.unique(epsilon)
     ord = np.unique(ord)
     proportion = np.array(df['proportion'])
@@ -177,11 +175,11 @@ if __name__ == "__main__":
     proportions_for_bounds = np.logspace(np.log10(min(proportion)), np.log10(max(proportion)), args.num_points)
     snr = signal_amplitude / noise_std
 
-    # compute standard risk
+    # compute standard arisk
     arisk = asymptotic_risk(proportions_for_bounds, signal_amplitude, features_kind, off_diag)
     anorm = assymptotic_l2_norm_squared(proportions_for_bounds, snr, features_kind, off_diag)
 
-    # Plot risk (one subplot per order)
+    # Plot arisk (one subplot per order)
     fig, ax = plt.subplots()
     if args.plot_type == 'risk_per_ord':
         p = args.ord if args.ord is not None else ord[0]

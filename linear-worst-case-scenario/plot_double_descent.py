@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     df = pd.read_csv(args.file)
 
-    epsilon, risk = zip(*[(float(k.split('-')[1]), np.array(df[k])) for k in df.keys() if 'risk-' in k])
+    epsilon, risk = zip(*[(float(k.split('-')[1]), np.array(df[k])) for k in df.keys() if 'arisk-' in k])
     proportion = np.array(df['proportion'])
     l2_parameter_norm = np.array(df['l2_param_norm'])
     lq_parameter_norm = np.array(df['lq_param_norm'])
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     n_train = np.array(df['n_train'])[0]  # assuming all are the same
     n_train = np.array(df['n_train'])[0]  # assuming all are the same
 
-    # Plot risk
+    # Plot arisk
     fig, ax = plt.subplots()
     markers = ['*', 'o', 's', '<', '>', 'h']
     i = 0

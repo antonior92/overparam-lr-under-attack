@@ -77,7 +77,7 @@ def train_and_evaluate(n_samples, n_features, input_dim, noise_std, parameter_no
     pnorms = {}
     pnorms['norm-2.0'] = np.linalg.norm(estim_param, ord=2)
 
-    # Estimate risk
+    # Estimate arisk
     risk = {}
     mdl = Mdl(Theta, estim_param, activation)
     for p in ord:
@@ -90,7 +90,7 @@ def train_and_evaluate(n_samples, n_features, input_dim, noise_std, parameter_no
         pnorms['norm-{:.1f}'.format(p)] = np.linalg.norm(estim_param, ord=q)
 
         for e in epsilon:
-            # Estimate adversarial risk
+            # Estimate adversarial arisk
             if e > 0:
                 delta_X = compute_pgd_attack(X_test, y_test, mdl, max_perturb=e, ord=p, steps=n_adv_steps)
                 X_adv = X_test + delta_X
@@ -155,7 +155,7 @@ if __name__ == '__main__':
 
     # Compute performance for varying number of features
     tqdm.write("Estimating performance as a function of proportion...")
-    df = pd.DataFrame(columns=['proportion', 'seed', 'n_features', 'l2_param_norm', 'risk'])
+    df = pd.DataFrame(columns=['inputdim_over_datasize', 'nfeatures_over_datasize', 'seed', 'datasize'])
     proportions = np.logspace(args.lower_proportion, args.upper_proportion, args.num_points)
     run_instances = list(itertools.product(range(args.repetitions), proportions))
     for seed, proportion in tqdm(run_instances, smoothing=0.03):

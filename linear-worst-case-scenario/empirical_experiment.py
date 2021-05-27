@@ -49,7 +49,7 @@ def train_and_evaluate(n_samples, n_features, feature_scaling, feature_std, epsi
     delta_x = compute_adv_attack(test_error, jac, ord=ord)
     risk = []
     for e in epsilon:
-        # Estimate adversarial risk
+        # Estimate adversarial arisk
         delta_X = e * delta_x
         r = np.mean((y_test - (X_test + delta_X) @ beta_hat) ** 2)
         risk.append(r)
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     # so the progress bar can give a more accurate notion of the time to completion
     #random.shuffle(run_instances)
     prev_mdl = None  # used only if reuse_weights is True
-    df = pd.DataFrame(columns=['proportion', 'seed', 'l2_param_norm', 'lq_param_norm'] + ['risk-{}'.format(e) for e in args.epsilon])
+    df = pd.DataFrame(columns=['proportion', 'seed', 'l2_param_norm', 'lq_param_norm'] + ['arisk-{}'.format(e) for e in args.epsilon])
     for seed, proportion in tqdm(run_instances, smoothing=0.03):
         n_features = max(int(proportion * args.num_train_samples), 1)
         feature_scaling = n_features ** (args.feature_scaling_growth / 2)
@@ -104,7 +104,7 @@ if __name__ == '__main__':
                  'feature_std': args.feature_std, 'n_train': args.num_train_samples,
                  'n_test': args.num_test_samples, 'ord': args.ord, 'seed': seed,
                  'l2_param_norm': l2_param_norm, 'lq_param_norm': lq_param_norm}
-        dict_risks = {'risk-{}'.format(e): r for e, r in zip(args.epsilon, risk)}
+        dict_risks = {'arisk-{}'.format(e): r for e, r in zip(args.epsilon, risk)}
         df = df.append({**dict1, **dict_risks}, ignore_index=True)
         df.to_csv(args.output, index=False)
     tqdm.write("Done")

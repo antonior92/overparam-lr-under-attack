@@ -1,7 +1,10 @@
 from activation_function_parameters import *
 from analitic_functions_v import AnaliticalVFunctions
 from uniform_distribution_over_the_sphere import rand_matrix_asymptotic_l2_norm
-from random_feature_regression import frac2int, frac2int_vec
+from random_feature_regression import  frac2int_vec
+
+
+markers = ['o', 's', '<', '>', 'h', '*']
 
 def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activation_params,
                         regularization, signal_amplitude, noise_std, compute_vs):
@@ -26,7 +29,7 @@ def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activat
         """implement chi zeta monomial in compact format."""
         return chi ** p * zeta ** q
 
-    # ---- Compute prediction risk ---- #
+    # ---- Compute prediction arisk ---- #
     # Implements eq (17) of Mei and Montanari
     E0 = - m(5, 6) + 3 * m(4, 4) + (psi1*psi2 - psi1 - psi2 + 1) * m(3, 6) - 2 * m(3, 4) - 3 * m(3, 2) + \
         (psi1 + psi2 - 3 * psi1 * psi2 + 1) * m(2, 4) + 2 * m(2, 2) + m(2, 0) + \
@@ -68,6 +71,52 @@ def log_interp(x, num_points=1000):
     return np.logspace(np.log10(x_min), np.log10(x_max), num_points)
 
 
+def plot_risk_per_ord(ax, p):
+    i = 0
+    risk = []
+    for e in epsilon:
+        r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
+        risk.append(r)
+        # Plot empirical value
+        l, = ax.plot(proportion, r, markers[i], ms=4, label='{}'.format(e))
+        # Plot upper bound
+        lb, ub = adversarial_bounds(e, p, arisk, parameter_norm, mnorm, bottleneck, activation)
+        if e == 0:
+            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
+        else:
+            ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
+            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
+            ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
+        i += 1
+
+
+def plot_risk_per_eps(ax, e):
+    markers = ['<', '>', 'h', '*', 'o', 's']
+    i = 0
+    risk = []
+    for p in ord:
+        r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
+        risk.append(r)
+        # Plot empirical value
+
+        l, = ax.plot(proportion, r, markers[i], ms=4, label='$\\ell_{}$'.format('\\infty' if p == np.Inf else int(p)))
+        #lb, ub = adversarial_bounds(e, p, arisk, parameter_norm, mnorm, bottleneck, activation)
+        #if e == 0:
+        #    ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
+        #else:
+        #    ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
+        #    ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
+        #    ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
+
+        # Increment
+        i += 1
+
+
+def plot_norm(ax):
+    ax.plot(proportion, df['norm-2.0'], '*')
+    ax.plot(proportions_for_bounds, np.array(parameter_norm))
+
+
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import pandas as pd
@@ -82,10 +131,20 @@ if __name__ == "__main__":
                         help='plot styles to be used')
     parser.add_argument('-n', '--num_points', default=1000, type=int,
                         help='number of points in the asymptotics')
+    parser.add_argument('--ord', type=float,
+                        help='ord norm')
+    parser.add_argument('--eps', type=float,
+                        help='eps for the adver')
+    parser.add_argument('--plot_type', choices=['risk_per_ord', 'risk_per_eps', 'norm'], default='risk_per_ord',
+                        help='plot styles to be used')
     parser.add_argument('--y_min', default=None, type=float,
                         help='inferior limit to y-axis in the plot.')
     parser.add_argument('--y_max', default=None, type=float,
                         help='superior limit to y-axis in the plot.')
+    parser.add_argument('--remove_ylabel', action='store_true',
+                        help='don include ylable')
+    parser.add_argument('--remove_legend', action='store_true',
+                        help='don include legend')
     parser.add_argument('--save', default='',
                         help='save plot in the given file (do not write extension). By default just show it.')
     args, unk = parser.parse_known_args()
@@ -93,20 +152,19 @@ if __name__ == "__main__":
         plt.style.use(args.plot_style)
 
     df = pd.read_csv(args.file)
+    ord, epsilon = zip(*[(float(k.split('-')[1]), float(k.split('-')[2])) for k in df.keys() if 'advrisk-' in k])
+    epsilon = np.unique(epsilon)
+    ord = np.unique(ord)
 
     inputdim_over_datasize = np.array(df['inputdim_over_datasize'])
     nfeatures_over_datasize = np.array(df['nfeatures_over_datasize'])
-    l2_parameter_norm = np.array(df['l2_param_norm'])
-    lq_parameter_norm = np.array(df['lq_param_norm'])
     seed = np.array(df['seed'])
     signal_amplitude = np.array(df['signal_amplitude'])[0]  # assuming all signal_amplitude are the same
-    ord = np.array(df['ord'])[0]  # assuming all ord are the same
     n_samples = np.array(df['num_train_samples'])[0]  # assuming a fixed n_train
     noise_std = np.array(df['noise_std'])[0]  # assuming all noise_std are the same
     activation = np.array(df['activation'])[0]  # assuming all features_kind are the same
     regularization = np.array(df['regularization'])[0]  # assuming all features_kind are the same
     fixed = np.array(df['fixed'])[0]  # assuming all features_kind are the same
-    epsilon, adversarial_risk = zip(*[(float(k.split('-')[1]), np.array(df[k])) for k in df.keys() if 'risk-' in k])
 
 
     # Compute bounds
@@ -116,13 +174,13 @@ if __name__ == "__main__":
     # compute assymptotics
     inputdim_over_datasize_for_bounds = log_interp(df['inputdim_over_datasize'], args.num_points)
     nfeatures_over_datasize_for_bounds = log_interp(df['nfeatures_over_datasize'], args.num_points)
-    risk = np.zeros(args.num_points)
+    arisk = np.zeros(args.num_points)
     mnorm = np.zeros(args.num_points)
     parameter_norm = np.zeros(args.num_points)
     for i in tqdm(range(args.num_points)):
-        risk[i], parameter_norm[i] = compute_asymptotics(nfeatures_over_datasize_for_bounds[i] / inputdim_over_datasize_for_bounds[i],
-                                                         1 / inputdim_over_datasize_for_bounds[i],
-                                                         activation_params, regularization, signal_amplitude, noise_std, compute_vs)
+        arisk[i], parameter_norm[i] = compute_asymptotics(nfeatures_over_datasize_for_bounds[i] / inputdim_over_datasize_for_bounds[i],
+                                                          1 / inputdim_over_datasize_for_bounds[i],
+                                                          activation_params, regularization, signal_amplitude, noise_std, compute_vs)
         # we divide by np.sqrt(input_dim) because this factor appears in Mei and Montanri Eq. (1)
         mnorm[i] = rand_matrix_asymptotic_l2_norm(nfeatures_over_datasize_for_bounds[i] / inputdim_over_datasize_for_bounds[i])
     # compute bottleneck
@@ -130,61 +188,35 @@ if __name__ == "__main__":
     input_dimension = frac2int_vec(inputdim_over_datasize_for_bounds, args.num_points)
     bottleneck = np.minimum(number_of_features, input_dimension)
 
-    # Plot risk
-    if fixed == 'inputdim_over_datasize':
-        proportion = inputdim_over_datasize
-        proportions_for_bounds = inputdim_over_datasize_for_bounds
-    elif fixed == 'nfeatures_over_datasize':
-        proportion = nfeatures_over_datasize
-        proportions_for_bounds = nfeatures_over_datasize_for_bounds
-    elif fixed == 'nfeatures_over_inputdim':
-        proportion = nfeatures_over_datasize
-        proportions_for_bounds = nfeatures_over_datasize_for_bounds
-    else:
-        raise ValueError('Invalid argument --fixed = {}.'.format(args.fixed))
+    # Plot arisk (one subplot per order)
+    proportion = nfeatures_over_datasize
+    proportions_for_bounds = nfeatures_over_datasize_for_bounds
     fig, ax = plt.subplots()
-    markers = ['*', 'o', 's', '<', '>', 'h']
-    i = 0
-    for r, e in zip(adversarial_risk, epsilon):
-        # Plot empirical value
-        l, = ax.plot(proportion, r, markers[i], ms=4, label='$\\delta={}$'.format(e))
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-
-        # Plot upper bound
-        lb, ub = adversarial_bounds(e, ord, risk, parameter_norm, mnorm, bottleneck, activation)
-        if e == 0:
-            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
-        else:
-            ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
-            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
-
-        # Labels
-        ax.set_xlabel('$\\gamma$')
-        ax.set_ylabel('Risk')
-
-        # Plot vertical line at the interpolation threshold
-        ax.axvline(1, ls='--')
-
-        # Increment
-        i += 1
-    all_risk = np.stack(risk)
-    y_min = 0.5 * np.min(all_risk) if args.y_min is None else args.y_min
-    y_max = 2 * np.max(all_risk) if args.y_max is None else args.y_max
-    plt.legend()
-    ax.set_title('risk')
-    if args.save:
-        plt.savefig(args.save+'.png')
-    else:
-        plt.show()
-
-    fig, ax = plt.subplots()
-    ax.plot(proportion, l2_parameter_norm, '*')
-    ax.plot(proportions_for_bounds, np.array(parameter_norm))
+    if args.plot_type == 'risk_per_ord':
+        p = args.ord if args.ord is not None else ord[0]
+        plot_risk_per_ord(ax, p)
+        if not args.remove_ylabel:
+            ax.set_ylabel('Risk')
+    elif args.plot_type == 'risk_per_eps':
+        e = args.eps if args.eps is not None else epsilon[0]
+        plot_risk_per_eps(ax, e)
+        if not args.remove_ylabel:
+            ax.set_ylabel('Risk')
+    elif args.plot_type == 'norm':
+        plot_norm(ax)
+        if not args.remove_ylabel:
+            ax.set_ylabel('Norm')
+    # Labels
+    # Plot vertical line at the interpolation threshold
+    ax.axvline(1, ls='--')
+    ax.set_xlabel('$m/n$')
+    if args.y_max:
+        ax.set_ylim((10 ** args.y_min, 10 ** args.y_max))
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_title('l2 parameter norm')
+    if not args.remove_legend:
+        plt.legend()
     if args.save:
-        plt.savefig(args.save+'-norm.png')
+        plt.savefig(args.save)
     else:
         plt.show()
