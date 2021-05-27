@@ -93,7 +93,7 @@ def plot_risk_per_ord(ax, p):
 
 
 def plot_risk_per_eps(ax, e):
-    markers = ['*', 'o', 's', '<', '>', 'h']
+    markers = ['<', '>', 'h', '*', 'o', 's']
     i = 0
     risk = []
     for p in ord:
