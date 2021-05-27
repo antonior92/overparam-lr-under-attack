@@ -53,14 +53,13 @@ def assymptotic_lp_norm_squared(arisk, anorm, ord, n_features, signal_amplitude,
     lfactor = 1 if ord >= 2 else factor
     ufactor = 1 if ord <= 2 else factor
 
-    if datagen_parameter == 'constant':
-        n = signal_amplitude * n_features ** (1/2-1/ord)
-        upper_bound = (n + ufactor * np.sqrt(arisk)) ** 2
-        lower_bound = (n - lfactor * np.sqrt(arisk)) ** 2
-        return lower_bound, upper_bound
-
     lower_bound = anorm * lfactor ** 2
     upper_bound = anorm * ufactor ** 2
+
+    if datagen_parameter == 'constant':
+        n = signal_amplitude * n_features ** (1/2-1/ord)
+        lower_bound = np.maximum((n - lfactor * np.sqrt(arisk)) ** 2, lower_bound)
+
     return lower_bound, upper_bound
 
 
@@ -201,7 +200,7 @@ if __name__ == "__main__":
     # Labels
     # Plot vertical line at the interpolation threshold
     ax.axvline(1, ls='--')
-    ax.set_xlabel('$\\gamma$')
+    ax.set_xlabel('$m/n$')
     if args.y_max:
         ax.set_ylim((10**args.y_min, 10**args.y_max))
     ax.set_xscale('log')
