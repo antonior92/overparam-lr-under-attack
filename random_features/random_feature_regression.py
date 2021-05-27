@@ -37,11 +37,15 @@ class Mdl(object):
 
 
 def train_and_evaluate(n_samples, n_features, input_dim, noise_std, parameter_norm, n_test_samples, activation,
-                       regularization, ord, epsilon, n_adv_steps, seed):
+                       regularization, ord, epsilon, n_adv_steps, datagen_parameter,  seed):
     # Get state
     rng = np.random.RandomState(seed)
     # Get parameter
-    beta = parameter_norm / np.sqrt(input_dim) * rng.randn(input_dim)
+    # Get parameter
+    if datagen_parameter == 'gaussian_prior':
+        beta = parameter_norm / np.sqrt(input_dim) * rng.randn(input_dim)
+    elif datagen_parameter == 'constant':
+        beta = parameter_norm / np.sqrt(input_dim) * np.ones(input_dim)
     # Get activation
     activation_function = get_activation(activation)
 
@@ -70,30 +74,33 @@ def train_and_evaluate(n_samples, n_features, input_dim, noise_std, parameter_no
     y_test = X_test @ beta + noise_std * e_test
 
     # Get parameter norm
-    estim_param_l2norm = np.linalg.norm(estim_param, ord=2)
-    if ord != np.Inf and ord > 1:
-        q = ord / (ord - 1)
-    elif ord == 1:
-        q = np.Inf
-    else:
-        q = 1
-    estim_param_lqnorm = np.linalg.norm(estim_param, ord=q)
+    pnorms = {}
+    pnorms['norm-2.0'] = np.linalg.norm(estim_param, ord=2)
 
     # Estimate risk
+    risk = {}
     mdl = Mdl(Theta, estim_param, activation)
-    risk = []
-    for e in epsilon:
-        # Estimate adversarial risk
-        if e > 0:
-            delta_X = compute_pgd_attack(X_test, y_test, mdl, max_perturb=e, ord=ord, steps=n_adv_steps)
-            X_adv = X_test + delta_X
+    for p in ord:
+        if p != np.Inf and p > 1:
+            q = p / (p - 1)
+        elif p == 1:
+            q = np.Inf
         else:
-            X_adv = X_test  # i.e. there is no disturbance
-        z = activation_function(1 / np.sqrt(input_dim) * X_adv @ Theta.T)
-        r = np.mean((y_test - z @ estim_param) ** 2)
-        risk.append(r)
+            q = 1
+        pnorms['norm-{:.1f}'.format(p)] = np.linalg.norm(estim_param, ord=q)
 
-    return risk, estim_param_l2norm, estim_param_lqnorm
+        for e in epsilon:
+            # Estimate adversarial risk
+            if e > 0:
+                delta_X = compute_pgd_attack(X_test, y_test, mdl, max_perturb=e, ord=p, steps=n_adv_steps)
+                X_adv = X_test + delta_X
+            else:
+                X_adv = X_test  # i.e. there is no disturbance
+            z = activation_function(1 / np.sqrt(input_dim) * X_adv @ Theta.T)
+            r = np.mean((y_test - z @ estim_param) ** 2)
+            risk['advrisk-{:.1f}-{:.1f}'.format(p, e)] = r
+
+    return risk, pnorms
 
 
 def frac2int(proportion, denominator):
@@ -110,30 +117,32 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Double descent for l-2 adversarial attack')
     parser.add_argument('-o', '--output', default='./performance.csv',
                         help='output csv file.')
-    parser.add_argument('--num_train_samples', type=int, default=200,
+    parser.add_argument('--num_train_samples', type=int, default=100,
                         help='number of samples in the experiment.')
-    parser.add_argument('--num_test_samples', type=int, default=300,
+    parser.add_argument('--num_test_samples', type=int, default=100,
                         help='number of samples in the experiment.')
     parser.add_argument('-r', '--repetitions', type=int, default=1,
                         help='number of times each experiment is repeated')
-    parser.add_argument('-p', '--ord', type=float, default=2.0,
+    parser.add_argument('-p', '--ord', type=float, default=[2.0], nargs='+',
                         help='ord is p norm of the adversarial attack.')
     parser.add_argument('-n', '--num_points', default=60, type=int,
                         help='number of points')
-    parser.add_argument('--n_adv_steps', default=200, type=int,
+    parser.add_argument('--n_adv_steps', default=100, type=int,
                         help='number of steps used in the adversarial attack')
     parser.add_argument('-l', '--lower_proportion', default=-1, type=float,
                         help='the lowest value for the proportion (n features / n samples) is 10^l.')
     parser.add_argument('-u', '--upper_proportion', default=1, type=float,
                         help='the upper value for the proportion (n features / n samples) is 10^u.')
-    parser.add_argument('--fixed_proportion', default=0.3, type=float,
+    parser.add_argument('--fixed_proportion', default=0.5, type=float,
                         help='the value of the proportion that is fixed')
     parser.add_argument('--fixed', choices=['inputdim_over_datasize', 'nfeatures_over_datasize',
                                             'nfeatures_over_inputdim'], default='nfeatures_over_datasize',
                         help='what is fixed in the problem.')
+    parser.add_argument('--datagen_parameter', choices=['gaussian_prior', 'constant'], default='gaussian_prior',
+                        help='how the features are generated')
     parser.add_argument('-s', '--noise_std', type=float, default=1,
                         help='standard deviation of the additive noise added.')
-    parser.add_argument('--regularization', type=float, default=1e-7,
+    parser.add_argument('--regularization', type=float, default=1e-6,
                         help='type of ridge regularization.')
     parser.add_argument('--activation', choices=implemented_activations, default='relu',
                         help='activations function')
@@ -158,19 +167,18 @@ if __name__ == '__main__':
             inputdim_over_datasize = args.fixed_proportion
             nfeatures_over_datasize = proportion
         elif args.fixed == 'nfeatures_over_inputdim':
-            inputdim_over_datasize = proportion
-            nfeatures_over_datasize = args.fixed_proportion * proportion
+            inputdim_over_datasize = args.fixed_proportion * proportion
+            nfeatures_over_datasize = proportion
         else:
             raise ValueError('Invalid argument --fixed = {}.'.format(args.fixed))
         n_features = frac2int(nfeatures_over_datasize, args.num_train_samples)
         input_dim = frac2int(inputdim_over_datasize, args.num_train_samples)
-        risk, estim_param_l2norm, estim_param_lq_norm = \
+        risk, pnorms = \
             train_and_evaluate(args.num_train_samples, n_features, input_dim, args.noise_std, args.signal_amplitude,
                                args.num_test_samples, args.activation, args.regularization, args.ord,
-                               args.epsilon, args.n_adv_steps, seed)
+                               args.epsilon, args.n_adv_steps, args.datagen_parameter, seed)
         dict1 = {'inputdim_over_datasize': inputdim_over_datasize, 'nfeatures_over_datasize': nfeatures_over_datasize,
-                 'seed': seed, 'datasize': args.num_train_samples, 'l2_param_norm': estim_param_l2norm, 'lq_param_norm': estim_param_lq_norm}
-        dict_risks = {'risk-{}'.format(e): r for e, r in zip(args.epsilon, risk)}
-        df = df.append({**dict1, **dict_risks, **vars(args)}, ignore_index=True)
+                 'seed': seed, 'datasize': args.num_train_samples}
+        df = df.append({**risk, **pnorms, **dict1, **vars(args)}, ignore_index=True)
         df.to_csv(args.output, index=False)
     tqdm.write("Done")
