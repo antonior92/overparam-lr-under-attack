@@ -2,7 +2,6 @@ font.family: serif
 font.serif: Times
 text.usetex: True
 figure.autolayout: False
-figure.figsize:  5.5, 4.4
 font.size: 16
 axes.spines.left:   True  # display axis spines
 axes.spines.bottom: True
@@ -12,7 +11,3 @@ mathtext.fontset: cm
 xtick.direction: in
 ytick.direction: in
 figure.frameon: False
-figure.subplot.left:   0.125  # the left side of the subplots of the figure
-figure.subplot.right:  0.99    # the right side of the subplots of the figure
-figure.subplot.bottom: 0.14   # the bottom of the subplots of the figure
-figure.subplot.top:    0.99   # the top of the subplots of the figure

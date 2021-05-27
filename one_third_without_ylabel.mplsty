@@ -1,0 +1,7 @@
+# here we compute the size as 5.5 * (0.99 - 0.125) / (0.99 - 0.01) = 3.9
+figure.figsize:  4.85, 4.4
+figure.subplot.left:   0.01  # the left side of the subplots of the figure
+figure.subplot.right:  0.99    # the right side of the subplots of the figure
+figure.subplot.bottom: 0.14   # the bottom of the subplots of the figure
+figure.subplot.top:    0.99   # the top of the subplots of the figure
+ytick.labelleft:     False

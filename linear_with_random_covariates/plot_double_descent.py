@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import argparse
 
+markers = ['*', 'o', 's', '<', '>', 'h']
+
 
 def asymptotic_risk(proportion, signal_amplitude, features_kind, off_diag, noise_std=1.0):
     # This follows from Hastie Thm.1 (p.7) and is the same regardless of the covariance matrix
@@ -68,104 +70,49 @@ def adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, eps, ord, n_fe
     return lower_bound, upper_bound
 
 
-
-def plot_risk_per_ord():
-    plot_i = 0
-    for p in ord:
-        fig, ax = plt.subplots()
-        markers = ['*', 'o', 's', '<', '>', 'h']
-        i = 0
-        risk = []
-        for e in epsilon:
-            r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
-            risk.append(r)
-            # Plot empirical value
-            l, = ax.plot(proportion, r, markers[i], ms=4, label='$\\delta={}$'.format(e))
-            ax.set_xscale('log')
-            ax.set_yscale('log')
-
-            # Plot upper bound
-            lb, ub = adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, e, p, proportions_for_bounds * n_train,  datagen_parameter)
-            if e == 0:
-                ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
-            else:
-                ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
-                ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
-                ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
-
-
-        # Plot vertical line at the interpolation threshold
-        ax.axvline(1, ls='--')
-
-        # Increment
-        i += 1
-
-        all_risk = np.stack(risk)
-        y_min = 0.5 * np.min(all_risk) if args.y_min is None else args.y_min
-        y_max = 2 * np.max(all_risk) if args.y_max is None else args.y_max
-        ax.set_ylim((y_min, y_max))
-
-        # Labels
-        ax.set_xlabel('$\\gamma$')
-        if plot_i == 0:
-            ax.set_ylabel('Risk')
-            plt.legend()
-        else:
-            frame1 = plt.gca()
-            frame1.axes.yaxis.set_ticklabels([])
-
-        if args.save:
-            plt.savefig(args.save + 'l{}.png'.format(p))
-        else:
-            plt.show()
-
-        plot_i += 1
-
-
-def plot_risk_per_eps():
+def plot_risk_per_ord(ax, p):
+    i = 0
+    risk = []
     for e in epsilon:
-        fig, ax = plt.subplots()
-        markers = ['*', 'o', 's', '<', '>', 'h']
-        i = 0
-        risk = []
-        for p in ord:
-            r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
-            risk.append(r)
-            # Plot empirical value
-            l, = ax.plot(proportion, r, markers[i], ms=4, label='$p={}$'.format(p))
-            ax.set_xscale('log')
-            ax.set_yscale('log')
+        r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
+        risk.append(r)
+        # Plot empirical value
+        l, = ax.plot(proportion, r, markers[i], ms=4, label='$\\delta={}$'.format(e))
+        # Plot upper bound
+        lb, ub = adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, e, p, proportions_for_bounds * n_train,  datagen_parameter)
+        if e == 0:
+            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
+        else:
+            ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
+            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
+            ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
+        i += 1
 
-            # Plot upper bound
-            lb, ub = adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, e, p,
-                                        proportions_for_bounds * n_train, datagen_parameter)
-            if e == 0:
-                ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
-            else:
-                ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
-                ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
-                ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
 
-        # Labels
-        ax.set_xlabel('$\\gamma$')
-        ax.set_ylabel('Risk')
-
-        # Plot vertical line at the interpolation threshold
-        ax.axvline(1, ls='--')
+def plot_risk_per_eps(ax, e):
+    markers = ['*', 'o', 's', '<', '>', 'h']
+    i = 0
+    risk = []
+    for p in ord:
+        r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
+        risk.append(r)
+        # Plot empirical value
+        l, = ax.plot(proportion, r, markers[i], ms=4, label='$p={}$'.format(p))
+        # Plot upper bound
+        lb, ub = adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, e, p,
+                                    proportions_for_bounds * n_train, datagen_parameter)
+        if e == 0:
+            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
+        else:
+            ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
+            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
+            ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
 
         # Increment
         i += 1
-
-        plt.legend()
-
-        if args.save:
-            plt.savefig(args.save + 'eps{}.png'.format(p))
-        else:
-            plt.show()
 
 
 def plot_norm():
-    fig, ax = plt.subplots()
     for p in ord:
         pnorm = df['norm-{:.1f}'.format(p)]
         l, = ax.plot(proportion, pnorm, 'o', ms=4, label=p)
@@ -177,15 +124,6 @@ def plot_norm():
             ax.plot(proportions_for_bounds, np.sqrt(ub), '-', color=l.get_color(), lw=1)
             ax.plot(proportions_for_bounds, np.sqrt(lb), '-', color=l.get_color(), lw=1)
 
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_xlabel('\gamma')
-    ax.set_ylabel('Parameter Norm')
-    plt.legend()
-    if args.save:
-        plt.savefig(args.save + '-norm.png')
-    else:
-        plt.show()
 
 
 if __name__ == "__main__":
@@ -195,12 +133,20 @@ if __name__ == "__main__":
                         help='input csv.')
     parser.add_argument('--plot_type', choices=['risk_per_ord', 'risk_per_eps', 'norm'], default='risk_per_ord',
                         help='plot styles to be used')
+    parser.add_argument('--ord', type=float,
+                        help='ord norm')
+    parser.add_argument('--eps', type=float,
+                        help='eps for the adver')
     parser.add_argument('--plot_style', nargs='*', default=[],
                         help='plot styles to be used')
     parser.add_argument('-n', '--num_points', default=1000, type=int,
                         help='number of points')
     parser.add_argument('--y_min', default=None, type=float,
                         help='inferior limit to y-axis in the plot.')
+    parser.add_argument('--remove_ylabel', action='store_true',
+                        help='don include ylable')
+    parser.add_argument('--remove_legend', action='store_true',
+                        help='don include legend')
     parser.add_argument('--y_max', default=None, type=float,
                         help='superior limit to y-axis in the plot.')
     parser.add_argument('--save', default='',
@@ -233,12 +179,35 @@ if __name__ == "__main__":
     anorm = assymptotic_l2_norm_squared(proportions_for_bounds, snr, features_kind, off_diag)
 
     # Plot risk (one subplot per order)
+    fig, ax = plt.subplots()
     if args.plot_type == 'risk_per_ord':
-        plot_risk_per_ord()
+        p = args.ord if args.ord is not None else ord[0]
+        plot_risk_per_ord(ax, p)
+        if not args.remove_ylabel:
+            ax.set_ylabel('Risk')
     elif args.plot_type == 'risk_per_eps':
-        plot_risk_per_eps()
+        e = args.eps if args.eps is not None else epsilon[0]
+        plot_risk_per_eps(ax, e)
+        if not args.remove_ylabel:
+            ax.set_ylabel('Risk')
     elif args.plot_type == 'norm':
-        plot_norm()
+        plot_norm(ax)
+        if not args.remove_ylabel:
+            ax.set_ylabel('Norm')
+    # Labels
+    # Plot vertical line at the interpolation threshold
+    ax.axvline(1, ls='--')
+    ax.set_xlabel('$\\gamma$')
+    if args.y_max:
+        ax.set_ylim((10**args.y_min, 10**args.y_max))
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    if not args.remove_legend:
+        plt.legend()
+    if args.save:
+        plt.savefig(args.save)
+    else:
+        plt.show()
 
 
 
