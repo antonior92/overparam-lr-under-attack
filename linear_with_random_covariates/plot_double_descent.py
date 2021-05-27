@@ -40,31 +40,9 @@ def assymptotic_l2_norm_squared(proportion, signal_amplitude, features_kind, off
     return noise_std ** 2 * v + signal_amplitude ** 2 * b
 
 
-def adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, eps, ord, n_features, datagen_parameter):
-
+def assymptotic_lp_norm_squared(anorm, ord, n_features):
     # Generalize to other norms,
     # using https://math.stackexchange.com/questions/218046/relations-between-p-norms
-    if ord == np.inf:
-        factor = n_features ** 1/2
-    else:
-        factor = n_features ** (1/2-1/ord)
-
-    lower_eps = eps if ord >= 2 else eps * factor
-    upper_eps = eps if ord <= 2 else eps * factor
-
-    if datagen_parameter == 'constant' and ord > 2:
-        n = signal_amplitude * n_features ** (1/2-1/ord)
-        upper_bound = (np.sqrt(arisk) + eps * (n+upper_eps * np.sqrt(arisk))) ** 2 + noise_std ** 2
-        lower_bound = arisk + eps ** 2 * (n-np.sqrt(arisk)) ** 2 + noise_std ** 2
-        return lower_bound, upper_bound
-
-    upper_bound = (np.sqrt(arisk) + upper_eps * np.sqrt(anorm))**2 + noise_std ** 2
-    lower_bound = arisk + lower_eps**2 * anorm + noise_std ** 2
-
-    return lower_bound, upper_bound
-
-
-def assymptotic_lp_norm_squared(anorm, ord, n_features):
     if ord == np.inf:
         factor = n_features ** 1/2
     else:
@@ -75,7 +53,24 @@ def assymptotic_lp_norm_squared(anorm, ord, n_features):
     return lower_bound, upper_bound
 
 
+def adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, eps, ord, n_features, datagen_parameter):
+    lqnorm_lb, lqnorm_ub = assymptotic_lp_norm_squared(anorm, ord, n_features)
+
+    if datagen_parameter == 'constant' and ord > 2:
+        n = signal_amplitude * n_features ** (1/2-1/ord)
+        upper_bound = (np.sqrt(arisk) + eps * (n+upper_eps * np.sqrt(arisk))) ** 2 + noise_std ** 2
+        lower_bound = arisk + eps ** 2 * (n-np.sqrt(arisk)) ** 2 + noise_std ** 2
+        return lower_bound, upper_bound
+
+    upper_bound = (np.sqrt(arisk) + eps * np.sqrt(lqnorm_ub))**2 + noise_std ** 2
+    lower_bound = arisk + eps**2 * lqnorm_lb + noise_std ** 2
+
+    return lower_bound, upper_bound
+
+
+
 def plot_risk_per_ord():
+    plot_i = 0
     for p in ord:
         fig, ax = plt.subplots()
         markers = ['*', 'o', 's', '<', '>', 'h']
@@ -98,26 +93,34 @@ def plot_risk_per_ord():
                 ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
                 ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
 
-            # Labels
-            ax.set_xlabel('$\\gamma$')
-            ax.set_ylabel('Risk')
 
-            # Plot vertical line at the interpolation threshold
-            ax.axvline(1, ls='--')
+        # Plot vertical line at the interpolation threshold
+        ax.axvline(1, ls='--')
 
-            # Increment
-            i += 1
+        # Increment
+        i += 1
 
         all_risk = np.stack(risk)
         y_min = 0.5 * np.min(all_risk) if args.y_min is None else args.y_min
         y_max = 2 * np.max(all_risk) if args.y_max is None else args.y_max
         ax.set_ylim((y_min, y_max))
-        plt.legend()
+
+        # Labels
+        ax.set_xlabel('$\\gamma$')
+        if plot_i == 0:
+            ax.set_ylabel('Risk')
+            plt.legend()
+        else:
+            frame1 = plt.gca()
+            frame1.axes.yaxis.set_ticklabels([])
 
         if args.save:
             plt.savefig(args.save + 'l{}.png'.format(p))
         else:
             plt.show()
+
+        plot_i += 1
+
 
 def plot_risk_per_eps():
     for e in epsilon:
@@ -143,20 +146,16 @@ def plot_risk_per_eps():
                 ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
                 ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
 
-            # Labels
-            ax.set_xlabel('$\\gamma$')
-            ax.set_ylabel('Risk')
+        # Labels
+        ax.set_xlabel('$\\gamma$')
+        ax.set_ylabel('Risk')
 
-            # Plot vertical line at the interpolation threshold
-            ax.axvline(1, ls='--')
+        # Plot vertical line at the interpolation threshold
+        ax.axvline(1, ls='--')
 
-            # Increment
-            i += 1
+        # Increment
+        i += 1
 
-        all_risk = np.stack(risk)
-        y_min = 0.5 * np.min(all_risk) if args.y_min is None else args.y_min
-        y_max = 2 * np.max(all_risk) if args.y_max is None else args.y_max
-        ax.set_ylim((y_min, y_max))
         plt.legend()
 
         if args.save:
