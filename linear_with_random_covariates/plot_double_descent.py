@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import argparse
 
+markers = ['*', 'o', 's', '<', '>', 'h']
 
 def asymptotic_risk(proportion, signal_amplitude, features_kind, off_diag, noise_std=1.0):
     # This follows from Hastie Thm.1 (p.7) and is the same regardless of the covariance matrix
@@ -77,7 +78,7 @@ def plot_risk_per_ord(ax, p):
         r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
         risk.append(r)
         # Plot empirical value
-        l, = ax.plot(proportion, r, markers[i], ms=4, label='$\\delta={}$'.format(e))
+        l, = ax.plot(proportion, r, markers[i], ms=4, label='${}$'.format(e))
         # Plot upper bound
         lb, ub = adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, e, p, proportions_for_bounds * n_train,  datagen_parameter)
         if e == 0:
@@ -158,7 +159,7 @@ if __name__ == "__main__":
 
     df = pd.read_csv(args.file)
 
-    ord, epsilon = zip(*[(float(k.split('-')[1]), float(k.split('-')[2])) for k in df.keys() if 'arisk-' in k])
+    ord, epsilon = zip(*[(float(k.split('-')[1]), float(k.split('-')[2])) for k in df.keys() if 'advrisk-' in k])
     epsilon = np.unique(epsilon)
     ord = np.unique(ord)
     proportion = np.array(df['proportion'])

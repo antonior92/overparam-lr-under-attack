@@ -2,7 +2,7 @@ font.family: serif
 font.serif: Times
 text.usetex: True
 figure.autolayout: False
-font.size: 17
+font.size: 18
 axes.spines.left:   True  # display axis spines
 axes.spines.bottom: True
 axes.spines.top:    False
