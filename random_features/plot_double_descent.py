@@ -78,7 +78,7 @@ def plot_risk_per_ord(ax, p):
         r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
         risk.append(r)
         # Plot empirical value
-        l, = ax.plot(proportion, r, markers[i], ms=4, label='{}'.format(e))
+        l, = ax.plot(proportion, r, markers[i], ms=4, label='$\delta={}$'.format(e))
         # Plot upper bound
         lb, ub = adversarial_bounds(e, p, arisk, parameter_norm, mnorm, bottleneck, activation)
         if e == 0:

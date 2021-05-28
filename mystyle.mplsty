@@ -2,7 +2,6 @@ font.family: serif
 font.serif: Times
 text.usetex: True
 figure.autolayout: False
-font.size: 18
 axes.spines.left:   True  # display axis spines
 axes.spines.bottom: True
 axes.spines.top:    False
@@ -11,3 +10,4 @@ xtick.direction: in
 ytick.direction: in
 figure.frameon: False
 legend.handletextpad: 0.01
+text.latex.preamble: \usepackage{newtxmath}

@@ -5,3 +5,5 @@ figure.subplot.right:  0.99    # the right side of the subplots of the figure
 figure.subplot.bottom: 0.14   # the bottom of the subplots of the figure
 figure.subplot.top:    0.99   # the top of the subplots of the figure
 ytick.labelleft:     False
+font.size: 18
+xtick.major.pad: 5
