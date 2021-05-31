@@ -1,9 +1,8 @@
-from activation_function_parameters import *
-from analitic_functions_v import AnaliticalVFunctions
-from random_features.asymptotics import compute_asymptotics, adversarial_bounds
-from uniform_distribution_over_the_sphere import rand_matrix_asymptotic_l2_norm
-from random_feature_regression import  frac2int_vec
-
+from interp_under_attack.random_features.activation_function_parameters import *
+from interp_under_attack.random_features.analitic_functions_v import AnaliticalVFunctions
+from interp_under_attack.random_features.asymptotics import compute_asymptotics, adversarial_bounds
+from interp_under_attack.random_features.uniform_distribution_over_the_sphere import rand_matrix_asymptotic_l2_norm
+from interp_under_attack.util import frac2int_vec
 
 markers = ['o', 's', '<', '>', 'h', '*']
 

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import argparse
 
-from linear_with_random_covariates.asymptotics import asymptotic_risk, assymptotic_l2_norm_squared, \
+from interp_under_attack.linear_with_random_covariates.asymptotics import asymptotic_risk, assymptotic_l2_norm_squared, \
     assymptotic_lp_norm_squared, adversarial_bounds
 
 markers = ['*', 'o', 's', '<', '>', 'h']

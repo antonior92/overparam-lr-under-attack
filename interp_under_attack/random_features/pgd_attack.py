@@ -1,7 +1,6 @@
-import scipy.linalg as linalg
 import numpy as np
 from activation_function_parameters import get_activation
-from adversarial_attack import compute_pgd_attack
+from interp_under_attack.random_features import compute_pgd_attack
 from uniform_distribution_over_the_sphere import uniform_distribution_over_the_sphere
 from random_feature_regression import ridge_regression, Mdl
 

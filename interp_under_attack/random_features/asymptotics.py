@@ -1,5 +1,5 @@
 import numpy as np
-from random_features.activation_function_parameters import lipshitz
+from .activation_function_parameters import lipshitz
 
 
 def compute_asymptotics(features_over_input_dim, samples_over_input_dim, activation_params,
