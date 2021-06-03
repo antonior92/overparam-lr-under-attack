@@ -1,6 +1,5 @@
 # High-dimensional analysis of the adversarial error
 
-
 Companion code to the paper:
 ```
 High-dimensional analysis of the adversarial error:
