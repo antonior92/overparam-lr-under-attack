@@ -1,8 +1,6 @@
 import scipy.linalg as linalg
 import numpy as np
-
-from ..util import frac2int
-from .activation_function_parameters import get_activation, implemented_activations, get_activation_grad
+from .activation_function_parameters import get_activation, get_activation_grad
 from ..adversarial_attack import compute_pgd_attack
 from .uniform_distribution_over_the_sphere import uniform_distribution_over_the_sphere
 
