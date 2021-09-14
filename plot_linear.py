@@ -40,7 +40,7 @@ def plot_risk_per_eps(ax, e):
         l, = ax.plot(proportion, r, markers[i], ms=4, label='$\\ell_{}$'.format('\\infty' if p == np.Inf else int(p)))
         # Plot upper bound
         lb, ub = adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, e, p,
-                                    proportions_for_bounds * n_train, datagen_parameter)
+                                    proportions_for_bounds * n_train, off_diag, datagen_parameter)
         if e == 0:
             ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
         else:
@@ -59,7 +59,8 @@ def plot_norm(ax):
         if p == 2:
             ax.plot(proportions_for_bounds, np.sqrt(anorm), '-', color=l.get_color(), lw=2)
         else:
-            lb, ub = assymptotic_lp_norm_squared(arisk, anorm, p, proportions_for_bounds * n_train, signal_amplitude, datagen_parameter)
+            lb, ub = assymptotic_lp_norm_squared(arisk, anorm, p, proportions_for_bounds * n_train, signal_amplitude,
+                                                 off_diag, datagen_parameter)
             ax.fill_between(proportions_for_bounds, np.sqrt(lb), np.sqrt(ub), color=l.get_color(), alpha=0.2)
             ax.plot(proportions_for_bounds, np.sqrt(ub), '-', color=l.get_color(), lw=1)
             ax.plot(proportions_for_bounds, np.sqrt(lb), '-', color=l.get_color(), lw=1)

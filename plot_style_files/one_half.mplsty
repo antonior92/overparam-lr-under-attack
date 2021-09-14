@@ -3,6 +3,5 @@ figure.subplot.left:   0.125  # the left side of the subplots of the figure
 figure.subplot.right:  0.99    # the right side of the subplots of the figure
 figure.subplot.bottom: 0.14   # the bottom of the subplots of the figure
 figure.subplot.top:    0.99   # the top of the subplots of the figure
-axes.prop_cycle: cycler('color', ['d62728', '9467bd', '8c564b', 'e377c2', '7f7f7f', 'bcbd22', '17becf'])
 font.size: 20
 xtick.major.pad: 5

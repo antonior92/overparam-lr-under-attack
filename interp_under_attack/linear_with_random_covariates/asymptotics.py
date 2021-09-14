@@ -37,7 +37,7 @@ def assymptotic_l2_norm_squared(proportion, signal_amplitude, features_kind, off
     return noise_std ** 2 * v + signal_amplitude ** 2 * b
 
 
-def assymptotic_lp_norm_squared(arisk, anorm, ord, n_features, signal_amplitude, datagen_parameter):
+def assymptotic_lp_norm_squared(arisk, anorm, ord, n_features, signal_amplitude, off_diag, datagen_parameter):
     # Generalize to other norms,
     # using https://math.stackexchange.com/questions/218046/relations-between-p-norms
     if ord == np.inf:
@@ -52,16 +52,17 @@ def assymptotic_lp_norm_squared(arisk, anorm, ord, n_features, signal_amplitude,
     upper_bound = anorm * ufactor ** 2
 
     if datagen_parameter == 'constant':
-        n = signal_amplitude * n_features ** (1/2-1/ord)
-        lower_bound = np.maximum((n - lfactor * np.sqrt(arisk)) ** 2, lower_bound)
+        lbb = signal_amplitude**2 * n_features ** (1/2-1/ord) - np.sqrt((arisk) / (1-off_diag))
+        lower_bound = np.maximum(lbb, lower_bound)
 
     return lower_bound, upper_bound
 
 
-def adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, eps, ord, n_features, datagen_parameter):
-    lqnorm_lb, lqnorm_ub = assymptotic_lp_norm_squared(arisk, anorm, ord, n_features, signal_amplitude, datagen_parameter)
+def adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, eps, ord, n_features, off_diag, datagen_parameter):
+    lqnorm_lb, lqnorm_ub = assymptotic_lp_norm_squared(arisk, anorm, ord, n_features, signal_amplitude,
+                                                       off_diag, datagen_parameter)
 
-    upper_bound = (np.sqrt(arisk) + eps * np.sqrt(lqnorm_ub))**2 + noise_std ** 2
+    upper_bound = (np.sqrt(arisk) + eps * np.sqrt(lqnorm_ub))**2 +noise_std ** 2
     lower_bound = arisk + eps**2 * lqnorm_lb + noise_std ** 2
 
     return lower_bound, upper_bound
