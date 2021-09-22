@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import argparse
 
-from interp_under_attack.linear_with_random_covariates.asymptotics import asymptotic_risk, assymptotic_l2_norm_squared, \
-    assymptotic_lp_norm_squared, adversarial_bounds
+from interp_under_attack.linear_with_random_covariates.asymptotics import asymptotic_risk, assymptotic_l2_norm_squared,\
+    lp_norm_squared, adversarial_bounds,l2_distance_between_parameters
 
 markers = ['*', 'o', 's', '<', '>', 'h']
 
@@ -18,7 +18,7 @@ def plot_risk_per_ord(ax, p):
         # Plot empirical value
         l, = ax.plot(proportion, r, markers[i], ms=4, label='$\delta={}$'.format(e))
         # Plot upper bound
-        lb, ub = adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, e, p, proportions_for_bounds * n_train, datagen_parameter)
+        lb, ub = adversarial_bounds(arisk, anorm, noise_std, e, p, proportions_for_bounds * n_train, datagen_parameter)
         if e == 0:
             ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
         else:
@@ -36,11 +36,9 @@ def plot_risk_per_eps(ax, e):
         r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
         risk.append(r)
         # Plot empirical value
-
         l, = ax.plot(proportion, r, markers[i], ms=4, label='$\\ell_{}$'.format('\\infty' if p == np.Inf else int(p)))
         # Plot upper bound
-        lb, ub = adversarial_bounds(arisk, anorm, noise_std, signal_amplitude, e, p,
-                                    proportions_for_bounds * n_train, off_diag, datagen_parameter)
+        lb, ub = adversarial_bounds(arisk, anorm, noise_std, e, p, proportions_for_bounds * n_train, datagen_parameter)
         if e == 0:
             ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
         else:
@@ -59,12 +57,16 @@ def plot_norm(ax):
         if p == 2:
             ax.plot(proportions_for_bounds, np.sqrt(anorm), '-', color=l.get_color(), lw=2)
         else:
-            lb, ub = assymptotic_lp_norm_squared(arisk, anorm, p, proportions_for_bounds * n_train, signal_amplitude,
-                                                 off_diag, datagen_parameter)
+            lb, ub = lp_norm_squared(anorm, p, proportions_for_bounds * n_train)
             ax.fill_between(proportions_for_bounds, np.sqrt(lb), np.sqrt(ub), color=l.get_color(), alpha=0.2)
             ax.plot(proportions_for_bounds, np.sqrt(ub), '-', color=l.get_color(), lw=1)
             ax.plot(proportions_for_bounds, np.sqrt(lb), '-', color=l.get_color(), lw=1)
 
+
+def plot_distance(ax):
+    distance = df['l2distance']
+    l, = ax.plot(proportion, distance, 'o', ms=4)
+    ax.plot(proportions_for_bounds, np.sqrt(adistance), '-', color=l.get_color(), lw=2)
 
 
 if __name__ == "__main__":
@@ -72,7 +74,7 @@ if __name__ == "__main__":
                                                  'n features / n samples rate.')
     parser.add_argument('--file', default='performance.csv',
                         help='input csv.')
-    parser.add_argument('--plot_type', choices=['risk_per_ord', 'risk_per_eps', 'norm'], default='risk_per_ord',
+    parser.add_argument('--plot_type', choices=['risk_per_ord', 'risk_per_eps', 'norm', 'distance'], default='risk_per_ord',
                         help='plot styles to be used')
     parser.add_argument('--ord', type=float,
                         help='ord norm')
@@ -117,7 +119,8 @@ if __name__ == "__main__":
 
     # compute standard arisk
     arisk = asymptotic_risk(proportions_for_bounds, signal_amplitude, features_kind, off_diag)
-    anorm = assymptotic_l2_norm_squared(proportions_for_bounds, snr, features_kind, off_diag)
+    anorm = assymptotic_l2_norm_squared(proportions_for_bounds, signal_amplitude, features_kind, off_diag)
+    adistance = l2_distance_between_parameters(proportions_for_bounds, signal_amplitude, features_kind, off_diag)
 
     # Plot arisk (one subplot per order)
     fig, ax = plt.subplots()
@@ -135,6 +138,10 @@ if __name__ == "__main__":
         plot_norm(ax)
         if not args.remove_ylabel:
             ax.set_ylabel('Norm')
+    elif args.plot_type == 'distance':
+        plot_distance(ax)
+        if not args.remove_ylabel:
+            ax.set_ylabel('l2_distance')
     # Labels
     # Plot vertical line at the interpolation threshold
     ax.axvline(1, ls='--')

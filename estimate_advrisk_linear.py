@@ -54,14 +54,14 @@ if __name__ == '__main__':
                               ['advrisk-{:.1f}-{:.1f}'.format(p, e) for p, e in itertools.product(args.ord, args.epsilon)])
     for seed, proportion in tqdm(run_instances, smoothing=0.03):
         n_features = max(int(proportion * args.num_train_samples), 1)
-        risk, pnorms = train_and_evaluate(
+        risk, pnorms, l2distance = train_and_evaluate(
             args.num_train_samples, n_features, args.noise_std, args.signal_amplitude,
             args.epsilon, args.ord, args.num_test_samples, args.features_kind,
             args.off_diag, args.datagen_parameter, seed)
         dict1 = {'proportion': proportion, 'n_features': n_features, 'n_train':args.num_train_samples,
                  'n_test': args.num_test_samples, 'ord': args.ord, 'features_kind': args.features_kind, 'seed': seed,
                  'signal_amplitude': args.signal_amplitude, 'noise_std': args.noise_std,
-                 'datagen_parameter': args.datagen_parameter}
+                 'datagen_parameter': args.datagen_parameter, 'l2distance': l2distance}
         if args.features_kind =='equicorrelated':
             dict1['off_diag'] = args.off_diag
         df = df.append({**risk, **pnorms, **dict1}, ignore_index=True)

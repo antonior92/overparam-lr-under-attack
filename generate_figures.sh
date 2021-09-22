@@ -2,7 +2,7 @@ mkdir figures  # if it does not exist already
 STYLE="plot_style_files/mystyle.mplsty"
 
 echo "Generate Figures 1..."
-python plot_linear.py --file results/equicorrelated-constant.csv --save figures/equicorrelated-constant.pdf --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mycolors.mplsty   --plot_type risk_per_eps
+python plot_linear.py --file results/equicorrelated-constant.csv  --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mycolors.mplsty   --plot_type risk_per_eps --save figures/equicorrelated-constant.pdf
 
 echo "Generate Figures 2..."
 python plot_linear.py --file results/equicorrelated0.9-gaussian-prior.csv --save figures/equicorrelated-gaussian-prior-l2.pdf --plot_style $STYLE plot_style_files/one_half.mplsty  --ord 2 --y_min -0.2 --y_max 4.6

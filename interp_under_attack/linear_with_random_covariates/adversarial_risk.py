@@ -75,4 +75,7 @@ def train_and_evaluate(n_samples, n_features, noise_std, parameter_norm, epsilon
             delta_X = e * delta_x
             r = np.mean((y_test - (X_test + delta_X) @ beta_hat) ** 2)
             risk['advrisk-{:.1f}-{:.1f}'.format(p, e)] = r
-    return risk, pnorms
+
+    # Compute distance
+    l2distance = np.linalg.norm(beta_hat - beta, ord=2)
+    return risk, pnorms, l2distance
