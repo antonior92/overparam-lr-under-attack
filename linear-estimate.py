@@ -5,7 +5,8 @@ import pandas as pd
 import numpy as np  # numpy > 1.10 so we can use np.linalg.norm(...,axis=axis, keepdims=keepdims)
 import random
 from interp_under_attack. adversarial_attack import compute_adv_attack
-
+import json
+import scipy.linalg as linalg
 
 def generate_features(n_samples, n_features, rng, kind, off_diag):
     # Get random components
@@ -87,8 +88,8 @@ def train_and_evaluate(n_samples, n_features, noise_std, parameter_norm, epsilon
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Double descent for l-2 adversarial attack')
-    parser.add_argument('-o', '--output', default='./performance.csv',
-                        help='output csv file.')
+    parser.add_argument('-o', '--output', default='./performance',
+                        help='output file.')
     parser.add_argument('--num_train_samples', type=int, default=100,
                        help='number of samples in the experiment')
     parser.add_argument('--num_test_samples', type=int, default=100,
@@ -119,6 +120,9 @@ if __name__ == '__main__':
     args, unk = parser.parse_known_args()
     print(args)
 
+    with open(args.output + '.json', 'w') as f:
+        json.dump(vars(args), f, indent=4)
+
     tqdm.write("Estimating performance as a function of proportion...")
     list_dict = []
     proportions = np.logspace(args.lower_proportion, args.upper_proportion, args.num_points)
@@ -136,12 +140,8 @@ if __name__ == '__main__':
             args.num_train_samples, n_features, args.noise_std, args.signal_amplitude,
             args.epsilon, args.ord, args.num_test_samples, args.features_kind,
             args.off_diag, args.datagen_parameter, seed)
-        dict1 = {'proportion': proportion, 'n_features': n_features, 'n_train':args.num_train_samples,
-                 'n_test': args.num_test_samples, 'ord': args.ord, 'features_kind': args.features_kind, 'seed': seed,
-                 'signal_amplitude': args.signal_amplitude, 'noise_std': args.noise_std,
-                 'datagen_parameter': args.datagen_parameter, 'l2distance': l2distance}
-        if args.features_kind =='equicorrelated':
-            dict1['off_diag'] = args.off_diag
+        dict1 = {'proportion': proportion, 'n_features': n_features, 'seed': seed, 'l2distance': l2distance}
         df = df.append({**risk, **pnorms, **dict1}, ignore_index=True)
-        df.to_csv(args.output, index=False)
+        df.to_csv(args.output + '.csv', index=False)
     tqdm.write("Done")
+

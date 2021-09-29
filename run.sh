@@ -1,0 +1,39 @@
+# Run all experiments and generate all figures
+mkdir out
+mkdir out/results  # if it does not exist already
+mkdir out/figures  # if it does not exist already
+RESULTS=out/results
+FIGURES=out/figures
+STYLE="plot_style_files/mystyle.mplsty"
+
+# Generate Figure 1
+python estimate_advrisk_linear.py --num_test_samples 100 --num_train_samples 100 -o $RESULTS/equicorrelated-constant.csv \
+    --features_kind equicorrelated --ord 2 inf --datagen_param constant -e 0.1 -u 2
+python plot_scripts/linear-plot.py --file out/results/equicorrelated-constant.csv  --plot_style $STYLE plot_style_files/one_half.mplsty \
+  plot_style_files/mycolors.mplsty   --plot_type risk_per_eps  --plot_type risk_per_eps --remove_bounds \
+  --save $FIGURES/equicorrelated-constant.pdf
+
+
+# Generate Figure 2
+python linear-estimate.py --num_test_samples 100 --num_train_samples 100 -o out/results/isotropic-gaussian-prior \
+    --ord 1.5 2 20
+python plot_linear.py --file out/results/equicorrelated0.9-gaussian-prior.csv \
+  --save out/figures/equicorrelated-gaussian-prior-l2.pdf --plot_style $STYLE plot_style_files/one_half.mplsty  --ord 2 --y_min -0.2 --y_max 4.6
+
+
+
+python estimate_advrisk_linear.py --num_test_samples 100 --num_train_samples 100 -o results/equicorrelated0.9-gaussian-prior.csv \
+  --features_kind equicorrelated --ord 2 --off_diag 0.9
+python estimate_advrisk_rand_features.py -n 60 -r 4 -u 1 -l -1 --epsilon 0 0.1 1.0 --ord 2 --noise_std 0 \
+     -o results/l2-random-feature.csv --fixed nfeatures_over_inputdim --datagen_parameter constant
+
+
+echo "Generate Figures 1..."
+
+echo "Generate Figures 2..."
+python plot_linear.py --file results/equicorrelated0.9-gaussian-prior.csv --save figures/equicorrelated-gaussian-prior-l2.pdf --plot_style $STYLE plot_style_files/one_half.mplsty  --ord 2 --y_min -0.2 --y_max 4.6
+
+echo "Generate Figures 3..."
+python plot_linear.py --file results/isotropic-gaussian-prior.csv --save figures/isotropic-gaussian-prior-l1.5.pdf --plot_style $STYLE plot_style_files/one_third_with_ylabel.mplsty --ord 1.5 --y_min -0.2 --y_max 4.6
+python plot_linear.py --file results/isotropic-gaussian-prior.csv --save figures/isotropic-gaussian-prior-l2.pdf --plot_style $STYLE plot_style_files/one_third_without_ylabel.mplsty --remove_ylabel --remove_legend --ord 2 --y_min -0.2 --y_max 4.6
+python plot_linear.py --file results/isotropic-gaussian-prior.csv --save figures/isotropic-gaussian-prior-l20.pdf --plot_style $STYLE plot_style_files/one_third_without_ylabel.mplsty  --remove_ylabel --remove_legend --ord 20 --y_min -0.2 --y_max 4.6

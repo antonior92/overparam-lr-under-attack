@@ -6,3 +6,5 @@ def frac2int(proportion, denominator):
 
 
 frac2int_vec = np.vectorize(frac2int)
+
+
