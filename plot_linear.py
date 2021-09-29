@@ -118,9 +118,9 @@ if __name__ == "__main__":
     snr = signal_amplitude / noise_std
 
     # compute standard arisk
-    arisk = asymptotic_risk(proportions_for_bounds, signal_amplitude, features_kind, off_diag)
-    anorm = assymptotic_l2_norm_squared(proportions_for_bounds, signal_amplitude, features_kind, off_diag)
-    adistance = l2_distance_between_parameters(proportions_for_bounds, signal_amplitude, features_kind, off_diag)
+    arisk = asymptotic_risk(proportions_for_bounds, signal_amplitude, noise_std, features_kind, off_diag)
+    anorm = assymptotic_l2_norm_squared(proportions_for_bounds, signal_amplitude, noise_std, features_kind, off_diag)
+    adistance = l2_distance_between_parameters(proportions_for_bounds, signal_amplitude, noise_std, features_kind, off_diag)
 
     # Plot arisk (one subplot per order)
     fig, ax = plt.subplots()
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     if args.y_max:
         ax.set_ylim((10**args.y_min, 10**args.y_max))
     ax.set_xscale('log')
-    ax.set_yscale('log')
+   # ax.set_yscale('log')
     if not args.remove_legend:
         plt.legend()
     if args.save:
