@@ -6,54 +6,43 @@ import argparse
 from interp_under_attack.linear_with_random_covariates.asymptotics import asymptotic_risk, assymptotic_l2_norm_squared,\
     lp_norm_squared, adversarial_bounds,l2_distance_between_parameters
 
-markers = ['*', 'o', 's', '<', '>', 'h']
+def plot_risk_and_bounds(i, lbl, p, e):
+    r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
+    # Plot empirical value
+    l, = ax.plot(proportion, r, markers[i], ms=4, label=lbl)
+    if args.remove_bounds:
+        return
+    # Plot upper bound
+    lb, ub = adversarial_bounds(arisk, anorm, noise_std, e, p, proportions_for_bounds * n_train, datagen_parameter)
+    if e == 0:
+        ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
+    else:
+        ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
+        ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
+        ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
 
 
 def plot_risk_per_ord(ax, p):
     i = 0
-    risk = []
     for e in epsilon:
-        r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
-        risk.append(r)
-        # Plot empirical value
-        l, = ax.plot(proportion, r, markers[i], ms=4, label='$\delta={}$'.format(e))
-        # Plot upper bound
-        lb, ub = adversarial_bounds(arisk, anorm, noise_std, e, p, proportions_for_bounds * n_train, datagen_parameter)
-        if e == 0:
-            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
-        else:
-            ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
-            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
-            ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
+        lbl = '$\delta={}$'.format(e)
+        plot_risk_and_bounds(i, lbl, p, e)
         i += 1
 
 
 def plot_risk_per_eps(ax, e):
-    markers = ['<', '>', 'h', '*', 'o', 's']
     i = 0
-    risk = []
     for p in ord:
-        r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
-        risk.append(r)
-        # Plot empirical value
-        l, = ax.plot(proportion, r, markers[i], ms=4, label='$\\ell_{}$'.format('\\infty' if p == np.Inf else int(p)))
-        # Plot upper bound
-        lb, ub = adversarial_bounds(arisk, anorm, noise_std, e, p, proportions_for_bounds * n_train, datagen_parameter)
-        if e == 0:
-            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
-        else:
-            ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
-            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
-            ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
-
-        # Increment
+        lbl = '$\\ell_{}$'.format('\\infty' if p == np.Inf else int(p))
+        plot_risk_and_bounds(i, lbl, p, e)
         i += 1
-
 
 def plot_norm(ax):
     for p in ord:
         pnorm = df['norm-{:.1f}'.format(p)]
         l, = ax.plot(proportion, pnorm, 'o', ms=4, label=p)
+        if args.remove_bounds:
+            return
         if p == 2:
             ax.plot(proportions_for_bounds, np.sqrt(anorm), '-', color=l.get_color(), lw=2)
         else:
@@ -66,6 +55,8 @@ def plot_norm(ax):
 def plot_distance(ax):
     distance = df['l2distance']
     l, = ax.plot(proportion, distance, 'o', ms=4)
+    if args.remove_bounds:
+        return
     ax.plot(proportions_for_bounds, np.sqrt(adistance), '-', color=l.get_color(), lw=2)
 
 
@@ -74,8 +65,8 @@ if __name__ == "__main__":
                                                  'n features / n samples rate.')
     parser.add_argument('--file', default='performance.csv',
                         help='input csv.')
-    parser.add_argument('--plot_type', choices=['risk_per_ord', 'risk_per_eps', 'norm', 'distance'], default='risk_per_ord',
-                        help='plot styles to be used')
+    parser.add_argument('--plot_type', choices=['risk_per_ord', 'risk_per_eps', 'norm', 'distance'],
+                        default='risk_per_ord', help='plot styles to be used')
     parser.add_argument('--ord', type=float,
                         help='ord norm')
     parser.add_argument('--eps', type=float,
@@ -90,6 +81,10 @@ if __name__ == "__main__":
                         help='don include ylable')
     parser.add_argument('--remove_legend', action='store_true',
                         help='don include legend')
+    parser.add_argument('--remove_bounds', action='store_true',
+                        help='don include legend')
+    parser.add_argument('--second_marker_set', action='store_true',
+                        help='don include ylable')
     parser.add_argument('--y_max', default=None, type=float,
                         help='superior limit to y-axis in the plot.')
     parser.add_argument('--save', default='',
@@ -97,6 +92,10 @@ if __name__ == "__main__":
     args, unk = parser.parse_known_args()
     if args.plot_style:
         plt.style.use(args.plot_style)
+
+    markers = ['*', 'o', 's', '<', '>', 'h']
+    if args.second_marker_set:
+        markers = ['<', '>', 'h', '*', 'o', 's']
 
     df = pd.read_csv(args.file)
 
@@ -149,7 +148,7 @@ if __name__ == "__main__":
     if args.y_max:
         ax.set_ylim((10**args.y_min, 10**args.y_max))
     ax.set_xscale('log')
-   # ax.set_yscale('log')
+    ax.set_yscale('log')
     if not args.remove_legend:
         plt.legend()
     if args.save:
