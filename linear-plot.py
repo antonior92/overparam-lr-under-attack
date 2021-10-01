@@ -82,8 +82,8 @@ def lp_norm_bounds(ord, sz):
 def adversarial_bounds(arisk, anorm, noise_std, eps, ord, n_features):
     lb, ub = lp_norm_bounds(ord, n_features)
 
-    upper_bound = (np.sqrt(arisk) + eps * lb * anorm)**2 + noise_std ** 2
-    lower_bound = arisk + (eps * ub * anorm) ** 2 + noise_std ** 2
+    upper_bound = (np.sqrt(arisk) + eps * ub * anorm)**2 + noise_std ** 2
+    lower_bound = arisk + (eps * lb * anorm) ** 2 + noise_std ** 2
 
     return lower_bound, upper_bound
 
@@ -101,11 +101,11 @@ def plot_risk_and_bounds(lbl, p, e):
     lb, ub = adversarial_bounds(arisk, anorm, config['noise_std'], e, p,
                                 proportions_for_bounds * config['num_train_samples'])
     if e == 0:
-        ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=2)
+        ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1.5)
     else:
-        ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.2)
-        ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
-        ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
+        ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.3)
+        ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1.5)
+        ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1.5)
 
 
 def plot_norm(ax, p):
