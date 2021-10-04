@@ -26,7 +26,7 @@ def asymptotic_risk(proportion, signal_amplitude, noise_std, features_kind, off_
         raise ValueError
     b = (proportion < 1) * b_underparametrized + (proportion > 1) * b_overparametrized
 
-    return noise_std ** 2 * v + signal_amplitude ** 2 * b
+    return noise_std ** 2 * v + signal_amplitude ** 2 * b + noise_std ** 2
 
 
 def assymptotic_l2_norm(proportion, signal_amplitude, noise_std, features_kind, off_diag):
@@ -79,11 +79,11 @@ def lp_norm_bounds(ord, sz):
     return lfactor, ufactor
 
 
-def adversarial_bounds(arisk, anorm, noise_std, eps, ord, n_features):
+def adversarial_bounds(arisk, anorm, eps, ord, n_features):
     lb, ub = lp_norm_bounds(ord, n_features)
 
-    upper_bound = (np.sqrt(arisk) + eps * ub * anorm)**2 + noise_std ** 2
-    lower_bound = arisk + (eps * lb * anorm) ** 2 + noise_std ** 2
+    upper_bound = (np.sqrt(arisk) + eps * ub * anorm)**2
+    lower_bound = arisk + (eps * lb * anorm) ** 2
 
     return lower_bound, upper_bound
 
@@ -91,6 +91,22 @@ def adversarial_bounds(arisk, anorm, noise_std, eps, ord, n_features):
 #########
 # Plots #
 #########
+def plot_risk_and_exactbounds(lbl, p, e):
+    r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
+    pred_risk = df['predrisk']
+    lqnorm = df['norm-{:.1f}'.format(p)]
+    # Plot empirical value
+    l, = ax.plot(df['proportion'], r, markers[i], ms=3, label=lbl)
+    if args.remove_bounds:
+        return
+    # Plot upper bound
+    ub = (np.sqrt(pred_risk) + e * lqnorm) ** 2
+    lb = pred_risk + (e * lqnorm) ** 2
+
+    ax.plot(df['proportion'], ub, '.', color='black', ms=2)
+    ax.plot(df['proportion'], lb, 's', color='black', ms=2)
+
+
 def plot_risk_and_bounds(lbl, p, e):
     r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
     # Plot empirical value
@@ -98,14 +114,23 @@ def plot_risk_and_bounds(lbl, p, e):
     if args.remove_bounds:
         return
     # Plot upper bound
-    lb, ub = adversarial_bounds(arisk, anorm, config['noise_std'], e, p,
+    lb, ub = adversarial_bounds(arisk, anorm, e, p,
                                 proportions_for_bounds * config['num_train_samples'])
+
+    lb_2, ub_2 = adversarial_bounds(arisk, anorm, e, 2, proportions_for_bounds * config['num_train_samples'])
     if e == 0:
         ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1.5)
     else:
-        ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.3)
-        ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1.5)
-        ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1.5)
+        if p < 2:
+            ax.fill_between(proportions_for_bounds, lb, lb_2, color=l.get_color(), alpha=0.3)
+            ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
+        if p > 2:
+            ax.fill_between(proportions_for_bounds, ub_2, ub, color=l.get_color(), alpha=0.3)
+            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
+        if p == 2:
+            ax.fill_between(proportions_for_bounds, lb, ub, color=l.get_color(), alpha=0.3)
+            ax.plot(proportions_for_bounds, ub, '-', color=l.get_color(), lw=1)
+            ax.plot(proportions_for_bounds, lb, '-', color=l.get_color(), lw=1)
 
 
 def plot_norm(ax, p):
