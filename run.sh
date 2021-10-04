@@ -21,6 +21,17 @@ python plot_linear.py --file out/results/equicorrelated0.9-gaussian-prior.csv \
   --save out/figures/equicorrelated-gaussian-prior-l2.pdf --plot_style $STYLE plot_style_files/one_half.mplsty  --ord 2 --y_min -0.2 --y_max 4.6
 
 
+# Generate Figure 3
+# TODO: There is something slightly weird with the case eps 0.1: check!
+python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior \
+    --ord 1.5 2 20
+python linear-plot.py --file out/results/isotropic-gaussian-prior \
+  --plot_style $STYLE plot_style_files/one_half.mplsty  \
+  plot_style_files/mycolors.mplsty  --plot_type risk_per_eps --second_marker_set --eps 2.0 \
+  --save out/figures/isotropic-gaussian-prior-variouslp.pdf
+
+
+# From previous run
 
 python estimate_advrisk_linear.py --num_test_samples 100 --num_train_samples 100 -o results/equicorrelated0.9-gaussian-prior.csv \
   --features_kind equicorrelated --ord 2 --off_diag 0.9
