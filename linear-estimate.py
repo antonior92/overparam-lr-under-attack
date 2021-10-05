@@ -11,17 +11,39 @@ import scipy.linalg as linalg
 def generate_features(n_samples, n_features, rng, kind, off_diag):
     # Get random components
     z = rng.randn(n_samples, n_features)
+    s = (n_features, n_features)
     if kind == 'isotropic':
         return z
-    elif kind == 'equicorrelated':
-        s = (n_features, n_features)
-        cov = (1-off_diag) * np.eye(*s) + off_diag * np.ones(s)
-        # take square root
-        u, s, vh = np.linalg.svd(cov)
-        cov_sqr = np.dot(u * np.sqrt(s), vh)
-        # return
-        return z @ cov_sqr
+    elif kind == 'equicorrelated':  # Significant faster implementation then the naive one
+        # For convenience, let u be a vector of ones
+        u = np.ones(n_features)
+        # The equicorrelated matrix can be written as:
+        # C = off_diag * np.outer(u, u) + (1 - off_diag) * np.eye(n_features)
+        # Here we compute the decomposition of
+        # np.outer(u, u) = v S v.T  using: https://math.stackexchange.com/q/704238
+        # S = diag(s_rankone)
+        w = u.copy()
+        w[0] += np.linalg.norm(u)
+        # We could just define v = np.eye(n_features) - 2 * np.outer(w, w) / np.dot(w, w)
+        # instead we define the v_dot(z) = z @ v for efficiency
+        def v_dot(z):
+            """Compute z @ v for v = np.eye(n_features) - 2 * np.outer(w, w) / np.dot(w, w).
+
+            where z has shape (n_samples, n_features) and the return also has shape (n_samples, n_features).
+            """
+            return z - 2 * np.outer((z @ w), w) / np.dot(w, w)
+
+        s_rankone = np.array([np.dot(u, u)] + [0] * (n_features - 1))
+        # Using this decomposition, we can write
+        # C = V (off_diag * S + (1 - off_diag) * I) V.T
+        s = off_diag * s_rankone + (1-off_diag)
+        return v_dot(v_dot(z) * np.sqrt(s))
     else:
+        #  For general cov matrices we could just use
+        #         u, s, vh = np.linalg.svd(cov)
+        #         cov_sqr = np.dot(u * np.sqrt(s), vh)
+        #         return z @ cov_sqr
+        # TODO: add latter...
         raise ValueError('Invalid kind of feature generation')
 
 
