@@ -196,12 +196,13 @@ if __name__ == "__main__":
     proportions_for_bounds = np.logspace(config['lower_proportion'], config['upper_proportion'], args.num_points)
 
     # compute standard arisk
-    arisk = asymptotic_risk(proportions_for_bounds, config['signal_amplitude'], config['noise_std'],
-                            config['features_kind'], config['off_diag'])
-    anorm = assymptotic_l2_norm(proportions_for_bounds, config['signal_amplitude'], config['noise_std'],
+    if not args.remove_bounds:
+        arisk = asymptotic_risk(proportions_for_bounds, config['signal_amplitude'], config['noise_std'],
                                 config['features_kind'], config['off_diag'])
-    adistance = assymptotic_l2_distance(proportions_for_bounds, config['signal_amplitude'], config['noise_std'],
-                                        config['features_kind'], config['off_diag'])
+        anorm = assymptotic_l2_norm(proportions_for_bounds, config['signal_amplitude'], config['noise_std'],
+                                    config['features_kind'], config['off_diag'])
+        adistance = assymptotic_l2_distance(proportions_for_bounds, config['signal_amplitude'], config['noise_std'],
+                                            config['features_kind'], config['off_diag'])
 
     # Plot arisk (one subplot per order)
     fig, ax = plt.subplots()

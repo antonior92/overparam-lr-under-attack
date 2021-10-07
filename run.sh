@@ -32,10 +32,16 @@ python linear-plot.py --file out/results/isotropic-gaussian-prior \
 
 
 # Generate Figure 4 (still not there)
-python linear-estimate.py  --num_test_samples 100 --num_train_samples 100 -o $RESULTS/isotropic-constant\
-    --features_kind  isotropic --ord 2 inf --datagen_param constant -e 0.1 -u 3
+python linear-estimate.py  --num_test_samples 100 --num_train_samples 100 -o out/results/isotropic-constant\
+    --features_kind  isotropic --ord 2 inf --datagen_param constant -e 0.1 -u 3 --signal_amplitude 2
 python linear-plot.py --file out/results/isotropic-constant  --plot_style $STYLE plot_style_files/one_half.mplsty \
-  plot_style_files/mycolors.mplsty   --plot_type risk_per_eps  --plot_type risk_per_eps --remove_bounds
+  plot_style_files/mycolors.mplsty   --plot_type risk_per_eps  --plot_type risk_per_eps
+
+# Generate Figure 5 (still not there)
+python linear-estimate.py  --num_test_samples 100 --num_train_samples 200 -o test   \
+  --features_kind latent --ord 2 inf --datagen_param gaussian_prior --latent 1 -e 0.1 \
+  --signal_amplitude 1 --noise_std 0 -u 2
+python linear-plot.py --file test  --plot_style  --plot_type risk_per_eps --plot_type risk_per_eps --remove_bounds
 
 # From previous run
 

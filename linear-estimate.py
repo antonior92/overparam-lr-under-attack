@@ -8,74 +8,112 @@ from interp_under_attack. adversarial_attack import compute_adv_attack
 import json
 import scipy.linalg as linalg
 
-def generate_features(n_samples, n_features, rng, kind, off_diag):
-    # Get random components
-    z = rng.randn(n_samples, n_features)
-    s = (n_features, n_features)
-    if kind == 'isotropic':
-        return z
-    elif kind == 'equicorrelated':  # Significant faster implementation then the naive one
-        # For convenience, let u be a vector of ones
-        u = np.ones(n_features)
-        # The equicorrelated matrix can be written as:
-        # C = off_diag * np.outer(u, u) + (1 - off_diag) * np.eye(n_features)
-        # Here we compute the decomposition of
-        # np.outer(u, u) = v S v.T  using: https://math.stackexchange.com/q/704238
-        # S = diag(s_rankone)
-        w = u.copy()
-        w[0] += np.linalg.norm(u)
-        # We could just define v = np.eye(n_features) - 2 * np.outer(w, w) / np.dot(w, w)
-        # instead we define the v_dot(z) = z @ v for efficiency
-        def v_dot(z):
-            """Compute z @ v for v = np.eye(n_features) - 2 * np.outer(w, w) / np.dot(w, w).
 
-            where z has shape (n_samples, n_features) and the return also has shape (n_samples, n_features).
-            """
-            return z - 2 * np.outer((z @ w), w) / np.dot(w, w)
-
-        s_rankone = np.array([np.dot(u, u)] + [0] * (n_features - 1))
-        # Using this decomposition, we can write
-        # C = V (off_diag * S + (1 - off_diag) * I) V.T
-        s = off_diag * s_rankone + (1-off_diag)
-        return v_dot(v_dot(z) * np.sqrt(s))
-    else:
-        #  For general cov matrices we could just use
-        #         u, s, vh = np.linalg.svd(cov)
-        #         cov_sqr = np.dot(u * np.sqrt(s), vh)
-        #         return z @ cov_sqr
-        # TODO: add latter...
-        raise ValueError('Invalid kind of feature generation')
+def generate_random_ortogonal(d, p, rng):
+    """Generate random W with shape (d, p) such that `W.T W = p / d I_d`."""
+    aux = rng.randn(p, d)
+    q, r = np.linalg.qr(aux, mode='reduced')
+    return q
 
 
-def train_and_evaluate(n_samples, n_features, noise_std, parameter_norm, epsilon, ord,
-                       n_test_samples, kind, off_diag, datagen_parameter, seed):
-    # Get state
-    rng = np.random.RandomState(seed)
+class GenerateData(object):
 
-    # Get parameter
-    if datagen_parameter == 'gaussian_prior':
-        beta = parameter_norm / np.sqrt(n_features) * rng.randn(n_features)
-    elif datagen_parameter == 'constant':
-        beta = parameter_norm / np.sqrt(n_features) * np.ones(n_features)
+    def __init__(self, n_features, n_latent, noise_std, parameter_norm,
+                 datagen_parameter, kind, off_diag, seed=0):
 
+        self.n_features, self.n_latent = n_features, n_latent
+        self.kind, self.datagen_parameter = kind, datagen_parameter
+        self.off_diag, self.noise_std = off_diag, noise_std
+
+        # Random state
+        rng = np.random.RandomState(seed)
+        self.rng = rng
+
+        # Define parameter
+        n = n_features if kind != 'latent' else n_latent
+        psi = n_latent / n_features
+        parameter_norm *= (psi + 1) / np.sqrt(psi)
+        if datagen_parameter == 'gaussian_prior':
+            self.beta = parameter_norm / np.sqrt(n) * rng.randn(n)
+        elif datagen_parameter == 'constant':
+            self.beta = parameter_norm / np.sqrt(n) * np.ones(n)
+
+        # In the case of latent space define transformation
+        if kind == 'latent':
+            self.w = generate_random_ortogonal(n_latent, n_features, rng)
+        else:
+            self.w = None
+
+    def __call__(self, n_samples):
+        # Just bring variable to the local scope
+        beta, w = self.beta, self.w
+        rng = self.rng
+        n_features, n_latent = self.n_features, self.n_latent
+        kind, datagen_parameter = self.kind, self.datagen_parameter
+        off_diag, noise_std = self.off_diag, self.noise_std
+        # Get number of components
+        if kind == 'latent':
+            theta = beta
+            z = rng.randn(n_samples, n_latent)
+            u = rng.randn(n_samples, n_features)
+            e = rng.randn(n_samples)
+            y = z @ theta + noise_std * e
+            X = z @ w.T + u
+            return X, y
+
+        # Get random components
+        z = rng.randn(n_samples, n_features)
+        if kind == 'isotropic':
+             X = z
+        elif kind == 'equicorrelated':  # Significant faster implementation then the naive one
+            # For convenience, let u be a vector of ones
+            u = np.ones(n_features)
+            # The equicorrelated matrix can be written as:
+            # C = off_diag * np.outer(u, u) + (1 - off_diag) * np.eye(n_features)
+            # Here we compute the decomposition of
+            # np.outer(u, u) = v S v.T  using: https://math.stackexchange.com/q/704238
+            # S = diag(s_rankone)
+            w = u.copy()
+            w[0] += np.linalg.norm(u)
+
+            # We could just define v = np.eye(n_features) - 2 * np.outer(w, w) / np.dot(w, w)
+            # instead we define the v_dot(z) = z @ v for efficiency
+            def v_dot(z):
+                """Compute z @ v for v = np.eye(n_features) - 2 * np.outer(w, w) / np.dot(w, w).
+
+                where z has shape (n_samples, n_features) and the return also has shape (n_samples, n_features).
+                """
+                return z - 2 * np.outer((z @ w), w) / np.dot(w, w)
+
+            s_rankone = np.array([np.dot(u, u)] + [0] * (n_features - 1))
+            # Using this decomposition, we can write
+            # C = V (off_diag * S + (1 - off_diag) * I) V.T
+            s = off_diag * s_rankone + (1-off_diag)
+            X = v_dot(v_dot(z) * np.sqrt(s))
+        else:
+            #  For general cov matrices we could just use
+            #         u, s, vh = np.linalg.svd(cov)
+            #         cov_sqr = np.dot(u * np.sqrt(s), vh)
+            #         return z @ cov_sqr
+            # TODO: add latter...
+            raise ValueError('Invalid kind of feature generation')
+        # Get error
+        e = rng.randn(n_samples)
+        # Compute output
+        y = X @ beta + noise_std * e
+        return X, y
+
+
+def train_and_evaluate(data_generator, n_samples, n_test_samples, epsilon, ord):
     # Generate training data
-    # Get X matrix
-    X = generate_features(n_samples, n_features, rng, kind, off_diag)
-    # Get error
-    e = rng.randn(n_samples)
-    # Compute output
-    y = X @ beta + noise_std * e
+    X, y = data_generator(n_samples)
 
     # Train
     beta_hat, _resid, _rank, _s = linalg.lstsq(X, y)
 
     # Test data
     # Get X matrix
-    X_test = generate_features(n_test_samples, n_features, rng, kind, off_diag)
-    # Get error
-    e_test = rng.randn(n_test_samples)
-    # Compute output
-    y_test = X_test @ beta + noise_std * e_test
+    X_test, y_test = data_generator(n_test_samples)
 
     # Generate adversarial disturbance
     pnorms = {}
@@ -104,7 +142,7 @@ def train_and_evaluate(n_samples, n_features, noise_std, parameter_norm, epsilon
             risk['advrisk-{:.1f}-{:.1f}'.format(p, e)] = r
 
     # Compute distance
-    l2distance = np.linalg.norm(beta_hat - beta, ord=2)
+    l2distance = np.linalg.norm(beta_hat - dgen.beta, ord=2) if dgen.kind != 'latent' else 'unavailable'
     return risk, pnorms, l2distance
 
 
@@ -130,13 +168,15 @@ if __name__ == '__main__':
                         help='the epsilon values used when computing the adversarial ttack')
     parser.add_argument('-s', '--noise_std', type=float, default=1.0,
                         help='standard deviation of the additive noise added.')
-    parser.add_argument('-f', '--features_kind', choices=['isotropic', 'equicorrelated'], default='isotropic',
-                        help='how the features are generated')
+    parser.add_argument('-f', '--features_kind', choices=['isotropic', 'equicorrelated', 'latent'],
+                        default='isotropic', help='how the features are generated')
     parser.add_argument('--datagen_parameter', choices=['gaussian_prior', 'constant'], default='gaussian_prior',
                         help='how the features are generated')
     parser.add_argument('--off_diag', default=0.5, type=float,
                         help='value of diagonal values. Default is 0.5. Only take effect when '
                              'features_kind = equicorrelated.')
+    parser.add_argument('--num_latent', default=20, type=int,
+                        help='size of latent space used only in the case features_kind=latent')
     parser.add_argument('--signal_amplitude', type=float, default=1.0,
                          help='signal amplitude. I.e. \|beta*\|_2')
     args, unk = parser.parse_known_args()
@@ -158,10 +198,10 @@ if __name__ == '__main__':
                               ['advrisk-{:.1f}-{:.1f}'.format(p, e) for p, e in itertools.product(args.ord, args.epsilon)])
     for seed, proportion in tqdm(run_instances, smoothing=0.03):
         n_features = max(int(proportion * args.num_train_samples), 1)
-        risk, pnorms, l2distance = train_and_evaluate(
-            args.num_train_samples, n_features, args.noise_std, args.signal_amplitude,
-            args.epsilon, args.ord, args.num_test_samples, args.features_kind,
-            args.off_diag, args.datagen_parameter, seed)
+        dgen = GenerateData(n_features, args.num_latent, args.noise_std, args.signal_amplitude,
+                            args.datagen_parameter, args.features_kind, args.off_diag, seed)
+        risk, pnorms, l2distance = train_and_evaluate(dgen, args.num_train_samples,  args.num_test_samples,
+                                                      args.epsilon, args.ord)
         dict1 = {'proportion': proportion, 'n_features': n_features, 'seed': seed, 'l2distance': l2distance}
         df = df.append({**risk, **pnorms, **dict1}, ignore_index=True)
         df.to_csv(args.output + '.csv', index=False)
