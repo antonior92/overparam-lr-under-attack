@@ -106,7 +106,6 @@ class GenerateData(object):
 def train_and_evaluate(data_generator, n_samples, n_test_samples, epsilon, ord):
     # Generate training data
     X, y = data_generator(n_samples)
-    print(np.linalg.norm(X.mean(axis=1)), '2')
 
     # Train
     beta_hat, _resid, _rank, _s = linalg.lstsq(X, y)
