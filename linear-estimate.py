@@ -9,8 +9,8 @@ import json
 import scipy.linalg as linalg
 
 
-def generate_random_ortogonal(d, p, rng):
-    """Generate random W with shape (d, p) such that `W.T W = p / d I_d`."""
+def generate_random_ortogonal(p, d, rng):
+    """Generate random W with shape (p, d) such that `W.T W = p / d I_d`."""
     aux = rng.randn(p, d)
     q, r = np.linalg.qr(aux, mode='reduced')
     return q
@@ -31,8 +31,6 @@ class GenerateData(object):
 
         # Define parameter
         n = n_features if kind != 'latent' else n_latent
-        psi = n_latent / n_features
-        parameter_norm *= (psi + 1) / np.sqrt(psi)
         if datagen_parameter == 'gaussian_prior':
             self.beta = parameter_norm / np.sqrt(n) * rng.randn(n)
         elif datagen_parameter == 'constant':
@@ -40,7 +38,8 @@ class GenerateData(object):
 
         # In the case of latent space define transformation
         if kind == 'latent':
-            self.w = generate_random_ortogonal(n_latent, n_features, rng)
+            factor = 1 / np.sqrt(n_latent)
+            self.w = factor * generate_random_ortogonal(n_features, n_latent, rng)
         else:
             self.w = None
 
@@ -55,7 +54,7 @@ class GenerateData(object):
         if kind == 'latent':
             theta = beta
             z = rng.randn(n_samples, n_latent)
-            u = rng.randn(n_samples, n_features)
+            u = 1 / np.sqrt(n_features) * rng.randn(n_samples, n_features)
             e = rng.randn(n_samples)
             y = z @ theta + noise_std * e
             X = z @ w.T + u
@@ -64,7 +63,7 @@ class GenerateData(object):
         # Get random components
         z = rng.randn(n_samples, n_features)
         if kind == 'isotropic':
-             X = z
+            X = z
         elif kind == 'equicorrelated':  # Significant faster implementation then the naive one
             # For convenience, let u be a vector of ones
             u = np.ones(n_features)
@@ -107,6 +106,7 @@ class GenerateData(object):
 def train_and_evaluate(data_generator, n_samples, n_test_samples, epsilon, ord):
     # Generate training data
     X, y = data_generator(n_samples)
+    print(np.linalg.norm(X.mean(axis=1)), '2')
 
     # Train
     beta_hat, _resid, _rank, _s = linalg.lstsq(X, y)
@@ -192,7 +192,7 @@ if __name__ == '__main__':
 
     # Some of the executions are computationally heavy and others are not. We shuffle the configurations
     # so the progress bar can give a more accurate notion of the time to completion
-    random.shuffle(run_instances)
+    #random.shuffle(run_instances)
     prev_mdl = None  # used only if reuse_weights is True
     df = pd.DataFrame(columns=['proportion', 'seed'] + ['norm-{:.1f}'.format(p) for p in args.ord] +
                               ['advrisk-{:.1f}-{:.1f}'.format(p, e) for p, e in itertools.product(args.ord, args.epsilon)])

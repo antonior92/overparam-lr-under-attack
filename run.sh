@@ -39,9 +39,10 @@ python linear-plot.py --file out/results/isotropic-constant  --plot_style $STYLE
 
 # Generate Figure 5 (still not there)
 python linear-estimate.py  --num_test_samples 100 --num_train_samples 200 -o test   \
-  --features_kind latent --ord 2 inf --datagen_param gaussian_prior --latent 1 -e 0.1 \
-  --signal_amplitude 1 --noise_std 0 -u 2
-python linear-plot.py --file test  --plot_style  --plot_type risk_per_eps --plot_type risk_per_eps --remove_bounds
+  --features_kind latent --ord 2 inf --datagen_param gaussian_prior --latent 1 -e 0 0.1 0.5 \
+  --signal_amplitude 1 --noise_std 0 -u 2  --num_latent 20
+python linear-plot.py --file test  --plot_style  --plot_type risk_per_eps  --remove_bounds
+python linear-plot.py --file test  --plot_style  --plot_type norm --remove_bounds
 
 # From previous run
 
