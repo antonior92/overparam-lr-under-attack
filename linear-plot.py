@@ -69,9 +69,9 @@ def lp_norm_bounds(ord, sz):
     # Generalize to other norms,
     # using https://math.stackexchange.com/questions/218046/relations-between-p-norms
     if ord == np.inf:
-        factor = sz ** 1/2
+        factor = sz ** (1.0/2.0)
     else:
-        factor = sz ** (1/2-1/ord)
+        factor = sz ** (1.0/2.0-1.0/ord)
 
     lfactor = 1 if ord >= 2 else factor
     ufactor = 1 if ord <= 2 else factor
@@ -239,6 +239,7 @@ if __name__ == "__main__":
     ax.set_yscale('log')
     if not args.remove_legend:
         plt.legend()
+    plt.grid()
     if args.save:
         plt.savefig(args.save)
     else:
