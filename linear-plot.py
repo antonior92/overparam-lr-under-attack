@@ -203,6 +203,13 @@ if __name__ == "__main__":
                                     config['features_kind'], config['off_diag'])
         adistance = assymptotic_l2_distance(proportions_for_bounds, config['signal_amplitude'], config['noise_std'],
                                             config['features_kind'], config['off_diag'])
+        # Adjust scaling
+        n_features_for_bounds = config["num_train_samples"] * proportions_for_bounds
+        if config['scaling'] == 'sqrt':
+            anorm *= np.sqrt(n_features_for_bounds)
+        elif config['scaling'] == 'sqrtlog':
+            anorm *= np.sqrt(np.log(n_features_for_bounds))
+
 
     # Plot arisk (one subplot per order)
     fig, ax = plt.subplots()

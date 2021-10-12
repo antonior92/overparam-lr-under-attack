@@ -34,13 +34,12 @@ class GenerateData(object):
             self.scaling = 1
         elif scaling == 'sqrt':
             self.scaling = np.sqrt(n_features)
-        elif scaling == 'log':
-            self.scaling = np.log(n_features)
+        elif scaling == 'sqrtlog':
+            self.scaling = np.sqrt(np.log(n_features))
         else:
             raise ValueError
 
         # Define parameter
-        n = n_features if kind != 'latent' else n_latent
         if kind != 'latent':
             if datagen_parameter == 'gaussian_prior':
                 self.beta = parameter_norm * (self.scaling / np.sqrt(n_features)) * rng.randn(n_features)
@@ -71,14 +70,14 @@ class GenerateData(object):
         if kind == 'latent':
             theta = beta
             z = rng.randn(n_samples, n_latent)
-            u = self.scaling  / np.sqrt(n_features) * rng.randn(n_samples, n_features)
+            u = self.scaling / np.sqrt(n_features) * rng.randn(n_samples, n_features)
             e = rng.randn(n_samples)
             y = z @ theta + noise_std * e
             X = z @ w.T + u
             return X, y
 
         # Get random components
-        z = rng.randn(n_samples, n_features)
+        z = 1 / self.scaling * rng.randn(n_samples, n_features)
         if kind == 'isotropic':
             X = z
         elif kind == 'equicorrelated':  # Significant faster implementation then the naive one
@@ -195,7 +194,7 @@ if __name__ == '__main__':
                         help='size of latent space used only in the case features_kind=latent')
     parser.add_argument('--signal_amplitude', type=float, default=1.0,
                          help='signal amplitude. I.e. \|beta*\|_2')
-    parser.add_argument('--scaling', choices=['none', 'sqrt', 'log'], default='none',
+    parser.add_argument('--scaling', choices=['none', 'sqrt', 'sqrtlog'], default='none',
                          help='the adversarial examples are quite sensitive to scaling.'
                               'the function `eta(m)` will be used defining the parameter vector and '
                               'the inputs. I.e. `beta = eta * beta` while `x = (1 / eta) * x`')
