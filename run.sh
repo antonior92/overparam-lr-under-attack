@@ -6,29 +6,51 @@ RESULTS=out/results
 FIGURES=out/figures
 STYLE="plot_style_files/mystyle.mplsty"
 
-# Generate Figure 1
+# Generate Figure 1 - Intro figure
 # TODO: In this case the l2 norm start increase again after somepoint!!! This definetly needs some attention.
 python linear-estimate.py --num_test_samples 100 --num_train_samples 100 -o $RESULTS/equicorrelated-constant \
-    --features_kind equicorrelated --ord 2 inf --datagen_param constant -e 0 0.1 0.5 1.0 -u 3
+    --features_kind equicorrelated --ord 2 inf --datagen_param constant -e 0 0.1 0.5 1.0 -u 3 --noise_std 0
 python linear-plot.py --file out/results/equicorrelated-constant  --plot_style $STYLE plot_style_files/one_half.mplsty \
-  plot_style_files/mycolors.mplsty   --plot_type risk_per_eps  --remove_bounds --eps 0 \
-  --save $FIGURES/equicorrelated-constant.pdf
-
+  plot_style_files/mycolors.mplsty   --plot_type norm --eps 0 \
+  --save $FIGURES/equicorrelated-constant.pdf --remove_bounds
 
 # Generate Figure 2
-python linear-estimate.py --num_test_samples 300 --num_train_samples 300 -o out/results/equicorrelated-gaussian-prior\
-    --ord 1.5 2 20 --features_kind equicorrelated --off_diag 0.9
-python linear-plot.py --file out/results/equicorrelated-gaussian-prior \
-    --plot_style $STYLE plot_style_files/one_half.mplsty --ord 2  --save out/figures/equicorrelated-gaussian-prior-l2.pdf
+python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior\
+    --ord 2 --features_kind isotropic --signal_amplitude 4
+python linear-plot.py --file out/results/isotropic-gaussian-prior \
+    --plot_style $STYLE plot_style_files/one_half.mplsty --ord 2 \
+      --save out/figures/isotropic-gaussian-prior.pdf
+
+
+# Generate Figure S1
+for RR in 0.5 1 2;
+do
+  python linear-estimate.py --num_test_samples 100 --num_train_samples 100 -o out/results/isotropic-gaussian-prior-r"$RR"\
+      --ord 2 --features_kind isotropic --signal_amplitude $RR
+  python linear-plot.py --file out/results/isotropic-gaussian-prior-r"$RR" \
+      --plot_style $STYLE plot_style_files/one_half.mplsty --ord 2 \
+      --save out/figures/isotropic-gaussian-prior-r"$RR".pdf
+done;
+
+
+python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior\
+    --ord 2 --features_kind isotropic --signal_amplitude 4
+python linear-plot.py --file out/results/isotropic-gaussian-prior \
+    --plot_style $STYLE plot_style_files/one_half.mplsty --ord 2 \
+      --save out/figures/isotropic-gaussian-prior.pdf
 
 
 # Generate Figure 3
-python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior \
-    --ord 1.5 2 20
+rm out/results/isotropic-gaussian-prior.csv out/results/isotropic-gaussian-prior.json
+python linear-estimate.py --num_test_samples 200 --num_train_samples 200 -o out/results/isotropic-gaussian-prior \
+    --ord 1.5 2 20 inf -u 2
 python linear-plot.py --file out/results/isotropic-gaussian-prior \
   --plot_style $STYLE plot_style_files/one_half.mplsty  \
-  plot_style_files/mycolors.mplsty  --plot_type risk_per_eps --second_marker_set --eps 2.0 \
+  plot_style_files/mycolors.mplsty  --plot_type risk_per_eps --second_marker_set --eps 0  \
   --save out/figures/isotropic-gaussian-prior-variouslp.pdf
+python linear-plot.py --file out/results/isotropic-gaussian-prior \
+  --plot_style $STYLE plot_style_files/one_half.mplsty  \
+  plot_style_files/mycolors.mplsty  --plot_type norm --second_marker_set
 
 
 # Generate Figure 4
@@ -44,6 +66,15 @@ python linear-estimate.py  --num_test_samples 100 --num_train_samples 200 -o tes
   --signal_amplitude 1 --noise_std 0 -u 2  --num_latent 20
 python linear-plot.py --file test  --plot_style  --plot_type risk_per_eps  --remove_bounds
 python linear-plot.py --file test  --plot_style  --plot_type norm --remove_bounds
+
+
+
+# Generate Figure 2*
+python linear-estimate.py --num_test_samples 300 --num_train_samples 300 -o out/results/equicorrelated-gaussian-prior\
+    --ord 1.5 2 20 --features_kind equicorrelated --off_diag 0.9
+python linear-plot.py --file out/results/equicorrelated-gaussian-prior \
+    --plot_style $STYLE plot_style_files/one_half.mplsty --ord 2  --save out/figures/equicorrelated-gaussian-prior-l2.pdf
+
 
 # From previous run
 
