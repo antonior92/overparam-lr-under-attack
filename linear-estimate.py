@@ -19,7 +19,7 @@ def generate_random_ortogonal(p, d, rng):
 class GenerateData(object):
 
     def __init__(self, n_features, n_latent, noise_std, parameter_norm,
-                 datagen_parameter, kind, off_diag, seed=0):
+                 datagen_parameter, kind, off_diag, scaling, seed=0):
 
         self.n_features, self.n_latent = n_features, n_latent
         self.kind, self.datagen_parameter = kind, datagen_parameter
@@ -29,19 +29,36 @@ class GenerateData(object):
         rng = np.random.RandomState(seed)
         self.rng = rng
 
+        # Define scaling
+        if scaling == 'none':  # identity
+            self.scaling = 1
+        elif scaling == 'sqrt':
+            self.scaling = np.sqrt(n_features)
+        elif scaling == 'log':
+            self.scaling = np.log(n_features)
+        else:
+            raise ValueError
+
         # Define parameter
         n = n_features if kind != 'latent' else n_latent
-        if datagen_parameter == 'gaussian_prior':
-            self.beta = parameter_norm / np.sqrt(n) * rng.randn(n)
-        elif datagen_parameter == 'constant':
-            self.beta = parameter_norm / np.sqrt(n) * np.ones(n)
+        if kind != 'latent':
+            if datagen_parameter == 'gaussian_prior':
+                self.beta = parameter_norm * (self.scaling / np.sqrt(n_features)) * rng.randn(n_features)
+            elif datagen_parameter == 'constant':
+                self.beta = parameter_norm * (self.scaling / np.sqrt(n_features)) * np.ones(n_features)
+        else:
+            if datagen_parameter == 'gaussian_prior':
+                self.beta = parameter_norm / np.sqrt(n_latent) * rng.randn(n_latent)
+            elif datagen_parameter == 'constant':
+                self.beta = parameter_norm / np.sqrt(n_latent) * np.ones(n_latent)
 
         # In the case of latent space define transformation
         if kind == 'latent':
-            factor = 1 / np.sqrt(n_latent)
+            factor = self.scaling / np.sqrt(n_latent)
             self.w = factor * generate_random_ortogonal(n_features, n_latent, rng)
         else:
             self.w = None
+
 
     def __call__(self, n_samples):
         # Just bring variable to the local scope
@@ -54,7 +71,7 @@ class GenerateData(object):
         if kind == 'latent':
             theta = beta
             z = rng.randn(n_samples, n_latent)
-            u = 1 / np.sqrt(n_features) * rng.randn(n_samples, n_features)
+            u = self.scaling  / np.sqrt(n_features) * rng.randn(n_samples, n_features)
             e = rng.randn(n_samples)
             y = z @ theta + noise_std * e
             X = z @ w.T + u
@@ -178,6 +195,10 @@ if __name__ == '__main__':
                         help='size of latent space used only in the case features_kind=latent')
     parser.add_argument('--signal_amplitude', type=float, default=1.0,
                          help='signal amplitude. I.e. \|beta*\|_2')
+    parser.add_argument('--scaling', choices=['none', 'sqrt', 'log'], default='none',
+                         help='the adversarial examples are quite sensitive to scaling.'
+                              'the function `eta(m)` will be used defining the parameter vector and '
+                              'the inputs. I.e. `beta = eta * beta` while `x = (1 / eta) * x`')
     args, unk = parser.parse_known_args()
     print(args)
 
@@ -198,7 +219,8 @@ if __name__ == '__main__':
     for seed, proportion in tqdm(run_instances, smoothing=0.03):
         n_features = max(int(proportion * args.num_train_samples), 1)
         dgen = GenerateData(n_features, args.num_latent, args.noise_std, args.signal_amplitude,
-                            args.datagen_parameter, args.features_kind, args.off_diag, seed)
+                            args.datagen_parameter, args.features_kind, args.off_diag, args.scaling,
+                            seed)
         risk, pnorms, l2distance = train_and_evaluate(dgen, args.num_train_samples,  args.num_test_samples,
                                                       args.epsilon, args.ord)
         dict1 = {'proportion': proportion, 'n_features': n_features, 'seed': seed, 'l2distance': l2distance}
