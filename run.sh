@@ -25,14 +25,31 @@ python linear-plot.py --file out/results/isotropic-gaussian-prior \
 # Generate Figure S1
 for RR in 0.5 1 2;
 do
-  python linear-estimate.py --num_test_samples 100 --num_train_samples 100 -o out/results/isotropic-gaussian-prior-r"$RR"\
+  python linear-estimate.py --num_test_samples 500 --num_train_samples 400 -o out/results/isotropic-gaussian-prior-r"$RR"\
       --ord 2 --features_kind isotropic --signal_amplitude $RR
   python linear-plot.py --file out/results/isotropic-gaussian-prior-r"$RR" \
-      --plot_style $STYLE plot_style_files/one_half.mplsty --ord 2 \
+      --plot_style $STYLE plot_style_files/one_third_with_ylabel.mplsty --ord 2 \
       --save out/figures/isotropic-gaussian-prior-r"$RR".pdf
 done;
 
 
+# Generate Figure S2 and S3
+for SCALING in sqrt sqrtlog;
+do for RR in 0.5 1 2;
+  do
+    python linear-estimate.py --num_test_samples 500 --num_train_samples 400 -o out/results/isotropic-gaussian-prior-r"$RR"-"$SCALING"\
+        --ord 2 --features_kind isotropic --signal_amplitude $RR --scaling $SCALING
+    python linear-plot.py --file out/results/isotropic-gaussian-prior-r"$RR"-"$SCALING" \
+        --plot_style $STYLE plot_style_files/one_third_with_ylabel.mplsty --ord 2 \
+        --save out/figures/isotropic-gaussian-prior-r"$RR"-"$SCALING".pdf
+  done;
+done;
+
+# TODO: implement the figure that will become figure 3. Linear estimate must now allow the
+# number of features to be constant while the number of datapoints vary.
+
+
+# Generate Figure 3 -> Make it figure 4
 python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior\
     --ord 2 --features_kind isotropic --signal_amplitude 4
 python linear-plot.py --file out/results/isotropic-gaussian-prior \
@@ -40,7 +57,7 @@ python linear-plot.py --file out/results/isotropic-gaussian-prior \
       --save out/figures/isotropic-gaussian-prior.pdf
 
 
-# Generate Figure 3
+# Generate Figure 4
 rm out/results/isotropic-gaussian-prior.csv out/results/isotropic-gaussian-prior.json
 python linear-estimate.py --num_test_samples 200 --num_train_samples 200 -o out/results/isotropic-gaussian-prior \
     --ord 1.5 2 20 inf -u 2
