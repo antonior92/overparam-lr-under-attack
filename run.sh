@@ -6,29 +6,24 @@ RESULTS=out/results
 FIGURES=out/figures
 STYLE="plot_style_files/mystyle.mplsty"
 
-# Generate Figure 1 - Intro figure
-# TODO: In this case the l2 norm start increase again after somepoint!!! This definetly needs some attention.
-python linear-estimate.py --num_test_samples 100 --num_train_samples 100 -o $RESULTS/equicorrelated-constant \
-    --features_kind equicorrelated --ord 2 inf --datagen_param constant -e 0 0.1 0.5 1.0 -u 3 --noise_std 0
-python linear-plot.py --file out/results/equicorrelated-constant  --plot_style $STYLE plot_style_files/one_half.mplsty \
-  plot_style_files/mycolors.mplsty   --plot_type norm --eps 0 \
-  --save $FIGURES/equicorrelated-constant.pdf --remove_bounds
-
+##########################
+## ISOTROPIC L2 ATTACKS ##
+##########################
 # Generate Figure 2
-python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior\
+python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic\
     --ord 2 --features_kind isotropic --signal_amplitude 4
 python linear-plot.py --file out/results/isotropic-gaussian-prior \
     --plot_style $STYLE plot_style_files/one_half.mplsty --ord 2 \
-      --save out/figures/isotropic-gaussian-prior.pdf
+      --save out/figures/isotropic.pdf
 
 # Generate Figure S1
 for RR in 0.5 1 2;
 do
-  python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior-r"$RR"\
+  python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-r"$RR"\
       --ord 2 --features_kind isotropic --signal_amplitude $RR
-  python linear-plot.py --file out/results/isotropic-gaussian-prior-r"$RR" \
+  python linear-plot.py --file out/results/isotropic-r"$RR" \
       --plot_style $STYLE plot_style_files/one_third_with_ylabel.mplsty --ord 2 \
-      --save out/figures/isotropic-gaussian-prior-r"$RR".pdf
+      --save out/figures/isotropic-r"$RR".pdf
 done;
 
 
@@ -44,7 +39,7 @@ do for RR in 0.5 1 2;
   done;
 done;
 
-# TODO: implement the figure that will become figure 3. Linear estimate must now allow the
+# TODO: implement the figure. Linear estimate must now allow the
 # number of features to be constant while the number of datapoints vary.
 # We must also allow different values of signal amplitude in the same plot
 python linear-estimate.py --num_test_samples 1000 --num_train_samples 1000 -o out/results/isotropic-sqrt-swepover_train\
@@ -53,7 +48,8 @@ python linear-estimate.py --num_test_samples 1000 --num_train_samples 1000 -o ou
 python linear-plot.py --file out/results/isotropic-sqrt-swepover_train \
        --plot_style $STYLE plot_style_files/one_third_with_ylabel.mplsty --ord 2 --xaxis n
 
-# Generate Figure 3 -> Make it figure 4
+
+# Generate Figure 3
 python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior\
     --ord 2 --features_kind isotropic --signal_amplitude 4
 python linear-plot.py --file out/results/isotropic-gaussian-prior \
@@ -61,34 +57,40 @@ python linear-plot.py --file out/results/isotropic-gaussian-prior \
       --save out/figures/isotropic-gaussian-prior.pdf
 
 
+############################
+## ISOTROPIC LINF ATTACKS ##
+############################
 # Generate Figure 4
-rm out/results/isotropic-gaussian-prior.csv out/results/isotropic-gaussian-prior.json
-python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior \
-    --ord 1.5 2 20 -u 2
-python linear-plot.py --file out/results/isotropic-gaussian-prior \
-  --plot_style $STYLE plot_style_files/one_half.mplsty  \
-  plot_style_files/mycolors.mplsty  --plot_type risk_per_eps --second_marker_set --eps 2.0  \
-  --save out/figures/isotropic-gaussian-prior-variouslp.pdf
-python linear-plot.py --file out/results/isotropic-gaussian-prior \
-  --plot_style $STYLE plot_style_files/one_half.mplsty  \
-  plot_style_files/mycolors.mplsty  --plot_type norm --second_marker_set
+for SCALING in sqrt sqrtlog;
+do
+  python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior-linf-"$SCALING" \
+      --ord inf --eps 1.0 -u 2 --scaling $SCALING
+done;
+python linear-plot.py out/results/isotropic-gaussian-prior-linf-sqrt \
+  out/results/isotropic-gaussian-prior-linf-sqrtlog --plot_type advrisk \
+  --fillbetween only-show-ub --plot_style $STYLE plot_style_files/one_half.mplsty \
+  --second_marker_set --save out/figures/linf-isotropic.pdf --labels '$\eta(m) = \sqrt{m}$' \
+  '$\eta(m) = \sqrt{\log(m)}$'
+
+##################
+## LATENT MODEL ##
+##################
+
+# Generate Figure 1
+python linear-estimate.py  --num_test_samples 100 --num_train_samples 400 -o test   \
+  --features_kind latent --ord 2 inf -e 0 0.1 \
+  --signal_amplitude 1 --noise_std 0 -u 2  --num_latent 20 --scaling sqrt
+python linear-plot.py  test test test --plot_type advrisk --eps 0 0.1 0.1 --ord inf 2 inf\
+  --remove_bounds --second_marker_set --labels "no adv." '$\ell_2$ adv.' '$\ell_\infty$ adv.' \
+  --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty   \
+  --save out/figures/latent.pdf
 
 
-# Generate Figure 4
-python linear-estimate.py  --num_test_samples 100 --num_train_samples 100 -o out/results/isotropic-constant\
-    --features_kind  isotropic --ord 2 inf --datagen_param constant -e 0.1 -u 3 --signal_amplitude 2
-python linear-plot.py --file out/results/isotropic-constant  --plot_style $STYLE plot_style_files/one_half.mplsty \
-  plot_style_files/mycolors.mplsty   --plot_type risk_per_eps  --plot_type risk_per_eps \
-  --save $FIGURES/isotropic-constant.pdf
-
-# Generate Figure 5 (still not there)
-python linear-estimate.py  --num_test_samples 100 --num_train_samples 200 -o test   \
-  --features_kind latent --ord 2 inf --datagen_param constant --latent 1 -e 0 0.1 0.5 \
-  --signal_amplitude 1 --noise_std 0 -u 2  --num_latent 20
-python linear-plot.py --file test  --plot_style  --plot_type risk_per_eps  --remove_bounds
-python linear-plot.py --file test  --plot_style  --plot_type norm --remove_bounds
 
 
+#########
+## OLD ##
+#########
 
 # Generate Figure 2*
 python linear-estimate.py --num_test_samples 300 --num_train_samples 300 -o out/results/equicorrelated-gaussian-prior\

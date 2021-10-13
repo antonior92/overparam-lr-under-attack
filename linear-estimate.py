@@ -53,7 +53,7 @@ class GenerateData(object):
 
         # In the case of latent space define transformation
         if kind == 'latent':
-            factor = self.scaling / np.sqrt(n_latent)
+            factor = 1 / self.scaling * np.sqrt(n_features / n_latent)
             self.w = factor * generate_random_ortogonal(n_features, n_latent, rng)
         else:
             self.w = None
@@ -70,7 +70,7 @@ class GenerateData(object):
         if kind == 'latent':
             theta = beta
             z = rng.randn(n_samples, n_latent)
-            u = self.scaling / np.sqrt(n_features) * rng.randn(n_samples, n_features)
+            u = 1 / self.scaling * rng.randn(n_samples, n_features)
             e = rng.randn(n_samples)
             y = z @ theta + noise_std * e
             X = z @ w.T + u
