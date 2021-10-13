@@ -21,11 +21,10 @@ python linear-plot.py --file out/results/isotropic-gaussian-prior \
     --plot_style $STYLE plot_style_files/one_half.mplsty --ord 2 \
       --save out/figures/isotropic-gaussian-prior.pdf
 
-
 # Generate Figure S1
 for RR in 0.5 1 2;
 do
-  python linear-estimate.py --num_test_samples 500 --num_train_samples 400 -o out/results/isotropic-gaussian-prior-r"$RR"\
+  python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior-r"$RR"\
       --ord 2 --features_kind isotropic --signal_amplitude $RR
   python linear-plot.py --file out/results/isotropic-gaussian-prior-r"$RR" \
       --plot_style $STYLE plot_style_files/one_third_with_ylabel.mplsty --ord 2 \
@@ -37,7 +36,7 @@ done;
 for SCALING in sqrt sqrtlog;
 do for RR in 0.5 1 2;
   do
-    python linear-estimate.py --num_test_samples 500 --num_train_samples 400 -o out/results/isotropic-gaussian-prior-r"$RR"-"$SCALING"\
+    python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior-r"$RR"-"$SCALING"\
         --ord 2 --features_kind isotropic --signal_amplitude $RR --scaling $SCALING
     python linear-plot.py --file out/results/isotropic-gaussian-prior-r"$RR"-"$SCALING" \
         --plot_style $STYLE plot_style_files/one_third_with_ylabel.mplsty --ord 2 \
@@ -47,7 +46,12 @@ done;
 
 # TODO: implement the figure that will become figure 3. Linear estimate must now allow the
 # number of features to be constant while the number of datapoints vary.
-
+# We must also allow different values of signal amplitude in the same plot
+python linear-estimate.py --num_test_samples 1000 --num_train_samples 1000 -o out/results/isotropic-sqrt-swepover_train\
+    --ord 2 --features_kind isotropic --signal_amplitude 4 --scaling sqrt --swep_over num_train_samples -l 0.2 -u 1.5 \
+     --eps 1
+python linear-plot.py --file out/results/isotropic-sqrt-swepover_train \
+       --plot_style $STYLE plot_style_files/one_third_with_ylabel.mplsty --ord 2 --xaxis n
 
 # Generate Figure 3 -> Make it figure 4
 python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior\

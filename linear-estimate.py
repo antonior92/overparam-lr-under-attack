@@ -179,6 +179,10 @@ if __name__ == '__main__':
                         help='the lowest value for the proportion (n features / n samples) is 10^l.')
     parser.add_argument('-u', '--upper_proportion', default=1, type=float,
                         help='the upper value for the proportion (n features / n samples) is 10^u.')
+    parser.add_argument('--swep_over', choices=['num_features', 'num_train_samples'], default='num_features',
+                        help='when `swep_over=num_features` keep the number of training samples and vary the '
+                             'number of training samples. when `swep_over=num_train_samples` keep the number of'
+                             'features constant and vary the number of training samples')
     parser.add_argument('-e', '--epsilon', default=[0, 0.1, 0.5, 1, 2], type=float, nargs='+',
                         help='the epsilon values used when computing the adversarial ttack')
     parser.add_argument('-s', '--noise_std', type=float, default=1.0,
@@ -216,13 +220,18 @@ if __name__ == '__main__':
     df = pd.DataFrame(columns=['proportion', 'seed'] + ['norm-{:.1f}'.format(p) for p in args.ord] +
                               ['advrisk-{:.1f}-{:.1f}'.format(p, e) for p, e in itertools.product(args.ord, args.epsilon)])
     for seed, proportion in tqdm(run_instances, smoothing=0.03):
-        n_features = max(int(proportion * args.num_train_samples), 1)
+        if args.swep_over == 'num_features':
+            n_features = max(int(proportion * args.num_train_samples), 1)
+            n_train = args.num_train_samples
+        elif args.swep_over == 'num_train_samples':
+            n_train = max(int((1/proportion) * args.num_train_samples), 1)
+            n_features = args.num_train_samples
         dgen = GenerateData(n_features, args.num_latent, args.noise_std, args.signal_amplitude,
                             args.datagen_parameter, args.features_kind, args.off_diag, args.scaling,
                             seed)
-        risk, pnorms, l2distance = train_and_evaluate(dgen, args.num_train_samples,  args.num_test_samples,
+        risk, pnorms, l2distance = train_and_evaluate(dgen, n_train,  args.num_test_samples,
                                                       args.epsilon, args.ord)
-        dict1 = {'proportion': proportion, 'n_features': n_features, 'seed': seed, 'l2distance': l2distance}
+        dict1 = {'proportion': proportion, 'n_features': n_features, 'n_train': n_train, 'seed': seed, 'l2distance': l2distance}
         df = df.append({**risk, **pnorms, **dict1}, ignore_index=True)
         df.to_csv(args.output + '.csv', index=False)
     tqdm.write("Done")
