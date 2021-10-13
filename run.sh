@@ -63,11 +63,11 @@ python linear-plot.py --file out/results/isotropic-gaussian-prior \
 
 # Generate Figure 4
 rm out/results/isotropic-gaussian-prior.csv out/results/isotropic-gaussian-prior.json
-python linear-estimate.py --num_test_samples 200 --num_train_samples 200 -o out/results/isotropic-gaussian-prior \
-    --ord 1.5 2 20 inf -u 2
+python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior \
+    --ord 1.5 2 20 -u 2
 python linear-plot.py --file out/results/isotropic-gaussian-prior \
   --plot_style $STYLE plot_style_files/one_half.mplsty  \
-  plot_style_files/mycolors.mplsty  --plot_type risk_per_eps --second_marker_set --eps 0  \
+  plot_style_files/mycolors.mplsty  --plot_type risk_per_eps --second_marker_set --eps 2.0  \
   --save out/figures/isotropic-gaussian-prior-variouslp.pdf
 python linear-plot.py --file out/results/isotropic-gaussian-prior \
   --plot_style $STYLE plot_style_files/one_half.mplsty  \

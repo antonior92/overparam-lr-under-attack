@@ -197,7 +197,15 @@ if __name__ == "__main__":
 
     # Get proportion for bounds
     proportions_for_bounds = np.logspace(config['lower_proportion'], config['upper_proportion'], args.num_points)
-
+    # Adjust scaling
+    if config['swep_over'] == 'num_features':
+        n_features_for_bounds = config["num_train_samples"] * proportions_for_bounds
+        n_train_for_bounds = config["num_train_samples"] * np.ones_like(n_features_for_bounds)
+    elif config['swep_over'] == 'num_train_samples':
+        n_features_for_bounds = config["num_train_samples"]
+        n_train_for_bounds = config["num_train_samples"] * (1 / proportions_for_bounds)
+    else:
+        raise ValueError
     # compute standard arisk
     if not args.remove_bounds:
 
@@ -207,19 +215,12 @@ if __name__ == "__main__":
                                     config['features_kind'], config['off_diag'])
         adistance = assymptotic_l2_distance(proportions_for_bounds, config['signal_amplitude'], config['noise_std'],
                                             config['features_kind'], config['off_diag'])
-        # Adjust scaling
-        if config['swep_over'] == 'num_features':
-            n_features_for_bounds = config["num_train_samples"] * proportions_for_bounds
-            n_train_for_bounds = config["num_train_samples"] * np.ones_like(n_features_for_bounds)
-        elif config['swep_over'] == 'num_train_samples':
-            n_features_for_bounds = config["num_train_samples"]
-            n_train_for_bounds = config["num_train_samples"] * (1/proportions_for_bounds)
-        else:
-            raise ValueError
         if config['scaling'] == 'sqrt':
             anorm *= np.sqrt(n_features_for_bounds)
         elif config['scaling'] == 'sqrtlog':
             anorm *= np.sqrt(np.log(n_features_for_bounds))
+        elif config['scaling'] == 'none':
+            pass
         else:
             raise ValueError
 
@@ -268,12 +269,14 @@ if __name__ == "__main__":
             ax.set_ylabel('l2_distance')
     # Labels
     # Plot vertical line at the interpolation threshold
-    ax.axvline(1, ls='--')
+    if args.xaxis == 'n-over-m' or args.xaxis == 'm-over-n':
+        ax.axvline(1, ls='--')
     ax.set_xlabel(xlabel)
     if args.y_max:
         ax.set_ylim((10**args.y_min, 10**args.y_max))
-    ax.set_xscale('log')
-    ax.set_yscale('log')
+    if args.xaxis == 'n-over-m' or args.xaxis == 'm-over-n':
+        ax.set_xscale('log')
+        ax.set_yscale('log')
     if not args.remove_legend:
         plt.legend()
     plt.grid()
