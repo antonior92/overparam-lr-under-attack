@@ -161,7 +161,8 @@ def plot_fn(ax, df, config, ii):
     # Plot vertical line at the interpolation threshold
     if args.xaxis == 'n-over-m' or args.xaxis == 'm-over-n':
         ax.axvline(1, ls='--')
-    ax.set_xlabel(xlabel)
+    if not args.remove_xlabel:
+        ax.set_xlabel(xlabel)
     if args.y_max:
         ax.set_ylim((10**args.y_min, 10**args.y_max))
     if args.xaxis == 'n-over-m' or args.xaxis == 'm-over-n':
@@ -195,6 +196,8 @@ if __name__ == "__main__":
     parser.add_argument('--y_max', default=None, type=float,
                         help='superior limit to y-axis in the plot.')
     parser.add_argument('--remove_ylabel', action='store_true',
+                        help='don include ylable')
+    parser.add_argument('--remove_xlabel', action='store_true',
                         help='don include ylable')
     parser.add_argument('--remove_legend', action='store_true',
                         help='don include legend')

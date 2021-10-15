@@ -50,11 +50,13 @@ python linear-plot.py --file out/results/isotropic-sqrt-swepover_train \
 
 
 # Generate Figure 3
-python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior\
-    --ord 2 --features_kind isotropic --signal_amplitude 4
+python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior \
+    --ord 1.5 2 20 --signal_amplitude 1
 python linear-plot.py --file out/results/isotropic-gaussian-prior \
-    --plot_style $STYLE plot_style_files/one_half.mplsty --ord 2 \
-      --save out/figures/isotropic-gaussian-prior.pdf
+  --plot_style $STYLE plot_style_files/one_half.mplsty  \
+  plot_style_files/mycolors.mplsty  --plot_type risk_per_eps --second_marker_set --eps 2.0 \
+   --fillbetween closest-l2bound \
+  --save out/figures/isotropic-gaussian-prior-variouslp.pdf
 
 
 ############################
@@ -77,17 +79,31 @@ python linear-plot.py out/results/isotropic-gaussian-prior-linf-sqrt \
 ##################
 
 # Generate Figure 1
-python linear-estimate.py  --num_test_samples 100 --num_train_samples 400 -o test   \
+python linear-estimate.py  --num_test_samples 500 --num_train_samples 500 -o out/results/latent-sqrt  \
   --features_kind latent --ord 2 inf -e 0 0.1 \
-  --signal_amplitude 1 --noise_std 0 -u 2  --num_latent 20 --scaling sqrt
-python linear-plot.py  test test test --plot_type advrisk --eps 0 0.1 0.1 --ord inf 2 inf\
+  --signal_amplitude 1 --noise_std 0.1 -u 2  --num_latent 20 --scaling sqrt
+python linear-plot.py out/results/latent-sqrt out/results/latent-sqrt  out/results/latent-sqrt  \
+  --plot_type advrisk --eps 0 0.1 0.1 --ord inf 2 inf\
   --remove_bounds --second_marker_set --labels "no adv." '$\ell_2$ adv.' '$\ell_\infty$ adv.' \
   --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty   \
   --save out/figures/latent.pdf
+# Generate Figure 4(a)
+python linear-estimate.py  --num_test_samples 500 --num_train_samples 500 -o  out/results/latent-logsqrt  \
+  --features_kind latent --ord 2 inf -e 0 0.1 \
+  --signal_amplitude 1 --noise_std 0.1 -u 2  --num_latent 20 --scaling sqrtlog
+python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord 2 2 \
+  --remove_bounds --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' \
+  --plot_style $STYLE plot_style_files/stacked.mplsty  plot_style_files/mycolors.mplsty   \
+  --save out/figures/latent-l2.pdf --remove_xlabel
+# Generate Figure 4(b)
+python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord inf inf \
+  --remove_bounds --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' \
+  --plot_style $STYLE plot_style_files/stacked_bottom.mplsty  plot_style_files/mycolors.mplsty \
+  --save out/figures/latent-linf.pdf --remove_legend
 
 
-
-
+python rand-feature-plot.py --file out/results/l2-random-feature.csv --plot_style \
+   $STYLE plot_style_files/one_half.mplsty --save figures/l2-random-feature.pdf
 #########
 ## OLD ##
 #########
