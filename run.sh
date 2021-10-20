@@ -6,9 +6,9 @@ RESULTS=out/results
 FIGURES=out/figures
 STYLE="plot_style_files/mystyle.mplsty"
 
-##########################
-## ISOTROPIC L2 ATTACKS ##
-##########################
+##############################
+## ISOTROPIC FEATURES MODEL ##
+################################
 # Generate Figure 2
 python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic\
     --ord 2 --features_kind isotropic --signal_amplitude 4
@@ -52,8 +52,6 @@ python linear-plot.py out/results/isotropic-r4-{sqrt,sqrtlog} out/results/isotro
   --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty \
   --save out/figures/isotropic-norm.pdf
 
-
-
 # TODO: implement the figure. Linear estimate must now allow the
 # number of features to be constant while the number of datapoints vary.
 # We must also allow different values of signal amplitude in the same plot
@@ -73,10 +71,6 @@ python linear-plot.py --file out/results/isotropic-gaussian-prior \
    --fillbetween closest-l2bound \
   --save out/figures/isotropic-gaussian-prior-variouslp.pdf
 
-
-############################
-## ISOTROPIC LINF ATTACKS ##
-############################
 # Generate Figure 4
 for SCALING in sqrt sqrtlog;
 do
@@ -88,6 +82,55 @@ python linear-plot.py out/results/isotropic-gaussian-prior-linf-sqrt \
   --fillbetween only-show-ub --plot_style $STYLE plot_style_files/one_half.mplsty \
   --second_marker_set --save out/figures/linf-isotropic.pdf --labels '$\eta(m) = \sqrt{m}$' \
   '$\eta(m) = \sqrt{\log(m)}$'
+
+###############################
+## EQUICORRELATED ATTACKS ##
+###############################
+
+# Generate Figure S5 (a)
+python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/equicorrelated \
+      --ord 1.5 2 20 --features_kind equicorrelated --signal_amplitude 4
+python linear-plot.py --file out/results/equicorrelated\
+        --plot_style $STYLE plot_style_files/one_half.mplsty --ord 2 \
+        --save out/figures/equicorrelated.pdf
+# Generate Figure S5 (b) and (c)
+for SCALING in sqrt sqrtlog;
+do
+  python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/equicorrelated-"$SCALING"\
+      --ord 1.5 2 20  --features_kind equicorrelated --signal_amplitude 4 --scaling $SCALING
+  python linear-plot.py --file out/results/equicorrelated-"$SCALING" \
+      --plot_style $STYLE plot_style_files/one_half.mplsty --ord 2 \
+        --save out/figures/equicorrelated-"$SCALING".pdf
+done
+
+
+# Generate Figure S6 (a)
+python linear-plot.py --file out/results/equicorrelated \
+  --plot_style $STYLE plot_style_files/one_half.mplsty  \
+  plot_style_files/mycolors.mplsty  --plot_type risk_per_eps --second_marker_set --eps 2.0\
+   --fillbetween closest-l2bound \
+   --save out/figures/equicorrelated-variouslp.pdf
+# Generate Figure S6 (b) and (c)
+for SCALING in sqrt sqrtlog;
+do
+  python linear-plot.py --file out/results/equicorrelated-"$SCALING"  \
+  --plot_style $STYLE plot_style_files/one_half.mplsty  \
+  plot_style_files/mycolors.mplsty  --plot_type risk_per_eps --second_marker_set --eps 2.0\
+   --fillbetween closest-l2bound \
+   --save out/figures/equicorrelated-variouslp-"$SCALING".pdf
+done
+
+# Generate Figure S7
+
+for SCALING in sqrt sqrtlog;
+do
+  python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/equicorrelated-linf-"$SCALING"-0.5 \
+      --ord inf --eps 1.0 -u 2 --scaling $SCALING --features_kind equicorrelated
+done;
+python linear-plot.py out/results/equicorrelated-linf-{sqrt,sqrtlog}-0.5 --plot_type advrisk \
+  --fillbetween only-show-ub --plot_style $STYLE plot_style_files/one_half.mplsty \
+  --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' \
+   --save out/figures/equicorrelated-linf.pdf
 
 ##################
 ## LATENT MODEL ##
@@ -119,31 +162,3 @@ python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot
 
 python rand-feature-plot.py --file out/results/l2-random-feature.csv --plot_style \
    $STYLE plot_style_files/one_half.mplsty --save figures/l2-random-feature.pdf
-#########
-## OLD ##
-#########
-
-# Generate Figure 2*
-python linear-estimate.py --num_test_samples 300 --num_train_samples 300 -o out/results/equicorrelated-gaussian-prior\
-    --ord 1.5 2 20 --features_kind equicorrelated --off_diag 0.9
-python linear-plot.py --file out/results/equicorrelated-gaussian-prior \
-    --plot_style $STYLE plot_style_files/one_half.mplsty --ord 2  --save out/figures/equicorrelated-gaussian-prior-l2.pdf
-
-
-# From previous run
-
-python estimate_advrisk_linear.py --num_test_samples 100 --num_train_samples 100 -o results/equicorrelated0.9-gaussian-prior.csv \
-  --features_kind equicorrelated --ord 2 --off_diag 0.9
-python estimate_advrisk_rand_features.py -n 60 -r 4 -u 1 -l -1 --epsilon 0 0.1 1.0 --ord 2 --noise_std 0 \
-     -o results/l2-random-feature.csv --fixed nfeatures_over_inputdim --datagen_parameter constant
-
-
-echo "Generate Figures 1..."
-
-echo "Generate Figures 2..."
-python plot_linear.py --file results/equicorrelated0.9-gaussian-prior.csv --save figures/equicorrelated-gaussian-prior-l2.pdf --plot_style $STYLE plot_style_files/one_half.mplsty  --ord 2 --y_min -0.2 --y_max 4.6
-
-echo "Generate Figures 3..."
-python plot_linear.py --file results/isotropic-gaussian-prior.csv --save figures/isotropic-gaussian-prior-l1.5.pdf --plot_style $STYLE plot_style_files/one_third_with_ylabel.mplsty --ord 1.5 --y_min -0.2 --y_max 4.6
-python plot_linear.py --file results/isotropic-gaussian-prior.csv --save figures/isotropic-gaussian-prior-l2.pdf --plot_style $STYLE plot_style_files/one_third_without_ylabel.mplsty --remove_ylabel --remove_legend --ord 2 --y_min -0.2 --y_max 4.6
-python plot_linear.py --file results/isotropic-gaussian-prior.csv --save figures/isotropic-gaussian-prior-l20.pdf --plot_style $STYLE plot_style_files/one_third_without_ylabel.mplsty  --remove_ylabel --remove_legend --ord 20 --y_min -0.2 --y_max 4.6
