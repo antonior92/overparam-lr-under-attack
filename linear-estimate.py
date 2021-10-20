@@ -215,7 +215,7 @@ if __name__ == '__main__':
 
     # Some of the executions are computationally heavy and others are not. We shuffle the configurations
     # so the progress bar can give a more accurate notion of the time to completion
-    #random.shuffle(run_instances)
+    random.shuffle(run_instances)
     prev_mdl = None  # used only if reuse_weights is True
     df = pd.DataFrame(columns=['proportion', 'seed'] + ['norm-{:.1f}'.format(p) for p in args.ord] +
                               ['advrisk-{:.1f}-{:.1f}'.format(p, e) for p, e in itertools.product(args.ord, args.epsilon)])

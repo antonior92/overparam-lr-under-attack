@@ -138,7 +138,7 @@ python linear-plot.py out/results/equicorrelated-linf-{sqrt,sqrtlog}-0.5 --plot_
 
 # Generate Figure 1
 python linear-estimate.py  --num_test_samples 500 --num_train_samples 500 -o out/results/latent-sqrt  \
-  --features_kind latent --ord 2 inf -e 0 0.1 \
+  --features_kind latent --ord 2 1.5 20 inf -e 0 0.1 \
   --signal_amplitude 1 --noise_std 0.1 -u 2  --num_latent 20 --scaling sqrt
 python linear-plot.py out/results/latent-sqrt out/results/latent-sqrt  out/results/latent-sqrt  \
   --plot_type advrisk --eps 0 0.1 0.1 --ord inf 2 inf\
@@ -147,7 +147,7 @@ python linear-plot.py out/results/latent-sqrt out/results/latent-sqrt  out/resul
   --save out/figures/latent.pdf
 # Generate Figure 4(a)
 python linear-estimate.py  --num_test_samples 500 --num_train_samples 500 -o  out/results/latent-logsqrt  \
-  --features_kind latent --ord 2 inf -e 0 0.1 \
+  --features_kind latent --ord  2 1.5 20 inf -e 0 0.1 \
   --signal_amplitude 1 --noise_std 0.1 -u 2  --num_latent 20 --scaling sqrtlog
 python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord 2 2 \
   --remove_bounds --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' \
@@ -158,6 +158,63 @@ python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot
   --remove_bounds --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' \
   --plot_style $STYLE plot_style_files/stacked_bottom.mplsty  plot_style_files/mycolors.mplsty \
   --save out/figures/latent-linf.pdf --remove_legend
+
+
+# Generate Figure S8
+python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord 2 2 \
+  --remove_bounds --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' \
+  --plot_style $STYLE plot_style_files/one_half.mplsty   plot_style_files/mycolors.mplsty   \
+  --save out/figures/latent-l1.5.pdf --remove_xlabel
+python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord 20 20 \
+  --remove_bounds --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' \
+  --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty \
+  --save out/figures/latent-l20.pdf --remove_legend
+
+
+# Generate Figure S9
+for SCALING in sqrt sqrtlog;
+  do for NOISE in 1 0.5 0.1 0;
+  do
+    python linear-estimate.py  --num_test_samples 200 --num_train_samples 200 -o out/results/latent-"$SCALING"-"$NOISE"  \
+      --features_kind latent --ord 2 1.5 20 inf -e 0 0.1 0.5 2  \
+      --signal_amplitude 1 --noise_std $NOISE -u 2  --num_latent 20 --scaling "$SCALING"
+  done;
+done
+
+
+for SCALING in sqrt sqrtlog;
+  do for ORD in 2 inf;
+  do
+    python linear-plot.py out/results/latent-"$SCALING"-{1,0.5,0.1,0} --ord $ORD $ORD $ORD $ORD --eps 0.1 0.1 0.1 0.1 --plot_type advrisk \
+      --plot_style $STYLE plot_style_files/stacked.mplsty --remove_bounds --second_marker_set \
+      --labels '$\sigma_\xi = 1$' '$\sigma_\xi = 0.5$' '$\sigma_\xi = 0.1$' '$\sigma_\xi = 0$' \
+       --save latent-noise-l"$ORD"-"$SCALING" --remove_legend
+  done;
+done
+# Repeat the last one with the legend so it overide the plot (Not very clen :) )
+python linear-plot.py out/results/latent-sqrt-{1,0.5,0.1,0} --ord inf inf inf inf  --eps 0.1 0.1 0.1 0.1 --plot_type advrisk \
+      --plot_style $STYLE plot_style_files/stacked.mplsty --remove_bounds --second_marker_set \
+      --labels '$\sigma_\xi = 1$' '$\sigma_\xi = 0.5$' '$\sigma_\xi = 0.1$' '$\sigma_\xi = 0$' \
+       --save latent-noise-linf-sqrt
+
+
+# Generate Figure S10
+
+for SCALING in sqrt sqrtlog;
+  do for ORD in 2 inf;
+  do
+  python linear-plot.py out/results/latent-"$SCALING"-0.1 \
+      --plot_style $STYLE plot_style_files/stacked.mplsty  --ord $ORD  --remove_bounds \
+       --save latent-eps-l"$ORD"-"$SCALING" --remove_legend
+  done;
+done;
+python linear-plot.py out/results/latent-sqrt-0.1 \
+      --plot_style $STYLE plot_style_files/stacked.mplsty  --ord inf  --remove_bounds \
+       --save latent-eps-linf-sqrt
+
+#####################
+## NONLINEAR MODEL ##
+#####################
 
 
 python rand-feature-plot.py --file out/results/l2-random-feature.csv --plot_style \
