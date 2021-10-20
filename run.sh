@@ -17,7 +17,7 @@ python linear-plot.py --file out/results/isotropic-gaussian-prior \
       --save out/figures/isotropic.pdf
 
 # Generate Figure S1
-for RR in 0.5 1 2;
+for RR in 0.5 1 2 4;
 do
   python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-r"$RR"\
       --ord 2 --features_kind isotropic --signal_amplitude $RR
@@ -29,15 +29,30 @@ done;
 
 # Generate Figure S2 and S3
 for SCALING in sqrt sqrtlog;
-do for RR in 0.5 1 2;
+do for RR in 0.5 1 2 4;
   do
-    python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior-r"$RR"-"$SCALING"\
+    python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-r"$RR"-"$SCALING"\
         --ord 2 --features_kind isotropic --signal_amplitude $RR --scaling $SCALING
-    python linear-plot.py --file out/results/isotropic-gaussian-prior-r"$RR"-"$SCALING" \
+    python linear-plot.py --file out/results/isotropic-r"$RR"-"$SCALING" \
         --plot_style $STYLE plot_style_files/one_third_with_ylabel.mplsty --ord 2 \
-        --save out/figures/isotropic-gaussian-prior-r"$RR"-"$SCALING".pdf
+        --save out/figures/isotropic-r"$RR"-"$SCALING".pdf
   done;
 done;
+
+# Generate Figure S4 (a)
+python linear-plot.py out/results/isotropic-r{0.5,1,2,4} --plot_type advrisk \
+  --second_marker_set --labels '$r^2=0.5$' '$r^2=1$' '$r^2=2$' '$r^2=4$' --eps 0 0 0 0 \
+  --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty \
+  --save out/figures/isotropic-predrisk.pdf
+
+
+# Generate Figure S4 (b)
+python linear-plot.py out/results/isotropic-r4-{sqrt,sqrtlog} out/results/isotropic-r4 --plot_type norm \
+  --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log{m}}$' '$\eta(m) = 1$'  \
+  --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty \
+  --save out/figures/isotropic-norm.pdf
+
+
 
 # TODO: implement the figure. Linear estimate must now allow the
 # number of features to be constant while the number of datapoints vary.

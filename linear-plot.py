@@ -54,6 +54,7 @@ def plot_risk_and_bounds(ax, i, df, lbl, p, e, xaxis, xaxis_for_bounds, n_featur
             ax.plot(xaxis_for_bounds, ub, '-', color=l.get_color(), lw=1)
             ax.plot(xaxis_for_bounds, lb, '-', color=l.get_color(), lw=1)
 
+
 def plot_norm(ax, i, df, lbl, p, xaxis, xaxis_for_bounds, n_features_for_bounds, anorm):
     pnorm = df['norm-{:.1f}'.format(p)]
     l, = ax.plot(xaxis, pnorm, markers[i], ms=4, label=lbl)
@@ -149,8 +150,9 @@ def plot_fn(ax, df, config, ii):
         if not args.remove_ylabel:
             ax.set_ylabel('Risk')
     elif args.plot_type == 'norm':
-        for i, p in enumerate(config['ord']):
-            plot_norm(ax, i, df, str(p), p, xaxis, xaxis_for_bounds, n_features_for_bounds, anorm)
+        p = args.ord[ii] if args.ord is not None else config['ord'][0]
+        lbl = args.labels[ii] if args.labels is not None else ''
+        plot_norm(ax, ii, df, lbl, p, xaxis, xaxis_for_bounds, n_features_for_bounds, anorm)
         if not args.remove_ylabel:
             ax.set_ylabel('Norm')
     elif args.plot_type == 'distance':
