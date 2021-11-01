@@ -1,31 +1,40 @@
 import numpy as np
+from interp_under_attack.latent_space import compute_normalized_bias_and_variance
+
 
 ###########################
 # Asymptotic computations #
 ###########################
-def asymptotic_risk(proportion, signal_amplitude, noise_std, features_kind, off_diag):
+def asymptotic_risk(proportion, signal_amplitude, noise_std, features_kind, off_diag, proportion_latent):
     # This follows from Hastie Thm.1 (p.7) and is the same regardless of the covariance matrix
     # Does not account for the noise
-
-    # The variance term
-    v_underparametrized = proportion / (1 - proportion)
-    v_overparametrized = 1 / (proportion - 1)
-    v = (proportion < 1) * v_underparametrized + (proportion > 1) * v_overparametrized
-
-    # The bias term
-    b_underparametrized = 0
-    if features_kind == 'isotropic':
-        b_overparametrized = (1 - 1 / proportion)
-    elif features_kind == 'equicorrelated':
-        b_overparametrized = (1 - off_diag) * (1 - 1 / proportion)
+    if features_kind == 'latent':
+        psi = (proportion_latent / proportion)
+        b, v = compute_normalized_bias_and_variance(proportion, 1/psi)
+        noise_std = np.sqrt(noise_std ** 2 + signal_amplitude**2 * psi / (1+psi))  # redefine noise std
     else:
-        raise ValueError
-    b = (proportion < 1) * b_underparametrized + (proportion > 1) * b_overparametrized
+        # The variance term
+        v_underparametrized = proportion / (1 - proportion)
+        v_overparametrized = 1 / (proportion - 1)
+        v = (proportion < 1) * v_underparametrized + (proportion > 1) * v_overparametrized
+
+        # The bias term
+        b_underparametrized = 0
+        if features_kind == 'isotropic':
+            b_overparametrized = (1 - 1 / proportion)
+        elif features_kind == 'equicorrelated':
+            b_overparametrized = (1 - off_diag) * (1 - 1 / proportion)
+        else:
+            raise ValueError
+        b = (proportion < 1) * b_underparametrized + (proportion > 1) * b_overparametrized
 
     return noise_std ** 2 * v + signal_amplitude ** 2 * b + noise_std ** 2
 
 
-def assymptotic_l2_norm(proportion, signal_amplitude, noise_std, features_kind, off_diag):
+def assymptotic_l2_norm(proportion, signal_amplitude, noise_std, features_kind, off_diag, proportion_latent):
+    if features_kind == 'latent':
+        return np.ones_like(proportion)
+
     if features_kind == 'isotropic':
         v_underparametrized = proportion / (1 - proportion)
         v_overparametrized = 1 / (proportion - 1)
@@ -43,7 +52,10 @@ def assymptotic_l2_norm(proportion, signal_amplitude, noise_std, features_kind, 
     return np.sqrt(noise_std ** 2 * v + signal_amplitude ** 2 * b)
 
 
-def assymptotic_l2_distance(proportion, signal_amplitude, noise_std, features_kind, off_diag):
+def assymptotic_l2_distance(proportion, signal_amplitude, noise_std, features_kind, off_diag, proportion_latent):
+    if features_kind == 'latent':
+        return np.ones_like(proportion)
+
     if features_kind == 'isotropic':
         v_underparametrized = proportion / (1 - proportion)
         v_overparametrized = 1 / (proportion - 1)
