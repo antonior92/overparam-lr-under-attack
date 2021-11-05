@@ -1,5 +1,5 @@
 import numpy as np
-from interp_under_attack.latent_space import compute_normalized_bias_and_variance
+from interp_under_attack.latent_space import compute_normalized_bias_and_variance, compute_c0
 
 
 ###########################
@@ -9,8 +9,9 @@ def asymptotic_risk(proportion, signal_amplitude, noise_std, features_kind, off_
     # This follows from Hastie Thm.1 (p.7) and is the same regardless of the covariance matrix
     # Does not account for the noise
     if features_kind == 'latent':
+        print('proportion_latent',  proportion_latent)
+        b, v = compute_normalized_bias_and_variance(proportion, proportion_latent)
         psi = (proportion_latent / proportion)
-        b, v = compute_normalized_bias_and_variance(proportion, 1/psi)
         noise_std = np.sqrt(noise_std ** 2 + signal_amplitude**2 * psi / (1+psi))  # redefine noise std
     else:
         # The variance term
@@ -33,7 +34,10 @@ def asymptotic_risk(proportion, signal_amplitude, noise_std, features_kind, off_
 
 def assymptotic_l2_norm(proportion, signal_amplitude, noise_std, features_kind, off_diag, proportion_latent):
     if features_kind == 'latent':
-        return np.ones_like(proportion)
+        c0 = compute_c0(proportion, proportion_latent)
+        psi = (proportion_latent / proportion)
+        noise_std = np.sqrt(noise_std ** 2 + signal_amplitude**2 * psi / (1+psi))  # redefine noise std
+        signal_amplitude = np.sqrt(1/psi) / (1 + (1/psi)) * signal_amplitude
 
     if features_kind == 'isotropic':
         v_underparametrized = proportion / (1 - proportion)
@@ -41,12 +45,19 @@ def assymptotic_l2_norm(proportion, signal_amplitude, noise_std, features_kind, 
     elif features_kind == 'equicorrelated':
         v_underparametrized = proportion / ((1 - proportion) * (1 - off_diag))
         v_overparametrized = 1 / ((proportion - 1) * (1 - off_diag))
+    elif features_kind == 'latent':
+        v_underparametrized = proportion / ((1 - proportion) * (1 - psi))
+        v_overparametrized = proportion * c0
     else:
         raise ValueError
     v = (proportion < 1) * v_underparametrized + (proportion > 1) * v_overparametrized
 
     b_underparametrized = 1
-    b_overparametrized = 1 / proportion
+    if features_kind in ['isotropic', 'equicorrelated'] :
+        b_overparametrized = 1 / proportion
+    elif features_kind == 'latent':
+        aux = proportion * c0 * (1 + (1/psi))
+        b_overparametrized = aux / (1 + aux)
     b = (proportion < 1) * b_underparametrized + (proportion > 1) * b_overparametrized
 
     return np.sqrt(noise_std ** 2 * v + signal_amplitude ** 2 * b)

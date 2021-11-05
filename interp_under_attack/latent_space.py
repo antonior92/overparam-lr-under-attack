@@ -10,7 +10,7 @@ class AnalyticFunctionC0(object):
         # Define 2nd order eq (35) from Hastie
         den1 = gamma
         den2 = 1 + c0 * gamma
-        den3 = 1 + c0 * (1 + 1 / psi) * gamma
+        den3 = 1 + c0 * (1 + (1 / psi)) * gamma
         eq_2nd_order = den2 * den3 + (1 - psi) * den1 * den3 + psi * den1 * den2 - den1 * den2 * den3
 
         # Transform to polynomial coeficients
@@ -20,19 +20,22 @@ class AnalyticFunctionC0(object):
     def __call__(self, gamma, psi):
         coeffs = self.compute_coeffs(gamma, psi)
         roots = np.roots(coeffs)
-        print(roots)
-        try:
-            return roots[roots >= 0][0]
-        except:
-            return 0
+        return max(np.abs(roots))
 
 
-compute_c0 = np.vectorize(AnalyticFunctionC0())
+compute_c0_scalar = AnalyticFunctionC0()
+
+def compute_c0(proportions, proportion_latent):
+    x = []
+    for p in proportions.tolist():
+        x += [compute_c0_scalar(p, proportion_latent/p)]
+    return np.array(x)
 
 
-def compute_normalized_bias_and_variance(gamma, psi):
-    c0 = compute_c0(gamma, psi)
-    print('c0=', c0, 'gamma= ', gamma)
+def compute_normalized_bias_and_variance(proportions, proportion_latent):
+    c0 = compute_c0(proportions, proportion_latent)
+    psi = (proportion_latent / proportions)
+    gamma = proportions
     # Implementing equations (33) and (34) from Hastie
     term1 = (1-psi) / (1 + c0 * gamma) ** 2
     aux = (1 + 1 / psi)
@@ -49,10 +52,12 @@ def compute_normalized_bias_and_variance(gamma, psi):
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     # Check whether the property of non-negativeness actually holds
-    proportions = np.logspace(-2, 2, 50)
+    proportions = np.logspace(-1, 2, 50)
 
-    x = compute_c0(proportions, 0.1/proportions)
-    plt.semilogx(proportions, x)
+    x = compute_c0(proportions, 0.0003)
+    plt.plot(proportions, x)
+    plt.xscale('log')
+    plt.yscale('log')
     plt.show()
 
     # TODO fix c0 computation
