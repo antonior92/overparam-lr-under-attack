@@ -219,3 +219,38 @@ python linear-plot.py out/results/latent-sqrt-0.1 \
 
 python rand-feature-plot.py --file out/results/l2-random-feature.csv --plot_style \
    $STYLE plot_style_files/one_half.mplsty --save figures/l2-random-feature.pdf
+
+
+## TEST
+python linear-estimate.py --num_test_samples 200 --num_train_samples 200 -o test  \
+  --features_kind latent --ord 2 1.5 20 inf -e 0 0.1 -r 10 \
+  --signal_amplitude 0.1 --noise_std 10 -u 2  --num_latent 20 --scaling none
+python linear-plot.py out/results/test-latent-none --plot_type advrisk --eps 0  --ord inf
+python linear-plot.py out/results/test-latent-none --plot_type norm
+
+
+
+## Presentation
+
+python linear-plot.py out/results/latent-sqrt \
+  --plot_type advrisk --eps 0 --ord inf \
+  --remove_bounds --second_marker_set --remove_legend \
+  --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty   \
+  --save latent_space_risk.pdf
+
+
+python linear-plot.py out/results/latent-sqrt \
+  --plot_type advrisk --eps 0.1 --ord inf \
+  --second_marker_set --remove_legend --fillbetween only-show-ub --remove_bounds \
+  --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty   \
+  --save latent_space_linfrisk.pdf
+python linear-plot.py out/results/latent-sqrt \
+  --plot_type advrisk --eps 0.1 --ord 2 \
+  --second_marker_set --remove_legendm --fillbetween only-show-ub --remove_bounds \
+  --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty   \
+  --save latent_space_l2risk.pdf
+
+## Test mispecif
+
+python linear-estimate.py --features_kind mispecif --num_train_samples 500 --num_test_samples 500
+python linear-plot.py performance --remove_bounds

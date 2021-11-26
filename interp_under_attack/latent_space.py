@@ -8,22 +8,31 @@ class AnalyticFunctionC0(object):
             = sympy.symbols('gamma psi c0')
 
         # Define 2nd order eq (35) from Hastie
-        den1 = gamma
-        den2 = 1 + c0 * gamma
-        den3 = 1 + c0 * (1 + (1 / psi)) * gamma
-        eq_2nd_order = den2 * den3 + (1 - psi) * den1 * den3 + psi * den1 * den2 - den1 * den2 * den3
+        den1 = 1 + c0 * gamma
+        den2 = 1 + c0 * (1 + (1 / psi)) * gamma
+        eq_2nd_order = (1/gamma - 1) * den1 * den2 + (1 - psi) * den2 + psi * den1
 
         # Transform to polynomial coeficients
-        coeffs = sympy.Poly(eq_2nd_order, c0).coeffs()
+        coeffs = sympy.Poly(eq_2nd_order, c0).all_coeffs()
+        print(coeffs)
         self.compute_coeffs = sympy.lambdify((gamma, psi), coeffs, 'numpy')
 
     def __call__(self, gamma, psi):
         coeffs = self.compute_coeffs(gamma, psi)
+        a, b, c = coeffs
+        print(coeffs)
+        delta = b**2 - 4 * a * c
+        print(delta)
         roots = np.roots(coeffs)
-        return max(np.abs(roots))
+        print(gamma, psi, roots > 0)
+        if (np.real(roots) > 0).any():
+            return np.max(np.abs(roots))
+        else:
+            return np.NaN
 
 
 compute_c0_scalar = AnalyticFunctionC0()
+
 
 def compute_c0(proportions, proportion_latent):
     x = []
@@ -45,7 +54,7 @@ def compute_normalized_bias_and_variance(proportions, proportion_latent):
 
     # Implementing equations (31) and (32)
     v = c0 * gamma * E1/E2
-    b = (1 + v) / ((1 + psi) * den2)
+    b = (1 + v) * aux / den2
     return b, v
 
 

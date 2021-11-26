@@ -19,11 +19,12 @@ def generate_random_ortogonal(p, d, rng):
 class GenerateData(object):
 
     def __init__(self, n_features, n_latent, noise_std, parameter_norm,
-                 datagen_parameter, kind, off_diag, scaling, seed=0):
+                 datagen_parameter, kind, off_diag, scaling, n_mispecif, seed=0):
 
         self.n_features, self.n_latent = n_features, n_latent
         self.kind, self.datagen_parameter = kind, datagen_parameter
         self.off_diag, self.noise_std = off_diag, noise_std
+        self.n_mispecif = n_mispecif   # this is alpha in Hasties section 5.3
 
         # Random state
         rng = np.random.RandomState(seed)
@@ -40,16 +41,16 @@ class GenerateData(object):
             raise ValueError
 
         # Define parameter
-        if kind != 'latent':
-            if datagen_parameter == 'gaussian_prior':
-                self.beta = parameter_norm * (self.scaling / np.sqrt(n_features)) * rng.randn(n_features)
-            elif datagen_parameter == 'constant':
-                self.beta = parameter_norm * (self.scaling / np.sqrt(n_features)) * np.ones(n_features)
+        if kind == 'latent':
+            nn = n_latent
+        elif kind == 'mispecif':
+            nn = n_features + n_mispecif
         else:
-            if datagen_parameter == 'gaussian_prior':
-                self.beta = parameter_norm / np.sqrt(n_latent) * rng.randn(n_latent)
-            elif datagen_parameter == 'constant':
-                self.beta = parameter_norm / np.sqrt(n_latent) * np.ones(n_latent)
+            nn = n_features
+        if datagen_parameter == 'gaussian_prior':
+            self.beta = parameter_norm / np.sqrt(nn) * rng.randn(nn)
+        elif datagen_parameter == 'constant':
+            self.beta = parameter_norm / np.sqrt(nn) * np.ones(nn)
 
         # In the case of latent space define transformation
         if kind == 'latent':
@@ -77,10 +78,12 @@ class GenerateData(object):
             return X, y
 
         # Get random components
-        z = 1 / self.scaling * rng.randn(n_samples, n_features)
-        if kind == 'isotropic':
-            X = z
+        if kind == 'mispecif':
+            X = 1 / self.scaling * rng.randn(n_samples, n_features + self.n_mispecif)
+        elif kind == 'isotropic':
+            X = 1 / self.scaling * rng.randn(n_samples, n_features)
         elif kind == 'equicorrelated':  # Significant faster implementation then the naive one
+            z = 1 / self.scaling * rng.randn(n_samples, n_features)
             # For convenience, let u be a vector of ones
             u = np.ones(n_features)
             # The equicorrelated matrix can be written as:
@@ -110,13 +113,18 @@ class GenerateData(object):
             #         u, s, vh = np.linalg.svd(cov)
             #         cov_sqr = np.dot(u * np.sqrt(s), vh)
             #         return z @ cov_sqr
-            # TODO: add latter...
+            # add if necessary
             raise ValueError('Invalid kind of feature generation')
         # Get error
         e = rng.randn(n_samples)
         # Compute output
         y = X @ beta + noise_std * e
-        return X, y
+
+        if kind == 'mispecif':
+            X_obs = X[:, :n_features]
+            return X_obs, y
+        else:
+            return X, y
 
 
 def train_and_evaluate(data_generator, n_samples, n_test_samples, epsilon, ord):
@@ -157,7 +165,10 @@ def train_and_evaluate(data_generator, n_samples, n_test_samples, epsilon, ord):
             risk['advrisk-{:.1f}-{:.1f}'.format(p, e)] = r
 
     # Compute distance
-    l2distance = np.linalg.norm(beta_hat - dgen.beta, ord=2) if dgen.kind != 'latent' else 'unavailable'
+    if dgen.kind in ['isotropic', 'equicorrelated']:
+        l2distance = np.linalg.norm(beta_hat - dgen.beta, ord=2)
+    else:
+        l2distance = 'unavailable'
     return risk, pnorms, l2distance
 
 
@@ -187,13 +198,17 @@ if __name__ == '__main__':
                         help='the epsilon values used when computing the adversarial ttack')
     parser.add_argument('-s', '--noise_std', type=float, default=1.0,
                         help='standard deviation of the additive noise added.')
-    parser.add_argument('-f', '--features_kind', choices=['isotropic', 'equicorrelated', 'latent'],
+    parser.add_argument('-f', '--features_kind', choices=['isotropic', 'equicorrelated', 'latent', 'mispecif'],
                         default='isotropic', help='how the features are generated')
     parser.add_argument('--datagen_parameter', choices=['gaussian_prior', 'constant'], default='gaussian_prior',
                         help='how the features are generated')
     parser.add_argument('--off_diag', default=0.5, type=float,
                         help='value of diagonal values. Default is 0.5. Only take effect when '
                              'features_kind = equicorrelated.')
+    parser.add_argument('--mispec_factor', default=1, type=float,
+                        help='In case `features_kind = mispecif` specify '
+                             'how the number of mispedified terms grow'
+                             ' with the number of parameters')
     parser.add_argument('--num_latent', default=20, type=int,
                         help='size of latent space used only in the case features_kind=latent')
     parser.add_argument('--signal_amplitude', type=float, default=1.0,
@@ -215,7 +230,7 @@ if __name__ == '__main__':
 
     # Some of the executions are computationally heavy and others are not. We shuffle the configurations
     # so the progress bar can give a more accurate notion of the time to completion
-    random.shuffle(run_instances)
+    #random.shuffle(run_instances)
     prev_mdl = None  # used only if reuse_weights is True
     df = pd.DataFrame(columns=['proportion', 'seed'] + ['norm-{:.1f}'.format(p) for p in args.ord] +
                               ['advrisk-{:.1f}-{:.1f}'.format(p, e) for p, e in itertools.product(args.ord, args.epsilon)])
@@ -226,9 +241,13 @@ if __name__ == '__main__':
         elif args.swep_over == 'num_train_samples':
             n_train = max(int((1/proportion) * args.num_train_samples), 1)
             n_features = args.num_train_samples
+        if args.features_kind == 'mispecif':
+            frac = n_features / n_train
+            frac_mispecif = (1 + frac) ** (-args.mispec_factor)
+            n_mispecif = int(n_features * frac_mispecif)
         dgen = GenerateData(n_features, args.num_latent, args.noise_std, args.signal_amplitude,
                             args.datagen_parameter, args.features_kind, args.off_diag, args.scaling,
-                            seed)
+                            n_mispecif, seed)
         risk, pnorms, l2distance = train_and_evaluate(dgen, n_train,  args.num_test_samples,
                                                       args.epsilon, args.ord)
         dict1 = {'proportion': proportion, 'n_features': n_features, 'n_train': n_train, 'seed': seed, 'l2distance': l2distance}
