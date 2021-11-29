@@ -4,7 +4,8 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np  # numpy > 1.10 so we can use np.linalg.norm(...,axis=axis, keepdims=keepdims)
 import random
-from interp_under_attack. adversarial_attack import compute_adv_attack
+from interp_under_attack.adversarial_attack import compute_adv_attack
+from linear import compute_mispecif_proportion
 import json
 import scipy.linalg as linalg
 
@@ -243,7 +244,7 @@ if __name__ == '__main__':
             n_features = args.num_train_samples
         if args.features_kind == 'mispecif':
             frac = n_features / n_train
-            frac_mispecif = (1 + frac) ** (-args.mispec_factor)
+            frac_mispecif = compute_mispecif_proportion(frac, args.mispec_factor)
             n_mispecif = int(n_features * frac_mispecif)
         dgen = GenerateData(n_features, args.num_latent, args.noise_std, args.signal_amplitude,
                             args.datagen_parameter, args.features_kind, args.off_diag, args.scaling,

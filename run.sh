@@ -252,5 +252,6 @@ python linear-plot.py out/results/latent-sqrt \
 
 ## Test mispecif
 
-python linear-estimate.py --features_kind mispecif --num_train_samples 500 --num_test_samples 500
-python linear-plot.py performance --remove_bounds
+python linear-estimate.py --features_kind mispecif --num_train_samples 200 --num_test_samples 200 -u 2
+python linear-plot.py performance --plot_type norm
+python linear-plot.py performance

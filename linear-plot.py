@@ -93,11 +93,14 @@ def plot_fn(ax, df, config, ii):
     if not args.remove_bounds:
         proportion_latent = config['num_latent'] / config['num_train_samples'] if config['features_kind'] == 'latent' else 0
         arisk = asymptotic_risk(proportions_for_bounds, config['signal_amplitude'], config['noise_std'],
-                                config['features_kind'], config['off_diag'], proportion_latent)
+                                config['features_kind'], config['off_diag'],
+                                config['mispec_factor'], proportion_latent)
         anorm = assymptotic_l2_norm(proportions_for_bounds, config['signal_amplitude'], config['noise_std'],
-                                    config['features_kind'], config['off_diag'], proportion_latent)
+                                    config['features_kind'], config['off_diag'], config['mispec_factor'],
+                                    proportion_latent)
         adistance = assymptotic_l2_distance(proportions_for_bounds, config['signal_amplitude'], config['noise_std'],
-                                            config['features_kind'], config['off_diag'], proportion_latent)
+                                            config['features_kind'], config['off_diag'], config['mispec_factor'],
+                                            proportion_latent)
         if config['scaling'] == 'sqrt':
             anorm *= np.sqrt(n_features_for_bounds)
         elif config['scaling'] == 'sqrtlog':
