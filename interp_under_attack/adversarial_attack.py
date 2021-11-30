@@ -7,7 +7,7 @@ def compute_q(p):
         q = np.Inf
     else:
         q = 1
-        returtn q
+    return q
 
 def compute_adv_attack(error, jac, ord=2.0):
     """Compute one step of the adversarial attack with unitary p-norm.

@@ -5,9 +5,25 @@ import pandas as pd
 import numpy as np  # numpy > 1.10 so we can use np.linalg.norm(...,axis=axis, keepdims=keepdims)
 import random
 from interp_under_attack.adversarial_attack import compute_adv_attack, compute_q
+from interp_under_attack.adversarial_training import adversarial_training
 from linear import compute_mispecif_proportion
 import json
 import scipy.linalg as linalg
+
+
+def train(X, y, type='min-l2norm', regularization=0.0):
+    if type == 'min-l2norm':  # min norm solution
+        estim_param, _resid, _rank, _s = linalg.lstsq(X, y)
+    elif type == 'ridge':
+        # SVD implementation of ridge regression
+        u, s, vh = linalg.svd(X, full_matrices=False, compute_uv=True)
+        prod_aux = s / (regularization + s ** 2)  # If S = diag(s) => P = inv(S.T S + ridge * I) S.T => prod_aux = diag(P)
+        estim_param = (prod_aux * (y @ u)) @ vh  # here estim_param = V P U.T
+    elif type == 'advtrain-l2':
+        estim_param = adversarial_training(X, y, 2, regularization, niter=10, verbose=False)
+    elif type == 'advtrain-linf':
+        estim_param = adversarial_training(X, y, np.Inf, regularization, niter=10, verbose=False)
+    return estim_param
 
 
 def generate_random_ortogonal(p, d, rng):
@@ -59,7 +75,6 @@ class GenerateData(object):
             self.w = factor * generate_random_ortogonal(n_features, n_latent, rng)
         else:
             self.w = None
-
 
     def __call__(self, n_samples):
         # Just bring variable to the local scope
@@ -128,12 +143,12 @@ class GenerateData(object):
             return X, y
 
 
-def train_and_evaluate(data_generator, n_samples, n_test_samples, epsilon, ord):
+def train_and_evaluate(data_generator, n_samples, n_test_samples, epsilon, ord, train_type, train_regularizations):
     # Generate training data
     X, y = data_generator(n_samples)
 
     # Train
-    beta_hat, _resid, _rank, _s = linalg.lstsq(X, y)
+    beta_hat = train(X, y, train_type, train_regularizations)
 
     # Test data
     # Get X matrix
@@ -191,9 +206,13 @@ if __name__ == '__main__':
                              'number of training samples. when `swep_over=num_train_samples` keep the number of'
                              'features constant and vary the number of training samples')
     parser.add_argument('-e', '--epsilon', default=[0, 0.1, 0.5, 1, 2], type=float, nargs='+',
-                        help='the epsilon values used when computing the adversarial ttack')
+                        help='the epsilon values used when computing the adversarial attack')
     parser.add_argument('-s', '--noise_std', type=float, default=1.0,
                         help='standard deviation of the additive noise added.')
+    parser.add_argument('--regularization', type=float, default=0.0,
+                        help='amount of regularization added during training')
+    parser.add_argument('--training', choices=['min-l2norm', 'ridge', 'advtrain-l2', 'advtrain-linf'],
+                        help='amount of regularization added during training')
     parser.add_argument('-f', '--features_kind', choices=['isotropic', 'equicorrelated', 'latent', 'mispecif'],
                         default='isotropic', help='how the features are generated')
     parser.add_argument('--datagen_parameter', choices=['gaussian_prior', 'constant'], default='gaussian_prior',
@@ -241,11 +260,13 @@ if __name__ == '__main__':
             frac = n_features / n_train
             frac_mispecif = compute_mispecif_proportion(frac, args.mispec_factor)
             n_mispecif = int(n_features * frac_mispecif)
+        else:
+            n_mispecif = 0
         dgen = GenerateData(n_features, args.num_latent, args.noise_std, args.signal_amplitude,
                             args.datagen_parameter, args.features_kind, args.off_diag, args.scaling,
                             n_mispecif, seed)
         risk, pnorms, l2distance = train_and_evaluate(dgen, n_train,  args.num_test_samples,
-                                                      args.epsilon, args.ord)
+                                                      args.epsilon, args.ord, args.training, args.regularization)
         dict1 = {'proportion': proportion, 'n_features': n_features, 'n_train': n_train, 'seed': seed, 'l2distance': l2distance}
         df = df.append({**risk, **pnorms, **dict1}, ignore_index=True)
         df.to_csv(args.output + '.csv', index=False)

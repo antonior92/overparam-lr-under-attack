@@ -10,7 +10,7 @@ STYLE="plot_style_files/mystyle.mplsty"
 ## ISOTROPIC FEATURES MODEL ##
 ################################
 # Generate Figure 2
-python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic\
+python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic \
     --ord 2 --features_kind isotropic --signal_amplitude 4
 python linear-plot.py --file out/results/isotropic-gaussian-prior \
     --plot_style $STYLE plot_style_files/one_half.mplsty --ord 2 \
@@ -19,7 +19,7 @@ python linear-plot.py --file out/results/isotropic-gaussian-prior \
 # Generate Figure S1
 for RR in 0.5 1 2 4;
 do
-  python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-r"$RR"\
+  python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-r"$RR" \
       --ord 2 --features_kind isotropic --signal_amplitude $RR
   python linear-plot.py --file out/results/isotropic-r"$RR" \
       --plot_style $STYLE plot_style_files/one_third_with_ylabel.mplsty --ord 2 \
@@ -221,6 +221,10 @@ python rand-feature-plot.py --file out/results/l2-random-feature.csv --plot_styl
    $STYLE plot_style_files/one_half.mplsty --save figures/l2-random-feature.pdf
 
 
+
+## SOME ADDITIONAL TESTS!!
+
+
 ## TEST
 python linear-estimate.py --num_test_samples 200 --num_train_samples 200 -o test  \
   --features_kind latent --ord 2 1.5 20 inf -e 0 0.1 -r 10 \
@@ -251,7 +255,11 @@ python linear-plot.py out/results/latent-sqrt \
   --save latent_space_l2risk.pdf
 
 ## Test mispecif
-
 python linear-estimate.py --features_kind mispecif --num_train_samples 200 --num_test_samples 200 -u 2
 python linear-plot.py performance --plot_type norm
 python linear-plot.py performance
+
+## Test ridge
+python linear-estimate.py --num_test_samples 50 --num_train_samples 50 \
+    --ord 2 --features_kind isotropic --signal_amplitude 4 --training  advtrain-l2 --regularization 0.1
+python linear-plot.py performance --ord 2 --remove_bounds
