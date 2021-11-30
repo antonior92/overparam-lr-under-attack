@@ -4,7 +4,7 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np  # numpy > 1.10 so we can use np.linalg.norm(...,axis=axis, keepdims=keepdims)
 import random
-from interp_under_attack.adversarial_attack import compute_adv_attack
+from interp_under_attack.adversarial_attack import compute_adv_attack, compute_q
 from linear import compute_mispecif_proportion
 import json
 import scipy.linalg as linalg
@@ -149,12 +149,7 @@ def train_and_evaluate(data_generator, n_samples, n_test_samples, epsilon, ord):
     risk['predrisk'] = np.mean(test_error ** 2)
     for p in ord:
         # Compute ord
-        if p != np.Inf and p > 1:
-            q = p / (p - 1)
-        elif p == 1:
-            q = np.Inf
-        else:
-            q = 1
+        q = compute_q(p)
         pnorms['norm-{:.1f}'.format(p)] = np.linalg.norm(beta_hat, ord=q)
 
         jac = beta_hat
