@@ -158,10 +158,12 @@ def plot_fn(ax, df, config, ii):
         plot_norm(ax, ii, df, lbl, p, xaxis, xaxis_for_bounds, n_features_for_bounds, anorm)
         if not args.remove_ylabel:
             ax.set_ylabel('Norm')
-    elif args.plot_type == 'distance':
+    elif args.plot_type == 'l2distance':
         plot_distance(ax, ii, df, xaxis, xaxis_for_bounds, adistance)
         if not args.remove_ylabel:
             ax.set_ylabel('l2_distance')
+    elif args.plot_type == 'train_mse':
+        ax.plot(xaxis, df['train_mse'], markers[ii], ms=4)
     # Labels
     # Plot vertical line at the interpolation threshold
     if args.xaxis == 'n-over-m' or args.xaxis == 'm-over-n':
@@ -182,7 +184,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot performance as a function of the proportion '
                                                  'n features / n samples rate.')
     parser.add_argument('files', help='input file.', nargs='+')
-    parser.add_argument('--plot_type', choices=['risk_per_ord', 'risk_per_eps', 'advrisk', 'norm', 'distance'],
+    parser.add_argument('--plot_type', choices=['risk_per_ord', 'risk_per_eps', 'advrisk', 'norm', 'l2distance', 'train_mse'],
                         default='risk_per_ord', help='plot styles to be used')
     parser.add_argument('--ord', type=float, nargs='+',
                         help='ord norm')

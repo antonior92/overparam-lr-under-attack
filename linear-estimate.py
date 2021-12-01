@@ -144,11 +144,15 @@ class GenerateData(object):
 
 
 def train_and_evaluate(data_generator, n_samples, n_test_samples, epsilon, ord, train_type, train_regularizations):
+    risk = {}
+
     # Generate training data
     X, y = data_generator(n_samples)
 
     # Train
     beta_hat = train(X, y, train_type, train_regularizations)
+    train_error = X @ beta_hat - y
+    risk['train_mse'] = np.mean(train_error ** 2)
 
     # Test data
     # Get X matrix
@@ -159,7 +163,6 @@ def train_and_evaluate(data_generator, n_samples, n_test_samples, epsilon, ord, 
     pnorms['norm-2.0'] = np.linalg.norm(beta_hat, ord=2)
 
     # Compute error = y_pred - y_test
-    risk = {}
     test_error = X_test @ beta_hat - y_test
     risk['predrisk'] = np.mean(test_error ** 2)
     for p in ord:
@@ -212,13 +215,14 @@ if __name__ == '__main__':
     parser.add_argument('--regularization', type=float, default=0.0,
                         help='amount of regularization added during training')
     parser.add_argument('--training', choices=['min-l2norm', 'ridge', 'advtrain-l2', 'advtrain-linf'],
-                        help='amount of regularization added during training')
+                        default='min-l2norm', help='amount of regularization added during training')
     parser.add_argument('-f', '--features_kind', choices=['isotropic', 'equicorrelated', 'latent', 'mispecif'],
                         default='isotropic', help='how the features are generated')
     parser.add_argument('--datagen_parameter', choices=['gaussian_prior', 'constant'], default='gaussian_prior',
                         help='how the features are generated')
     parser.add_argument('--off_diag', default=0.5, type=float,
-                        help='value of diagonal values. Default is 0.5. Only take effect when '
+                        help='value of diagonal v'
+                             'alues. Default is 0.5. Only take effect when '
                              'features_kind = equicorrelated.')
     parser.add_argument('--mispec_factor', default=1, type=float,
                         help='In case `features_kind = mispecif` specify '
