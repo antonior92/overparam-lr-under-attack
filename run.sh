@@ -254,12 +254,21 @@ python linear-plot.py out/results/latent-sqrt \
   --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty   \
   --save latent_space_l2risk.pdf
 
-## Test mispecif
-python linear-estimate.py --features_kind mispecif --num_train_samples 200 --num_test_samples 200 -u 2
-python linear-plot.py performance --plot_type norm
-python linear-plot.py performance
+## Test mispecif (TODO: fix.)
+python linear-estimate.py --features_kind mispecif --num_train_samples 100 --num_test_samples 100 -u 1.5 --mispec_factor 3 --signal_amplitude 2 -e 0 --dont_shuffle
+python linear-plot.py performance --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mycolors.mplsty
 
-## Test ridge
-python linear-estimate.py --num_test_samples 50 --num_train_samples 50 \
-    --ord 2 --features_kind isotropic --signal_amplitude 4 --training  advtrain-l2 --regularization 0.1
-python linear-plot.py performance --ord 2 --remove_bounds
+## Test Regularized
+REGUL_TYPE=advtrain-l2
+for REG in 10 1 0.1 0.01 0.001;
+  do python linear-estimate.py --num_test_samples 30 --num_train_samples 30 \
+      --features_kind isotropic --signal_amplitude 4 --training $REGUL_TYPE --regularization $REG \
+      -o out/results/"$REGUL_TYPE"-"$REG"
+done;
+python linear-plot.py out/results/"$REGUL_TYPE"-{10,1,0.1,0.01,0.001} --ord 2 2 2 2 2 --eps 0.5 0.5 0.5 0.5 0.5 \
+  --plot_type advrisk --remove_bounds --labels {10,1,0.1,0.01,0.001}
+python linear-plot.py out/results/"$REGUL_TYPE"-{10,1,0.1,0.01,0.001} --ord 2 2 2 2 2 --eps 0.5 0.5 0.5 0.5 0.5 \
+  --plot_type train_mse --remove_bounds --labels {10,1,0.1,0.01,0.001}
+
+
+python linear-plot.py out/results/"$REGUL_TYPE"-0.5 out/results/ridge-0.1 --plot_type train_mse

@@ -221,8 +221,7 @@ if __name__ == '__main__':
     parser.add_argument('--datagen_parameter', choices=['gaussian_prior', 'constant'], default='gaussian_prior',
                         help='how the features are generated')
     parser.add_argument('--off_diag', default=0.5, type=float,
-                        help='value of diagonal v'
-                             'alues. Default is 0.5. Only take effect when '
+                        help='value of diagonal values. Default is 0.5. Only take effect when '
                              'features_kind = equicorrelated.')
     parser.add_argument('--mispec_factor', default=1, type=float,
                         help='In case `features_kind = mispecif` specify '
@@ -236,6 +235,9 @@ if __name__ == '__main__':
                          help='the adversarial examples are quite sensitive to scaling.'
                               'the function `eta(m)` will be used defining the parameter vector and '
                               'the inputs. I.e. `beta = eta * beta` while `x = (1 / eta) * x`')
+    parser.add_argument('--dont_shuffle', action='store_true',
+                        help='pass this option when you do not want the options to be shuffle.'
+                             'Shuffling usually yields more accurate progress bars.')
     args, unk = parser.parse_known_args()
     print(args)
 
@@ -249,7 +251,8 @@ if __name__ == '__main__':
 
     # Some of the executions are computationally heavy and others are not. We shuffle the configurations
     # so the progress bar can give a more accurate notion of the time to completion
-    #random.shuffle(run_instances)
+    if not args.dont_shuffle:
+        random.shuffle(run_instances)
     prev_mdl = None  # used only if reuse_weights is True
     df = pd.DataFrame(columns=['proportion', 'seed'] + ['norm-{:.1f}'.format(p) for p in args.ord] +
                               ['advrisk-{:.1f}-{:.1f}'.format(p, e) for p, e in itertools.product(args.ord, args.epsilon)])
