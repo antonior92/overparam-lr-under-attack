@@ -244,9 +244,9 @@ if __name__ == "__main__":
     args, unk = parser.parse_known_args()
     if args.plot_style:
         plt.style.use(args.plot_style)
-    markers = ['*', 'o', 's', '<', '>', 'h']
+    markers = ['*', 'o', 's', '<', '>', 'h', '*', 'o', 's', '<', '>', 'h']
     if args.second_marker_set:
-        markers = ['<', '>', 'h', '*', 'o', 's']
+        markers = ['<', '>', 'h', '*', 'o', 's', '*', 'o', 's', '<', '>', 'h']
     # Read files
     fig, ax = plt.subplots()
     for ii, file in enumerate(args.files):
