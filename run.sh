@@ -12,7 +12,7 @@ STYLE="plot_style_files/mystyle.mplsty"
 # Generate Figure 2
 python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic \
     --ord 2 --features_kind isotropic --signal_amplitude 4
-python linear-plot.py --file out/results/isotropic-gaussian-prior \
+python linear-plot.py --file out/results/isotropic \
     --plot_style $STYLE plot_style_files/one_half.mplsty --ord 2 \
       --save out/figures/isotropic.pdf
 

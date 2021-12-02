@@ -9,12 +9,35 @@ from linear import *
 #########
 # Plots #
 #########
+
+def plot_experiments(xaxis, r, ithplot, lbl, plt_type='markers'):
+    if plt_type == 'markers':
+        l, = ax.plot(xaxis, r, markers[ithplot], ms=4, label=lbl)
+        return l
+    elif plt_type == 'error_bars':
+        new_xaxis, inverse, counts = np.unique(xaxis, return_inverse=True, return_counts=True)
+
+        r_values = np.zeros([len(new_xaxis), max(counts)])
+        secondindex = np.zeros(len(new_xaxis), dtype=int)
+        for n in range(len(xaxis)):
+            i = inverse[n]
+            j = secondindex[i]
+            r_values[i, j] = r[n]
+            secondindex[i] += 1
+        m = np.median(r_values, axis=1)
+        lerr = m - np.quantile(r_values, 0.25, axis=1)
+        uerr = np.quantile(r_values, 0.75, axis=1) - m
+        ec = ax.errorbar(x=new_xaxis, y=m, yerr=[lerr, uerr], capsize=3,
+                     linestyle="None", marker="o", markersize=3, label=lbl)
+        return ec.lines[0]
+
+
 def plot_risk_and_exactbounds(ax, i, df, lbl, p, e, xaxis):
     r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
     pred_risk = df['predrisk']
     lqnorm = df['norm-{:.1f}'.format(p)]
     # Plot empirical value
-    l, = ax.plot(xaxis, r, markers[i], ms=3, label=lbl)
+    l = plot_experiments(xaxis, r, i, lbl, args.experiment_plot)
     if args.remove_bounds:
         return
     # Plot upper bound
@@ -28,7 +51,7 @@ def plot_risk_and_exactbounds(ax, i, df, lbl, p, e, xaxis):
 def plot_risk_and_bounds(ax, i, df, lbl, p, e, xaxis, xaxis_for_bounds, n_features_for_bounds, anorm, arisk):
     r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
     # Plot empirical value
-    l, = ax.plot(xaxis, r, markers[i], ms=4, label=lbl)
+    l = plot_experiments(xaxis, r, i, lbl, args.experiment_plot)
     if args.remove_bounds:
         return
     # Plot upper bound
@@ -57,7 +80,7 @@ def plot_risk_and_bounds(ax, i, df, lbl, p, e, xaxis, xaxis_for_bounds, n_featur
 
 def plot_norm(ax, i, df, lbl, p, xaxis, xaxis_for_bounds, n_features_for_bounds, anorm):
     pnorm = df['norm-{:.1f}'.format(p)]
-    l, = ax.plot(xaxis, pnorm, markers[i], ms=4, label=lbl)
+    l = plot_experiments(xaxis, pnorm, i, lbl, args.experiment_plot)
     if args.remove_bounds:
         return
     if p == 2:
@@ -71,7 +94,7 @@ def plot_norm(ax, i, df, lbl, p, xaxis, xaxis_for_bounds, n_features_for_bounds,
 
 def plot_distance(ax, i, df, xaxis, xaxis_for_bounds, adistance):
     distance = df['l2distance']
-    l, = ax.plot(xaxis, distance, markers[i], ms=4)
+    l = plot_experiments(xaxis, distance, i, lbl, args.experiment_plot)
     if args.remove_bounds:
         return
     ax.plot(xaxis_for_bounds, adistance, '-', color=l.get_color(), lw=2)
@@ -211,6 +234,8 @@ if __name__ == "__main__":
     parser.add_argument('--remove_bounds', action='store_true',
                         help='don include legend')
     parser.add_argument('--second_marker_set', action='store_true',
+                        help='don include ylabel')
+    parser.add_argument('--experiment_plot', choices=['markers', 'error_bars'], default='markers',
                         help='don include ylabel')
     parser.add_argument('--fillbetween', choices=['from-lower-to-upper', 'closest-l2bound', 'only-show-ub'],
                         default='from-lower-to-upper',  help='don show fill between')
