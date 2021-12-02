@@ -43,9 +43,12 @@ def adversarial_training(X, y, ord, eps, niter=10, verbose=True):
         cost1 = compute_cost(cp.pnorm(param, p=ord), linalg.norm(error0, ord=1), cp.pnorm(error, p=2))
         cost2 = compute_cost(linalg.norm(param0, ord=q), cp.pnorm(error, p=1), cp.pnorm(error, p=2))
 
-        prob = cp.Problem(cp.Minimize(cost1 + cost2))
-        prob.solve()
-        param0 = param.value
+        try:
+            prob = cp.Problem(cp.Minimize(cost1 + cost2))
+            prob.solve()
+            param0 = param.value
+        except cp.error.SolverError:
+            break
 
     return param0
 
