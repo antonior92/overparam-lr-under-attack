@@ -1,6 +1,7 @@
 # Run all experiments and generate all figures
 mkdir out
 mkdir out/results  # if it does not exist already
+mkdir out/results/advtrain
 mkdir out/figures  # if it does not exist already
 mkdir out/figures/advtrain
 RESULTS=out/results
@@ -14,20 +15,28 @@ rep(){
 	done
 }
 
+# This is now running on hyperion:
 N=100
-python linear-estimate.py --num_test_samples $N --num_train_samples $N \
-      --features_kind isotropic --signal_amplitude 4 \
-      -o out/results/control-noreg
-
-for REGUL_TYPE in advtrain-l2 advtrain-linf ridge;
+SIGNAL_AMPLITUDE=4
+for FEATURE_KIND in latent isotropic;
 do
-  for REG in 10 1 0.5 0.1 0.05 0.01 0.001;
-  do python linear-estimate.py --num_test_samples $N --num_train_samples $N \
-      --features_kind isotropic --signal_amplitude 4 --training $REGUL_TYPE --regularization $REG \
-      -o out/results/"$REGUL_TYPE"-"$REG"
+  for SCALING in sqrt sqrtlog none;
+  do
+    python linear-estimate.py --num_test_samples $N --num_train_samples $N \
+      --features_kind $FEATURE_KIND --signal_amplitude $SIGNAL_AMPLITUDE --ord 2 1.5 20 inf \
+      -o "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-noreg -l -0.5
+    for REGUL_TYPE in advtrain-l2 advtrain-linf ridge;
+    do
+      for REG in 1 0.5 0.1 0.05 0.01;
+      do python linear-estimate.py --num_test_samples $N --num_train_samples $N \
+          --features_kind $FEATURE_KIND --signal_amplitude $SIGNAL_AMPLITUDE --training $REGUL_TYPE --regularization $REG \
+          -o "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-"$REG" -l -0.5
+      done;
+    done;
   done;
 done;
 
+# TODO: update plot
 for REGUL_TYPE in advtrain-l2 ridge;
 do
   PLT_TYPE=advrisk
