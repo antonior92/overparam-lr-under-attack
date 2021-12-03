@@ -14,7 +14,7 @@ def plot_experiments(xaxis, r, ithplot, lbl, plt_type='markers'):
     if plt_type == 'markers':
         l, = ax.plot(xaxis, r, markers[ithplot], ms=4, label=lbl)
         return l
-    elif plt_type == 'error_bars':
+    elif plt_type == 'error_bars' or plt_type == 'median_line':
         new_xaxis, inverse, counts = np.unique(xaxis, return_inverse=True, return_counts=True)
 
         r_values = np.zeros([len(new_xaxis), max(counts)])
@@ -27,9 +27,14 @@ def plot_experiments(xaxis, r, ithplot, lbl, plt_type='markers'):
         m = np.median(r_values, axis=1)
         lerr = m - np.quantile(r_values, 0.25, axis=1)
         uerr = np.quantile(r_values, 0.75, axis=1) - m
-        ec = ax.errorbar(x=new_xaxis, y=m, yerr=[lerr, uerr], capsize=3,
-                     linestyle="None", marker="o", markersize=3, label=lbl)
-        return ec.lines[0]
+        if plt_type == 'error_bars':
+            ec = ax.errorbar(x=new_xaxis, y=m, yerr=[lerr, uerr], capsize=3,
+                            linestyle="None", marker="o", markersize=3, label=lbl)
+            return ec.lines[0]
+        elif plt_type == 'median_line':
+            l, = ax.plot(new_xaxis, m, '-'+ markers[ithplot], label=lbl)
+            return l
+
 
 
 def plot_risk_and_exactbounds(ax, i, df, lbl, p, e, xaxis):
@@ -186,7 +191,8 @@ def plot_fn(ax, df, config, ii):
         if not args.remove_ylabel:
             ax.set_ylabel('l2_distance')
     elif args.plot_type == 'train_mse':
-        ax.plot(xaxis, df['train_mse'], markers[ii], ms=4)
+        lbl = args.labels[ii] if args.labels is not None else ''
+        plot_experiments(xaxis, df['train_mse'], ii, lbl, args.experiment_plot)
     # Labels
     # Plot vertical line at the interpolation threshold
     if args.xaxis == 'n-over-m' or args.xaxis == 'm-over-n':
@@ -235,7 +241,7 @@ if __name__ == "__main__":
                         help='don include legend')
     parser.add_argument('--second_marker_set', action='store_true',
                         help='don include ylabel')
-    parser.add_argument('--experiment_plot', choices=['markers', 'error_bars'], default='markers',
+    parser.add_argument('--experiment_plot', choices=['markers', 'error_bars', 'median_line'], default='markers',
                         help='don include ylabel')
     parser.add_argument('--fillbetween', choices=['from-lower-to-upper', 'closest-l2bound', 'only-show-ub'],
                         default='from-lower-to-upper',  help='don show fill between')
