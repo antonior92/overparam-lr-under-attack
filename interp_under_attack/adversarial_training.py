@@ -36,9 +36,14 @@ def adversarial_training(X, y, ord, eps, niter=10, verbose=True):
         error = X @ param - y
         error0 = X @ param0 - y
         if verbose:
-            print("The cost is", compute_cost(linalg.norm(param0, ord=ord),
-                                              linalg.norm(error0, ord=1),
-                                              linalg.norm(error0, ord=2)))
+            print("Cost ={}, Risk = {}, Parameter norm = {}".format(
+                compute_cost(linalg.norm(param0, ord=ord),
+                             linalg.norm(error0, ord=1),
+                             linalg.norm(error0, ord=2)),
+                linalg.norm(error0, ord=2),
+                linalg.norm(param0, ord=ord)
+            )
+            )
 
         cost1 = compute_cost(cp.pnorm(param, p=ord), linalg.norm(error0, ord=1), cp.pnorm(error, p=2))
         cost2 = compute_cost(linalg.norm(param0, ord=q), cp.pnorm(error, p=1), cp.pnorm(error, p=2))
@@ -58,7 +63,7 @@ def adversarial_training(X, y, ord, eps, niter=10, verbose=True):
 if __name__ == '__main__':
     # Generate data.
     m = 20
-    n = 15
+    n = 23
     np.random.seed(1)
     X = np.random.randn(m, n)
     y = np.random.randn(m)
@@ -66,3 +71,4 @@ if __name__ == '__main__':
     param = adversarial_training(X, y, 2, 0.1)
 
 
+    print(np.linalg.norm(X @ param - y))
