@@ -229,8 +229,8 @@ python rand-feature-plot.py --file out/results/l2-random-feature.csv --plot_styl
 python linear-estimate.py --num_test_samples 200 --num_train_samples 200 -o test  \
   --features_kind latent --ord 2 1.5 20 inf -e 0 0.1 -r 10 \
   --signal_amplitude 0.1 --noise_std 10 -u 2  --num_latent 20 --scaling none
-python linear-plot.py out/results/test-latent-none --plot_type advrisk --eps 0  --ord inf
-python linear-plot.py out/results/test-latent-none --plot_type norm
+python linear-plot.py performance --plot_type advrisk --eps 0  --ord inf
+python linear-plot.py performance  --plot_type norm
 
 
 
@@ -238,7 +238,7 @@ python linear-plot.py out/results/test-latent-none --plot_type norm
 
 python linear-plot.py out/results/latent-sqrt \
   --plot_type advrisk --eps 0 --ord inf \
-  --remove_bounds --second_marker_set --remove_legend \
+  --second_marker_set --remove_legend \
   --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty   \
   --save latent_space_risk.pdf
 

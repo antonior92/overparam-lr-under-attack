@@ -20,11 +20,7 @@ class AnalyticFunctionC0(object):
     def __call__(self, gamma, psi):
         coeffs = self.compute_coeffs(gamma, psi)
         a, b, c = coeffs
-        print(coeffs)
-        delta = b**2 - 4 * a * c
-        print(delta)
         roots = np.roots(coeffs)
-        print(gamma, psi, roots > 0)
         if (np.real(roots) > 0).any():
             return np.max(np.abs(roots))
         else:
