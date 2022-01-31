@@ -10,6 +10,7 @@ from linear import compute_mispecif_proportion
 import json
 import scipy.linalg as linalg
 
+EPS = 1e-15
 
 def train(X, y, type='min-l2norm', regularization=0.0):
     if type == 'min-l2norm':  # min norm solution
@@ -161,6 +162,7 @@ def train_and_evaluate(data_generator, n_samples, n_test_samples, epsilon, ord, 
     # Generate adversarial disturbance
     pnorms = {}
     pnorms['norm-2.0'] = np.linalg.norm(beta_hat, ord=2)
+    pnorms['non-zero'] = sum(np.abs(beta_hat) > EPS)  # number of non-zero elements
 
     # Compute error = y_pred - y_test
     test_error = X_test @ beta_hat - y_test

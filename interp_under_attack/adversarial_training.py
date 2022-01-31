@@ -5,16 +5,16 @@ import numpy.linalg as linalg
 from interp_under_attack.adversarial_attack import compute_q
 
 
-def adversarial_training(X, y, ord, eps, niter=10, verbose=True):
+def adversarial_training(X, y, p, eps, niter=10, verbose=True):
     """Compute parameter for linear model trained adversarially with unitary p-norm.
 
     :param X:
         A numpy array of shape = (n_points, input_dim) containing the inputs
     :param y:
         A numpy array of shape = (n_points,) containing true outcomes
-    :param ord:
-        The p-norm the adversarial attack is bounded. `ord` gives which p-norm is used
-        ord = 2 is the euclidean norm. `ord` can a float value greater then or equal to 1 or np.inf,
+    :param p:
+        The p-norm the adversarial attack is bounded. `p` gives which p-norm is used
+        p = 2 is the euclidean norm. `p` can a float value greater then or equal to 1 or np.inf,
         (for the infinity norm).
     :param eps:
         The magnitude of the attack during the trainign
@@ -26,37 +26,22 @@ def adversarial_training(X, y, ord, eps, niter=10, verbose=True):
     """
     m, n = X.shape
 
-    def compute_cost(param_norm, error_l1, error_l2):
-        return eps ** 2 * param_norm ** 2 + 2 / m * eps * error_l1 * param_norm + 1 / m * error_l2 ** 2
+    q = compute_q(p)
 
-    q = compute_q(ord)
-    param0 = 1 / np.sqrt(n) * np.random.randn(n)
-    for i in range(niter):  # solve iterative procedure
-        param = cp.Variable(n)
-        error = X @ param - y
-        error0 = X @ param0 - y
-        if verbose:
-            print("Cost ={}, Risk = {}, Parameter norm = {}".format(
-                compute_cost(linalg.norm(param0, ord=ord),
-                             linalg.norm(error0, ord=1),
-                             linalg.norm(error0, ord=2)),
-                linalg.norm(error0, ord=2),
-                linalg.norm(param0, ord=ord)
-            )
-            )
+    # Formulate problem
+    param = cp.Variable(n)
+    param_norm = cp.pnorm(param,  p=q)
+    abs_error = cp.abs(X @ param - y)
+    adv_loss = 1 / m * cp.sum((abs_error + eps * param_norm)**2)
 
-        cost1 = compute_cost(cp.pnorm(param, p=ord), linalg.norm(error0, ord=1), cp.pnorm(error, p=2))
-        cost2 = compute_cost(linalg.norm(param0, ord=q), cp.pnorm(error, p=1), cp.pnorm(error, p=2))
-
-        try:
-            prob = cp.Problem(cp.Minimize(cost1 + cost2))
-            prob.solve()
-            param0 = param.value
-        except cp.error.SolverError:
-            break
+    prob = cp.Problem(cp.Minimize(adv_loss))
+    try:
+        prob.solve()
+        param0 = param.value
+    except:
+        param0 = np.zeros(n)
 
     return param0
-
 
 
 # Define and solve the CVXPY problem.
@@ -72,3 +57,4 @@ if __name__ == '__main__':
 
 
     print(np.linalg.norm(X @ param - y))
+    print(np.linalg.norm(param))

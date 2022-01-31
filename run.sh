@@ -271,4 +271,9 @@ python linear-plot.py out/results/"$REGUL_TYPE"-{10,1,0.1,0.01,0.001} --ord 2 2 
   --plot_type train_mse --remove_bounds --labels {10,1,0.1,0.01,0.001}
 
 
-python linear-plot.py out/results/"$REGUL_TYPE"-0.5 out/results/ridge-0.1 --plot_type train_mse
+
+python linear-estimate.py --num_test_samples 30 --num_train_samples 30 \
+      --features_kind isotropic --signal_amplitude 4 --training advtrain-linf --regularization 0.05 \
+      -n 50 -r 4
+python linear-plot.py performance --plot_type train_mse
+python linear-plot.py performance
