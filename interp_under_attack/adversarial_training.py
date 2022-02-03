@@ -5,7 +5,7 @@ import numpy.linalg as linalg
 from interp_under_attack.adversarial_attack import compute_q
 
 
-def adversarial_training(X, y, p, eps, niter=10, verbose=True):
+def adversarial_training(X, y, p, eps):
     """Compute parameter for linear model trained adversarially with unitary p-norm.
 
     :param X:
