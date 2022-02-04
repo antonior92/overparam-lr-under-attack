@@ -20,6 +20,7 @@ def plot_coefs(alphas, coefs, name):
         plt.semilogx(1/alphas, coef_l, c=c)
 
     plt.xlabel("$$1/\delta$$")
+    plt.ylim(-40, 40)
     plt.ylabel("coefficients")
 
     if args.save:
@@ -48,7 +49,7 @@ if __name__ == '__main__':
 
     # Compute ridge paths
     n_alphas = 200
-    alphas_ridge = np.logspace(-1, 4, n_alphas)
+    alphas_ridge = np.logspace(-2, 4, n_alphas)
     coefs_ridge_ = []
     for a in tqdm.tqdm(alphas_ridge):
         ridge = linear_model.Ridge(alpha=a, fit_intercept=False)
@@ -63,7 +64,7 @@ if __name__ == '__main__':
     coefs_advtrain_linf_ = []
     for a in tqdm.tqdm(alphas_adv):
         coefs_advtrain_l2_.append(adversarial_training(X, y, p=2, eps=a))
-        coefs_advtrain_linf_.append(adversarial_training(X, y, p=1000, eps=a)) # p = infty seems ill conditioned
+        coefs_advtrain_linf_.append(adversarial_training(X, y, p=np.inf, eps=a)) # p = infty seems ill conditioned
     coefs_advtrain_l2 = np.stack((coefs_advtrain_l2_)).T
     coefs_advtrain_linf = np.stack((coefs_advtrain_linf_)).T
 
