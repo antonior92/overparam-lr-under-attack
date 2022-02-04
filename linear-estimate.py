@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np  # numpy > 1.10 so we can use np.linalg.norm(...,axis=axis, keepdims=keepdims)
 import random
 from interp_under_attack.adversarial_attack import compute_adv_attack, compute_q
-from interp_under_attack.adversarial_training import adversarial_training
+from interp_under_attack.adversarial_training import adversarial_training, lasso_cvx
 from linear import compute_mispecif_proportion
 import json
 import scipy.linalg as linalg
@@ -20,10 +20,15 @@ def train(X, y, type='min-l2norm', regularization=0.0):
         u, s, vh = linalg.svd(X, full_matrices=False, compute_uv=True)
         prod_aux = s / (regularization + s ** 2)  # If S = diag(s) => P = inv(S.T S + ridge * I) S.T => prod_aux = diag(P)
         estim_param = (prod_aux * (y @ u)) @ vh  # here estim_param = V P U.T
+    elif type == 'lasso':
+        # I do not use the scikit-learn coordinate descent implementation!
+        # While more efficient, it does not has a consistent behavior in the overparametrized region.
+        #   from sklearn import linear_model; clf = linear_model.Lasso(alpha=regularization); clf.fit(X, y); estim_param = clf.coef_
+        estim_param = lasso_cvx(X, y, regularization)
     elif type == 'advtrain-l2':
-        estim_param = adversarial_training(X, y, 2, regularization, niter=10, verbose=False)
+        estim_param = adversarial_training(X, y, 2, regularization)
     elif type == 'advtrain-linf':
-        estim_param = adversarial_training(X, y, np.Inf, regularization, niter=10, verbose=False)
+        estim_param = adversarial_training(X, y, np.Inf, regularization)
     return estim_param
 
 
@@ -216,7 +221,7 @@ if __name__ == '__main__':
                         help='standard deviation of the additive noise added.')
     parser.add_argument('--regularization', type=float, default=0.0,
                         help='amount of regularization added during training')
-    parser.add_argument('--training', choices=['min-l2norm', 'ridge', 'advtrain-l2', 'advtrain-linf'],
+    parser.add_argument('--training', choices=['min-l2norm', 'ridge', 'advtrain-l2', 'advtrain-linf', 'lasso'],
                         default='min-l2norm', help='amount of regularization added during training')
     parser.add_argument('-f', '--features_kind', choices=['isotropic', 'equicorrelated', 'latent', 'mispecif'],
                         default='isotropic', help='how the features are generated')

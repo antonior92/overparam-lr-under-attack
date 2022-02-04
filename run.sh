@@ -260,20 +260,21 @@ python linear-plot.py performance --plot_style $STYLE plot_style_files/one_half.
 
 ## Test Regularized
 REGUL_TYPE=advtrain-l2
-for REG in 10 1 0.1 0.01 0.001;
-  do python linear-estimate.py --num_test_samples 30 --num_train_samples 30 \
+for REG in 1 0.05 0.1 0.005 0.01;
+  do python linear-estimate.py --num_test_samples 200 --num_train_samples 200 \
       --features_kind isotropic --signal_amplitude 4 --training $REGUL_TYPE --regularization $REG \
       -o out/results/"$REGUL_TYPE"-"$REG"
 done;
-python linear-plot.py out/results/"$REGUL_TYPE"-{10,1,0.1,0.01,0.001} --ord 2 2 2 2 2 --eps 0.5 0.5 0.5 0.5 0.5 \
-  --plot_type advrisk --remove_bounds --labels {10,1,0.1,0.01,0.001}
-python linear-plot.py out/results/"$REGUL_TYPE"-{10,1,0.1,0.01,0.001} --ord 2 2 2 2 2 --eps 0.5 0.5 0.5 0.5 0.5 \
-  --plot_type train_mse --remove_bounds --labels {10,1,0.1,0.01,0.001}
+python linear-plot.py out/results/"$REGUL_TYPE"-{1,0.5,0.1,0.05,0.01} --ord 2 2 2 2 2 --eps 0.1 0.1 0.1 0.1 0.1 \
+  --plot_type advrisk --remove_bounds --labels {1,0.5,0.1,0.05,0.01}
+python linear-plot.py out/results/"$REGUL_TYPE"-{1,0.5,0.1,0.05,0.01}  --ord 2 2 2 2 2 --eps 0.5 0.5 0.5 0.5 0.5 \
+  --plot_type train_mse --remove_bounds --labels {1,0.5,0.1,0.05,0.01}
+python linear-plot.py out/results/"$REGUL_TYPE"-{1,0.5,0.1,0.05,0.01}  --ord 2 2 2 2 2 --eps 0.5 0.5 0.5 0.5 0.5 \
+  --plot_type norm --remove_bounds --labels {1,0.5,0.1,0.05,0.01}
 
 
-
-python linear-estimate.py --num_test_samples 30 --num_train_samples 30 \
-      --features_kind isotropic --signal_amplitude 4 --training advtrain-linf --regularization 0.05 \
+python linear-estimate.py --num_test_samples 40 --num_train_samples 40 \
+      --features_kind isotropic --signal_amplitude 4 --training lasso --regularization 0.000005 \
       -n 50 -r 4
-python linear-plot.py performance --plot_type train_mse
-python linear-plot.py performance
+python linear-plot.py performance --plot_type train_mse --remove_bounds --eps 0.5
+python linear-plot.py performance --remove_bounds

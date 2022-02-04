@@ -17,7 +17,7 @@ do
     python linear-estimate.py --num_test_samples $N --num_train_samples $N  --scaling $SCALING \
       --features_kind $FEATURE_KIND --signal_amplitude $SIGNAL_AMPLITUDE --ord 2 1.5 20 inf -l -0.5 \
       -o "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-noreg
-    for REGUL_TYPE in advtrain-l2 advtrain-linf ridge;
+    for REGUL_TYPE in advtrain-l2 advtrain-linf ridge lasso;
     do
       for REG in 1 0.5 0.1 0.05 0.01;
       do python linear-estimate.py --num_test_samples $N --num_train_samples $N --scaling $SCALING  \

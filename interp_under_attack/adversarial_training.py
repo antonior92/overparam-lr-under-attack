@@ -19,10 +19,7 @@ def adversarial_training(X, y, p, eps):
     :param eps:
         The magnitude of the attack during the trainign
     :return:
-        An array containing `delta_x` of shape = (n_points, n_parameters)
-        which should perturbate the input. The p-norm of each row is equal to 1.
-        In order to obtain the adversarial attack bounded by `e` just multiply it
-        `delta_x`.
+        An array containing the adversarially estimated parameter.
     """
     m, n = X.shape
 
@@ -44,6 +41,37 @@ def adversarial_training(X, y, p, eps):
     return param0
 
 
+def lasso_cvx(X, y, eps):
+    """Compute parameter for linear model using lasso (using cvxpy).
+
+    :param X:
+        A numpy array of shape = (n_points, input_dim) containing the inputs
+    :param y:
+        A numpy array of shape = (n_points,) containing true outcomes
+    :param eps:
+        The magnitude of the attack during the trainign
+    :return:
+        An array containing the adversarially estimated parameter.
+    """
+    m, n = X.shape
+
+    # Formulate problem
+    param = cp.Variable(n)
+    param_norm = cp.pnorm(param,  p=1)
+    square_error = cp.sum((X @ param - y)**2)
+    adv_loss = 1 / (2 * m) * square_error + eps * param_norm
+
+    prob = cp.Problem(cp.Minimize(adv_loss))
+    try:
+        prob.solve()
+        param0 = param.value
+    except:
+        print(m, n)
+        param0 = np.zeros(n)
+
+    return param0
+
+
 # Define and solve the CVXPY problem.
 if __name__ == '__main__':
     # Generate data.
@@ -54,7 +82,10 @@ if __name__ == '__main__':
     y = np.random.randn(m)
 
     param = adversarial_training(X, y, 2, 0.1)
-
+    param_lasso = lasso_cvx(X, y, 0.1)
 
     print(np.linalg.norm(X @ param - y))
     print(np.linalg.norm(param))
+
+    print(np.linalg.norm(X @ param_lasso - y))
+    print(np.linalg.norm(param_lasso))
