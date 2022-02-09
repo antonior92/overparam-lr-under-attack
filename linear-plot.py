@@ -203,7 +203,8 @@ def plot_fn(ax, df, config, ii):
         ax.set_ylim((10**args.y_min, 10**args.y_max))
     if args.xaxis == 'n-over-m' or args.xaxis == 'm-over-n':
         ax.set_xscale('log')
-        ax.set_yscale('log')
+        if args.y_scale == 'log':
+            ax.set_yscale('log')
     if not args.remove_legend:
         plt.legend()
     plt.grid()
@@ -231,6 +232,8 @@ if __name__ == "__main__":
                         help='inferior limit to y-axis in the plot.')
     parser.add_argument('--y_max', default=None, type=float,
                         help='superior limit to y-axis in the plot.')
+    parser.add_argument('--y_scale', default='log', choices=['log', 'linear'],
+                       help='superior limit to y-axis in the plot.')
     parser.add_argument('--remove_ylabel', action='store_true',
                         help='don include ylable')
     parser.add_argument('--remove_xlabel', action='store_true',

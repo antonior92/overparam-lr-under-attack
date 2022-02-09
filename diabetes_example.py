@@ -25,7 +25,8 @@ def plot_coefs(alphas, coefs, name):
 
     if args.save:
         plt.savefig(os.path.join(args.save,'diabetes_{}.pdf'.format(name)))
-    plt.show()
+    else:
+        plt.show()
 
 if __name__ == '__main__':
     import argparse

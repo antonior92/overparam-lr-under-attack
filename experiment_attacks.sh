@@ -28,7 +28,7 @@ do
   done;
 done;
 
-# Prepare for plotting
+
 STYLE="plot_style_files/mystyle.mplsty"
 
 rep(){
@@ -44,9 +44,8 @@ do
   for SCALING in sqrt sqrtlog none;
   do
     NN="$RESULTS"/"$SCALING"-"$FEATURE_KIND"
-    for REGUL_TYPE in advtrain-l2 advtrain-linf ridge;
+    for REGUL_TYPE in advtrain-l2 advtrain-linf ridge lasso;
     do
-
       for ORD in 2 inf;
       do
         PLT_TYPE=advrisk
@@ -54,18 +53,17 @@ do
         do
             python linear-plot.py "$NN"-"$REGUL_TYPE"-{0.1,0.5,0.01,0.05}  "$NN"-noreg --ord $(rep $ORD 6) \
            --eps  $(rep $EPS 6)  --labels {1,0.5,0.1,0.05}  noreg --experiment_plot median_line \
-           --plot_type $PLT_TYPE --remove_bounds --save $FIGURES/risk-e"$EPS"o"$ORD"-"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-.pdf
+           --plot_type $PLT_TYPE --remove_bounds --save $FIGURES/risk-e"$EPS"o"$ORD"-"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE".pdf
         done;
         PLT_TYPE='norm'
         python linear-plot.py "$NN"-"$REGUL_TYPE"-{0.1,0.5,0.01,0.05} "$NN"-noreg --ord $(rep $ORD 6) \
             --labels {1,0.5,0.1,0.05}  noreg --experiment_plot median_line \
-            --plot_type $PLT_TYPE --remove_bounds  --save $FIGURES/norm"$ORD"-"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE".pdf
+            --plot_type $PLT_TYPE --remove_bounds  --save $FIGURES/norm-o"$ORD"-"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE".pdf
       done
       PLT_TYPE="train_mse"
-      python linear-plot.py "$NN"-"$REGUL_TYPE"-{0.1,0.5,0.01,0.05} "$NN"-noreg --ord $(rep $ORD 6) \
+      python linear-plot.py "$NN"-"$REGUL_TYPE"-{0.1,0.5,0.01,0.05} "$NN"-noreg \
           --eps  $(rep $EPS 6)  --labels {0.1,0.5,0.01,0.05}  noreg --experiment_plot median_line \
           --plot_type $PLT_TYPE --remove_bounds --save $FIGURES/train_mse-"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE".pdf
-    done;
   done;
 done;
-
+done;

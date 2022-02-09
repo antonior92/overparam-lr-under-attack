@@ -212,6 +212,68 @@ python linear-plot.py out/results/latent-sqrt-0.1 \
       --plot_style $STYLE plot_style_files/stacked.mplsty  --ord inf  --remove_bounds \
        --save latent-eps-linf-sqrt
 
+
+######################
+## DIABETES EXAMPLE ##
+######################
+# Generate Figure 7
+python diabetes_example.py --plot_style $STYLE plot_style_files/stacked_bottom.mplsty --save out/figures
+
+
+
+###########################################
+## Adversarial training overparametrized ##
+###########################################
+# Generate Figure 8
+FEATURE_KIND=isotropic
+SCALING=none
+for REGUL_TYPE in advtrain-l2 advtrain-linf ridge lasso;
+    do
+  for REG in 1 0.5 0.1 0.05 0.01;
+        do
+    python linear-estimate.py --num_test_samples 200 --num_train_samples 200  --scaling none \
+      --features_kind isotropic --signal_amplitude 4 --ord 2 1.5 20 inf --training $REGUL_TYPE --regularization $REG \
+        --ord 2 1.5 20 inf -l -0.5  -o "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-"$REG"
+  done;
+done;
+
+RESULTS=out/results/advtrain
+for REGUL_TYPE in advtrain-l2 lasso ridge;
+    do
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
+    --labels {0.5,0.1,0.05,0.01} --experiment_plot error_bars \
+    --plot_type train_mse --remove_bounds --remove_legend  --save "$FIGURES"/train_mse-"$REGUL_TYPE".pdf \
+    --plot_style $STYLE plot_style_files/stacked.mplsty
+done;
+REGUL_TYPE=advtrain-linf
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
+    --labels "$\delta = "{0.5,0.1,0.05,0.01}"$" --experiment_plot error_bars --y_min -12 --y_max 2 \
+    --plot_type train_mse --remove_bounds --save "$FIGURES"/train_mse-"$REGUL_TYPE".pdf \
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty
+
+
+# Figure 9
+# now runing on hyperion:636772.experiment_adversarial_training
+FEATURE_KIND=latent
+SCALING=sqrt
+for REGUL_TYPE in advtrain-l2 advtrain-linf ridge lasso;
+    do
+for REG in 0.5 0.4 0.3 0.2 0.1 0.09 0.08 0.07 0.06 0.05 0.04 0.03 0.02 0.01;
+        do
+  python linear-estimate.py --num_test_samples 200 --num_train_samples 200  --scaling none \
+        --features_kind isotropic --signal_amplitude 4 --ord 2 1.5 20 inf --training $REGUL_TYPE --regularization $REG \
+          --ord 2 1.5 20 inf -l -0.5  -o "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-"$REG"
+  done;
+done;
+
+for REGUL_TYPE in advtrain-l2 advtrain-linf ridge lasso;
+    do
+  python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05} \
+      --labels {0.5,0.1,0.05} --ord inf inf inf inf --experiment_plot error_bars \
+      --plot_type norm --remove_bounds --y_scale linear
+done;
+
+
 #####################
 ## NONLINEAR MODEL ##
 #####################
