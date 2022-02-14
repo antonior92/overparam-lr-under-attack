@@ -6,6 +6,8 @@ RESULTS=out/results
 FIGURES=out/figures
 STYLE="plot_style_files/mystyle.mplsty"
 
+# TODO: Change all the plots to error bars
+
 ##############################
 ## ISOTROPIC FEATURES MODEL ##
 ################################
@@ -141,7 +143,7 @@ python linear-estimate.py  --num_test_samples 500 --num_train_samples 500 -o out
   --features_kind latent --ord 2 1.5 20 inf -e 0 0.1 \
   --signal_amplitude 1 --noise_std 0.1 -u 2  --num_latent 20 --scaling sqrt
 python linear-plot.py out/results/latent-sqrt out/results/latent-sqrt  out/results/latent-sqrt  \
-  --plot_type advrisk --eps 0 0.1 0.1 --ord inf 2 inf\
+  --plot_type advrisk --eps 0 0.1 0.1 --ord inf 2 inf --experiment_plot error_bars \
   --remove_bounds --second_marker_set --labels "no adv." '$\ell_2$ adv.' '$\ell_\infty$ adv.' \
   --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty   \
   --save out/figures/latent.pdf
@@ -224,6 +226,9 @@ python diabetes_example.py --plot_style $STYLE plot_style_files/stacked_bottom.m
 ###########################################
 ## Adversarial training overparametrized ##
 ###########################################
+
+# (TODO: better understand when these conclusions would also hold for the latent models)
+
 # Generate Figure 8
 FEATURE_KIND=isotropic
 SCALING=none
@@ -251,28 +256,89 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0
     --plot_type train_mse --remove_bounds --save "$FIGURES"/train_mse-"$REGUL_TYPE".pdf \
     --plot_style $STYLE plot_style_files/stacked_bottom.mplsty
 
+rep(){
+	for i in $(seq "$2");
+	do echo -n "$1"
+	 echo -n " "
+	done
+}
 
 # Figure 9
-# now runing on hyperion:636772.experiment_adversarial_training
+RESULTS=out/results/advtrain
 FEATURE_KIND=latent
 SCALING=sqrt
 for REGUL_TYPE in advtrain-l2 advtrain-linf ridge lasso;
     do
-for REG in 0.5 0.4 0.3 0.2 0.1 0.09 0.08 0.07 0.06 0.05 0.04 0.03 0.02 0.01;
-        do
-  python linear-estimate.py --num_test_samples 200 --num_train_samples 200  --scaling none \
-        --features_kind isotropic --signal_amplitude 4 --ord 2 1.5 20 inf --training $REGUL_TYPE --regularization $REG \
-          --ord 2 1.5 20 inf -l -0.5  -o "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-"$REG"
+  for REG in 0.5 0.4 0.3 0.2 0.1 0.09 0.08 0.07 0.06 0.05 0.04 0.03 0.02 0.01 0.009 0.008 0.007 0.006 0.005
+          do
+    python linear-estimate.py --num_test_samples 200 --num_train_samples 200  --scaling $SCALING \
+          --features_kind isotropic --signal_amplitude 4 --ord 2 1.5 20 inf --training $REGUL_TYPE --regularization $REG \
+            --ord 2 1.5 20 inf -l -0.5  -o "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-"$REG"
   done;
 done;
 
-for REGUL_TYPE in advtrain-l2 advtrain-linf ridge lasso;
+
+REGUL_TYPE=advtrain-l2
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.1,0.09,0.08,0.07,0.06,0.05,0.01} \
+    --ord  $(rep inf 7) --experiment_plot error_bars \
+    --plot_type norm --remove_bounds --remove_legend --y_scale linear \
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty \
+    --save "$FIGURES"/norm-"$REGUL_TYPE".pdf
+
+REGUL_TYPE=ridge
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.3,0.1,0.05,0.03,0.01,0.008} \
+    --ord  $(rep inf 7) --experiment_plot error_bars \
+    --plot_type norm --remove_bounds --remove_legend  --y_scale linear \
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty \
+    --save "$FIGURES"/norm-"$REGUL_TYPE".pdf
+
+REGUL_TYPE=advtrain-linf
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.03,0.02,0.01,0.008,0.007,0.006,0.005} \
+    --ord  $(rep inf 7) --experiment_plot error_bars \
+    --plot_type norm --remove_bounds --remove_legend --y_scale linear \
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty \
+    --save "$FIGURES"/norm-"$REGUL_TYPE".pdf
+
+REGUL_TYPE=lasso
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.04,0.03,0.02,0.01,0.008,0.007,0.005} \
+    --ord  $(rep inf 7) --experiment_plot error_bars  \
+    --plot_type norm --remove_bounds --remove_legend  --y_scale linear \
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty \
+    --save "$FIGURES"/norm-"$REGUL_TYPE".pdf
+
+
+
+
+# Figure 10 (TODO: There is something weird here! l2 attacks seems to affect lasso and linfty trained models)
+RESULTS=out/results/advtrain
+FEATURE_KIND=isotropic
+SCALING=sqrt
+REGUL_TYPE=(advtrain-l2 ridge advtrain-linf lasso min-l2norm)
+REG=(0.01 0.01 0.005 0.005 0.0)
+for i in 0 1 2 3 4;
     do
-  python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05} \
-      --labels {0.5,0.1,0.05} --ord inf inf inf inf --experiment_plot error_bars \
-      --plot_type norm --remove_bounds --y_scale linear
+    python linear-estimate.py --num_test_samples 100 --num_train_samples 100  --scaling $SCALING \
+          --features_kind $FEATURE_KIND --signal_amplitude 4  -l -0.5 -u 2  \
+          --ord 2 1.5 20 inf --eps 0.5 0.1 0.05 0.01 0.005 0.001 0.0 \
+          --training ${REGUL_TYPE[$i]} \
+          --regularization ${REG[$i]} \
+          --ord 2 1.5 20 inf   -o "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"${REGUL_TYPE[$i]}"-long
 done;
 
+ORD=(2 2 inf)
+EPS=(0 0.5 0.5)
+for i in 0 1 2;
+do
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,advtrain-linf,lasso,min-l2norm}-long \
+    --plot_type advrisk --eps $(rep ${EPS[$i]} 5)  --ord $(rep ${ORD[$i]} 5) --experiment_plot error_bars \
+    --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty   \
+    --remove_bounds --second_marker_set --labels {advtrain-l2,ridge,advtrain-linf,lasso,min-l2norm}
+done;
+
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,advtrain-linf,lasso,min-l2norm}-long \
+    --plot_type norm  --ord $(rep 2 5) --experiment_plot error_bars \
+    --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty   \
+    --remove_bounds --second_marker_set --labels {advtrain-l2,ridge,advtrain-linf,lasso,min-l2norm}
 
 #####################
 ## NONLINEAR MODEL ##
