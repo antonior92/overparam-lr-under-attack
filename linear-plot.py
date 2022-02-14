@@ -54,7 +54,8 @@ def plot_risk_and_exactbounds(ax, i, df, lbl, p, e, xaxis):
 
 
 def plot_risk_and_bounds(ax, i, df, lbl, p, e, xaxis, xaxis_for_bounds, n_features_for_bounds, anorm, arisk):
-    r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
+    ord_eps_dict = {(np.float64(ss.split('-')[1]), np.float64(ss.split('-')[2])): ss for ss in df.keys() if 'advrisk' in ss}
+    r = df[ord_eps_dict[(p, e)]]
     # Plot empirical value
     l = plot_experiments(xaxis, r, i, lbl, args.experiment_plot)
     if args.remove_bounds:

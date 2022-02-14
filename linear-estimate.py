@@ -183,7 +183,7 @@ def train_and_evaluate(data_generator, n_samples, n_test_samples, epsilon, ord, 
             # Estimate adversarial arisk
             delta_X = e * delta_x
             r = np.mean((y_test - (X_test + delta_X) @ beta_hat) ** 2)
-            risk['advrisk-{:.1f}-{:.1f}'.format(p, e)] = r
+            risk['advrisk-{:.1f}-{:f}'.format(p, e)] = r
 
     # Compute distance
     if dgen.kind in ['isotropic', 'equicorrelated']:
@@ -262,7 +262,7 @@ if __name__ == '__main__':
         random.shuffle(run_instances)
     prev_mdl = None  # used only if reuse_weights is True
     df = pd.DataFrame(columns=['proportion', 'seed'] + ['norm-{:.1f}'.format(p) for p in args.ord] +
-                              ['advrisk-{:.1f}-{:.1f}'.format(p, e) for p, e in itertools.product(args.ord, args.epsilon)])
+                              ['advrisk-{:.1f}-{:f}'.format(p, e) for p, e in itertools.product(args.ord, args.epsilon)])
     for seed, proportion in tqdm(run_instances, smoothing=0.03):
         if args.swep_over == 'num_features':
             n_features = max(int(proportion * args.num_train_samples), 1)
