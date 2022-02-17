@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np  # numpy > 1.10 so we can use np.linalg.norm(...,axis=axis, keepdims=keepdims)
 import random
 from interp_under_attack.adversarial_attack import compute_adv_attack, compute_q
-from interp_under_attack.adversarial_training import adversarial_training, lasso_cvx
+from interp_under_attack.adversarial_training import adversarial_training, lasso_cvx, ridge
 from linear import compute_mispecif_proportion
 import json
 import scipy.linalg as linalg
@@ -16,10 +16,7 @@ def train(X, y, type='min-l2norm', regularization=0.0):
     if type == 'min-l2norm':  # min norm solution
         estim_param, _resid, _rank, _s = linalg.lstsq(X, y)
     elif type == 'ridge':
-        # SVD implementation of ridge regression
-        u, s, vh = linalg.svd(X, full_matrices=False, compute_uv=True)
-        prod_aux = s / (regularization + s ** 2)  # If S = diag(s) => P = inv(S.T S + ridge * I) S.T => prod_aux = diag(P)
-        estim_param = (prod_aux * (y @ u)) @ vh  # here estim_param = V P U.T
+        estim_param = ridge(X, y, regularization)
     elif type == 'lasso':
         # I do not use the scikit-learn coordinate descent implementation!
         # While more efficient, it does not has a consistent behavior in the overparametrized region.

@@ -3,9 +3,9 @@ import cvxpy as cp
 import numpy as np
 import numpy.linalg as linalg
 from interp_under_attack.adversarial_attack import compute_q
+import scipy.linalg as linalg
 
-
-def adversarial_training(X, y, p, eps):
+def adversarial_training(X, y, p, eps, **kwargs):
     """Compute parameter for linear model trained adversarially with unitary p-norm.
 
     :param X:
@@ -33,7 +33,7 @@ def adversarial_training(X, y, p, eps):
 
     prob = cp.Problem(cp.Minimize(adv_loss))
     try:
-        prob.solve()
+        prob.solve(**kwargs)
         param0 = param.value
     except:
         param0 = np.zeros(n)
@@ -41,7 +41,7 @@ def adversarial_training(X, y, p, eps):
     return param0
 
 
-def lasso_cvx(X, y, eps):
+def lasso_cvx(X, y, eps, **kwargs):
     """Compute parameter for linear model using lasso (using cvxpy).
 
     :param X:
@@ -63,13 +63,20 @@ def lasso_cvx(X, y, eps):
 
     prob = cp.Problem(cp.Minimize(adv_loss))
     try:
-        prob.solve()
+        prob.solve(**kwargs)
         param0 = param.value
     except:
-        print(m, n)
         param0 = np.zeros(n)
 
     return param0
+
+
+def ridge(X, y, regularization):
+    # SVD implementation of ridge regression
+    u, s, vh = linalg.svd(X, full_matrices=False, compute_uv=True)
+    prod_aux = s / (regularization + s ** 2)  # If S = diag(s) => P = inv(S.T S + ridge * I) S.T => prod_aux = diag(P)
+    estim_param = (prod_aux * (y @ u)) @ vh  # here estim_param = V P U.T
+    return estim_param
 
 
 # Define and solve the CVXPY problem.
@@ -83,9 +90,13 @@ if __name__ == '__main__':
 
     param = adversarial_training(X, y, 2, 0.1)
     param_lasso = lasso_cvx(X, y, 0.1)
+    param_ridge = lasso_cvx(X, y, 0.1)
 
     print(np.linalg.norm(X @ param - y))
     print(np.linalg.norm(param))
 
     print(np.linalg.norm(X @ param_lasso - y))
     print(np.linalg.norm(param_lasso))
+
+    print(np.linalg.norm(X @ param_ridge - y))
+    print(np.linalg.norm(param_ridge))

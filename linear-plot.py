@@ -28,8 +28,8 @@ def plot_experiments(xaxis, r, ithplot, lbl, plt_type='markers'):
         lerr = m - np.quantile(r_values, 0.25, axis=1)
         uerr = np.quantile(r_values, 0.75, axis=1) - m
         if plt_type == 'error_bars':
-            ec = ax.errorbar(x=new_xaxis, y=m, yerr=[lerr, uerr], capsize=3,
-                            linestyle="None", marker="o", markersize=3, label=lbl)
+            ec = ax.errorbar(x=new_xaxis, y=m, yerr=[lerr, uerr], capsize=3, alpha=0.8,
+                            marker=markers[ithplot], markersize=3, ls=':', label=lbl)
             return ec.lines[0]
         elif plt_type == 'median_line':
             l, = ax.plot(new_xaxis, m, '-'+ markers[ithplot], label=lbl)
