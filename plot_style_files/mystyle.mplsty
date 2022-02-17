@@ -11,3 +11,4 @@ ytick.direction: in
 figure.frameon: False
 legend.handletextpad: 0.01
 text.latex.preamble: \usepackage{newtxmath}
+legend.handlelength: 1
