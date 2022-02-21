@@ -12,12 +12,30 @@ l2advtrain = lambda xx, yy, ee: adversarial_training(xx, yy, 2, ee)
 linfadvtrain = lambda xx, yy, ee: adversarial_training(xx, yy, np.Inf, ee)
 
 if __name__ == '__main__':
-    out_p = 'HET_2'
-    pp = './WEBSITE/DATA'
-    out_folder = 'out/results/magic'
-    subsampl = 20  #use only every n-th input
-    test_size = 250
-    random_state = 0
+    import argparse
+    parser = argparse.ArgumentParser(description='Evaluate on MAGIC dataset for grid of points.')
+    parser.add_argument('-i', '--input_folder', default='./WEBSITE/DATA',
+                        help='input folder containing magic dataset.')
+    parser.add_argument('-o', '--output_folder', default='./out/results/magic',
+                        help='output folder.')
+    parser.add_argument('--test_size', type=int, default=300,
+                       help='number of test samples in the experiment. The number of training points will be 504 minus'
+                            'this quantity.')
+    parser.add_argument('-g', '--grid', type=int, default=20,
+                        help='number of points each solver will be evaluated on')
+    parser.add_argument('-s', '--subsampl', type=int, default=40,
+                        help='use a subsample of features. Naturally deal with 55067 features (genotypes).'
+                             'when s > 1. The number of features used will be `55067 / s` '
+                             'and it will take every s-th sample.')
+    parser.add_argument('-p', '--output_phenotype', default='HET_2', type=str,
+                        help='which phenotype will be predicted')
+    parser.add_argument('-r', '--random_state', default=0, type=int,
+                        help='random seed.')
+    args = parser.parse_args()
+    print(args)
+
+    if not os.path.exists(args.output_folder):
+        os.makedirs(args.output_folder)
 
     founder_names = ["Banco", "Bersee", "Brigadier", "Copain", "Cordiale", "Flamingo",
                      "Gladiator", "Holdfast", "Kloka", "MarisFundin", "Robigus", "Slejpner",
@@ -25,16 +43,16 @@ if __name__ == '__main__':
 
 
     # Genotype
-    genotype = pd.read_csv(os.path.join(pp, 'MAGIC_IMPUTED_PRUNED/MAGIC_imputed.pruned.traw'), sep='\t')
+    genotype = pd.read_csv(os.path.join(args.input_folder, 'MAGIC_IMPUTED_PRUNED/MAGIC_imputed.pruned.traw'), sep='\t')
     genotype.set_index('SNP', inplace=True)
-    genotype = genotype.iloc[:,5:]
+    genotype = genotype.iloc[:, 5:]
     colnames = genotype.keys()
     new_colnames = [c.split('_')[0] for c in colnames]
     genotype.rename(columns={c: new_c for c, new_c in zip(colnames, new_colnames)}, inplace=True)
     genotype = genotype.transpose()
 
     # Phenotype
-    phenotype = pd.read_csv(os.path.join(pp, 'PHENOTYPES/NDM_phenotypes.tsv'), sep='\t')
+    phenotype = pd.read_csv(os.path.join(args.input_folder, 'PHENOTYPES/NDM_phenotypes.tsv'), sep='\t')
     phenotype.set_index('line_name', inplace=True)
     phenotype.drop(founder_names, inplace=True)
     del phenotype['line_code']
@@ -48,13 +66,13 @@ if __name__ == '__main__':
 
     # Formulate problem
     X = genotype.values
-    y = phenotype[out_p].values
+    y = phenotype[args.output_phenotype].values
 
     # Reduce size (just for testing quickly)
-    X = X[:, ::subsampl]
+    X = X[:, ::args.subsampl]
 
     # Train-val split
-    X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y, test_size=test_size, random_state=random_state)
+    X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y, test_size=args.test_size, random_state=args.random_state)
 
     # Rescale
     X_mean = X_train.mean(axis=0)
@@ -68,23 +86,23 @@ if __name__ == '__main__':
     y_test = (y_test - y_mean) / y_std
 
 
-    np.savez(os.path.join(out_folder, 'dataset'),
+    np.savez(os.path.join(args.output_folder, 'dataset'),
              X_train=X_train, X_test=X_test,
              y_train=y_train, y_test=y_test)
 
-    def compute_all_values(f, name, df, min_scale=-3, max_scale=10, n_alphas=20):
+    def compute_all_values(f, name, df, min_scale=-3, max_scale=6):
         # Compute ridge paths
-        alphas = np.logspace(min_scale, max_scale, n_alphas)
+        alphas = np.logspace(min_scale, max_scale, args.grid)
         for a in tqdm.tqdm(alphas):
             theta = f(X_train, y_train, a)
             fname = name+'_{:0.8}'.format(a)
-            np.save(os.path.join(out_folder, fname), theta)
+            np.save(os.path.join(args.output_folder, fname), theta)
             df = df.append({'method': name, 'alpha': a, 'file': fname}, ignore_index=True)
-            df.to_csv(os.path.join(out_folder, 'experiments.csv'), index=False)
+            df.to_csv(os.path.join(args.output_folder, 'experiments.csv'), index=False)
         return df
 
     df = pd.DataFrame(columns=['method', 'alpha', 'file'])
-    df = compute_all_values(ridge, 'ridge', df)
-    df = compute_all_values(lasso_cvx, 'lasso', df)
-    df = compute_all_values(linfadvtrain, 'linfadvtrain', df)
-    df = compute_all_values(l2advtrain, 'l2advtrain', df)
+    df = compute_all_values(ridge, 'ridge', df, min_scale=-1, max_scale=6)
+    df = compute_all_values(lasso_cvx, 'lasso', df, min_scale=-5, max_scale=1)
+    df = compute_all_values(linfadvtrain, 'linfadvtrain', df, min_scale=-6, max_scale=0)
+    df = compute_all_values(l2advtrain, 'l2advtrain', df, min_scale=-4, max_scale=1)

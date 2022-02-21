@@ -2,11 +2,10 @@ import os
 import numpy as np
 import pandas as pd
 
-
+ls = ['-', ':', '--', '-.']
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    folder = 'out/results/magic'
-    method = 'lasso'
+    folder = 'out/results/magic_2'
 
     # Load dataset
     dset = np.load(os.path.join(folder, 'dataset.npz'))
@@ -15,25 +14,29 @@ if __name__ == '__main__':
 
     # Load file
     df = pd.read_csv(os.path.join(folder, 'experiments.csv'))
+
     # filter method
-    df = df[df['method'] == method]
+    methods = np.unique(df['method'])
+    for j, m in enumerate(methods):
+        df_method = df[df['method'] == m]
 
-    alphas = []
-    mse_test_list = []
-    mse_train_list = []
-    for i, l in df.iterrows():
-        fname = l['file']
-        theta = np.load(os.path.join(folder, fname + '.npy'))
-        y_pred = X_test @ theta
-        mse = np.mean((y_test - y_pred) ** 2)
-        mse_test_list.append(mse)
+        alphas = []
+        mse_test_list = []
+        mse_train_list = []
+        for i, l in df_method.iterrows():
+            fname = l['file']
+            theta = np.load(os.path.join(folder, fname + '.npy'))
+            y_pred = X_test @ theta
+            mse = np.mean((y_test - y_pred) ** 2)
+            mse_test_list.append(mse)
 
-        y_pred_train = X_train @ theta
-        mse_train = np.mean((y_train - y_pred_train) ** 2)
-        mse_train_list.append(mse_train)
+            y_pred_train = X_train @ theta
+            mse_train = np.mean((y_train - y_pred_train) ** 2)
+            mse_train_list.append(mse_train)
 
-        alphas.append(l['alpha'])
-    alphas = np.array(alphas)
+            alphas.append(l['alpha'])
+        alphas = np.array(alphas)
 
-    plt.loglog(1 / alphas, mse_test_list)
+        plt.semilogx(1 / alphas, mse_test_list, label=m, ls=ls[j])
+    plt.legend()
     plt.show()

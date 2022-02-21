@@ -409,6 +409,22 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-advtrain-l2-0.03 \
     --plot_type advrisk --eps $(rep 0.01 4)  --ord $(rep inf 4) --experiment_plot error_bars \
     --remove_bounds --second_marker_set --y_scale linear
 
+
+
+###################
+## MAGIC example ##
+###################
+
+wget http://mtweb.cs.ucl.ac.uk/mus/www/MAGICdiverse/MAGIC_diverse_FILES/BASIC_GWAS.tar.gz
+tar -xvf BASIC_GWAS.tar.gz
+
+# Testing whether the optimal point changes with the number of features.
+#  Now running on hyperion:410452.advtrain
+for S in 40 35 30 25 20 15;
+do
+  python magic-estimate.py -o ./out/results/magic_s"$S" -s $S
+done;
+
 #####################
 ## NONLINEAR MODEL ##
 #####################
