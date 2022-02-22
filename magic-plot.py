@@ -5,7 +5,7 @@ import pandas as pd
 ls = ['-', ':', '--', '-.']
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    folder = 'out/results/magic_2'
+    folder = 'out/results/magic_s15'
 
     # Load dataset
     dset = np.load(os.path.join(folder, 'dataset.npz'))
@@ -23,6 +23,7 @@ if __name__ == '__main__':
         alphas = []
         mse_test_list = []
         mse_train_list = []
+        sparsity = []
         for i, l in df_method.iterrows():
             fname = l['file']
             theta = np.load(os.path.join(folder, fname + '.npy'))
@@ -34,9 +35,13 @@ if __name__ == '__main__':
             mse_train = np.mean((y_train - y_pred_train) ** 2)
             mse_train_list.append(mse_train)
 
+            sparsity.append(sum(np.abs(theta) < 1e-10) / len(theta))
+
             alphas.append(l['alpha'])
         alphas = np.array(alphas)
 
-        plt.semilogx(1 / alphas, mse_test_list, label=m, ls=ls[j])
+        #plt.semilogx(1 / alphas, mse_test_list, label=m, ls=ls[j])
+        #plt.loglog(1 / alphas, mse_train_list, label=m, ls=ls[j])
+        plt.plot(alphas, sparsity, label=m, ls=ls[j])
     plt.legend()
     plt.show()

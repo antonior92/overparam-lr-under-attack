@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import sklearn.model_selection
 import numpy as np
+import numpy.random as rnd
 import tqdm
 from interp_under_attack.adversarial_training import adversarial_training, lasso_cvx, ridge
 
@@ -18,15 +19,14 @@ if __name__ == '__main__':
                         help='input folder containing magic dataset.')
     parser.add_argument('-o', '--output_folder', default='./out/results/magic',
                         help='output folder.')
-    parser.add_argument('--test_size', type=int, default=300,
+    parser.add_argument('--test_size', type=int, default=252,
                        help='number of test samples in the experiment. The number of training points will be 504 minus'
                             'this quantity.')
     parser.add_argument('-g', '--grid', type=int, default=20,
                         help='number of points each solver will be evaluated on')
-    parser.add_argument('-s', '--subsampl', type=int, default=40,
-                        help='use a subsample of features. Naturally deal with 55067 features (genotypes).'
-                             'when s > 1. The number of features used will be `55067 / s` '
-                             'and it will take every s-th sample.')
+    parser.add_argument('-m', '--num_features', type=int, default=2000,
+                        help='How many features to use. Naturally deal with 55067 features (genotypes).'
+                             'When this is not the case use subset of the features.')
     parser.add_argument('-p', '--output_phenotype', default='HET_2', type=str,
                         help='which phenotype will be predicted')
     parser.add_argument('-r', '--random_state', default=0, type=int,
@@ -68,11 +68,15 @@ if __name__ == '__main__':
     X = genotype.values
     y = phenotype[args.output_phenotype].values
 
+
     # Reduce size (just for testing quickly)
-    X = X[:, ::args.subsampl]
+    rng = rnd.RandomState(seed=args.random_state)
+    selected_features_before = np.arange(X.shape[1]) < args.num_features
+    selected_features = rnd.permutation(selected_features_before)
+    X = X[:, selected_features]
 
     # Train-val split
-    X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y, test_size=args.test_size, random_state=args.random_state)
+    X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y, test_size=args.test_size, random_state=0)
 
     # Rescale
     X_mean = X_train.mean(axis=0)

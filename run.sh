@@ -418,11 +418,14 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-advtrain-l2-0.03 \
 wget http://mtweb.cs.ucl.ac.uk/mus/www/MAGICdiverse/MAGIC_diverse_FILES/BASIC_GWAS.tar.gz
 tar -xvf BASIC_GWAS.tar.gz
 
-# Testing whether the optimal point changes with the number of features.
-#  Now running on hyperion:410452.advtrain
-for S in 40 35 30 25 20 15;
+# Now running on hyperion:410452.advtrain
+# Generate multiple runs
+for M in 1000 2000 4000 8000 16000;
 do
-  python magic-estimate.py -o ./out/results/magic_s"$S" -s $S
+  for SEED in 0 1 2 3 4;
+  do
+    python magic-estimate.py -o ./out/results/magic_m"$M"_seed"$SEED" -m $M -r $SEED --grid 100
+  done;
 done;
 
 #####################
