@@ -229,7 +229,7 @@ python linear-plot.py out/results/latent-sqrt-0.1 \
 python diabetes_example.py --plot_style $STYLE plot_style_files/stacked_bottom.mplsty --save out/figures
 
 
-
+# TODO: fix to isotropic / Figure out why runs from hyperion seem more noisy
 ######################################################
 ## Adversarial training overparametrized: isotropic ##
 ######################################################
@@ -262,7 +262,7 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0
     --plot_style $STYLE plot_style_files/stacked_bottom.mplsty
 
 
-# Figure 9: TODO fix to isotropic / Figure out why runs from hyperion seem more noisy
+# Figure 9
 RESULTS=out/results/advtrain
 FEATURE_KIND=isotropic
 SCALING=sqrt
@@ -308,7 +308,6 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.04,
 
 
 # Figure 10
-# This is now running on hyperion:experiment_adversarial_training2
 RESULTS=out/results/advtrain_new
 FEATURE_KIND=isotropic
 SCALING=sqrt
@@ -331,10 +330,45 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,a
     --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mycolors.mplsty \
     --save "$FIGURES"/"$FEATURE_KIND"-advrisk-regularized.pdf
 
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,advtrain-linf,lasso,min-l2norm}-long \
+    --plot_type advrisk --eps $(rep 0.0 5)  --ord $(rep inf 5) --experiment_plot error_bars \
+    --remove_bounds --second_marker_set --labels "adv. train $\ell_2$" "ridge"  "adv. train $\ell_{\infty}$" lasso "min. norm" \
+    --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mycolors.mplsty \
+    --save "$FIGURES"/"$FEATURE_KIND"-stdrisk-regularized.pdf
 
 ###################################################
 ## Adversarial training overparametrized: latent ##
 ###################################################
+# ---- Figure "8" for Latent ----
+# TODO: remove lines and keep only error bars
+FEATURE_KIND=latent
+SCALING=none
+RESULTS=out/results/advtrain_new
+for REGUL_TYPE in advtrain-l2 advtrain-linf ridge lasso;
+    do
+  for REG in 1 0.5 0.1 0.05 0.01;
+        do
+    python linear-estimate.py --num_test_samples 200 --num_train_samples 200  --scaling $SCALING \
+      --features_kind $FEATURE_KIND --signal_amplitude 1  --noise_std 0.1 -l -0.5 --eps 0.5 0.1 0.05 0.01 0.005 0.001 0.0 \
+      --ord 2 1.5 20 inf --training $REGUL_TYPE \
+      --regularization $REG -ord 2 1.5 20 inf \
+      -o "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-"$REG"
+  done;
+done;
+
+for REGUL_TYPE in advtrain-l2 lasso ridge;
+    do
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
+    --labels {0.5,0.1,0.05,0.01} --experiment_plot error_bars \
+    --plot_type train_mse --remove_bounds --remove_legend \
+    --plot_style $STYLE plot_style_files/stacked.mplsty
+done;
+REGUL_TYPE=advtrain-linf
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
+    --labels "$\delta = "{0.5,0.1,0.05,0.01}"$" --experiment_plot error_bars --y_min -12 --y_max 2 \
+    --plot_type train_mse --remove_bounds \
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty
+
 
 # ---- Figure "9" for Latent ----
 RESULTS=out/results/advtrain_new
@@ -379,7 +413,6 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.06,
 
 
 #  ---- Figure "10" for Latent ----
-# NOW RUNNING on hyperion:410452.advtrain
 RESULTS=out/results/advtrain_new
 FEATURE_KIND=latent
 SCALING=sqrt
@@ -395,19 +428,15 @@ for i in 0 1 2 3 4;
           -o "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"${REGUL_TYPE[$i]}"-long
 done;
 
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-advtrain-l2-0.03 \
-    "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-ridge-0.03  \
-    "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-lasso-0.03 \
-    "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-advtrain-linf-0.03  \
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,lasso,advtrain-linf}-long \
     --plot_type advrisk --eps $(rep 0.01 4)  --ord $(rep inf 4) --experiment_plot error_bars \
-    --remove_bounds --second_marker_set --y_scale linear
+    --remove_bounds --second_marker_set --y_scale log
 
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-advtrain-l2-0.03 \
-    "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-ridge-0.03  \
-    "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-lasso-0.03 \
-    "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-advtrain-linf-0.03  \
-    --plot_type advrisk --eps $(rep 0.01 4)  --ord $(rep inf 4) --experiment_plot error_bars \
-    --remove_bounds --second_marker_set --y_scale linear
+
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,lasso,advtrain-linf}-long \
+    --plot_type advrisk --eps $(rep 0.0 4)  --ord $(rep inf 4) --experiment_plot error_bars \
+    --remove_bounds --second_marker_set --y_scale log --labels {advtrain-l2,ridge,lasso,advtrain-linf}
+
 
 
 
@@ -418,7 +447,9 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-advtrain-l2-0.03 \
 wget http://mtweb.cs.ucl.ac.uk/mus/www/MAGICdiverse/MAGIC_diverse_FILES/BASIC_GWAS.tar.gz
 tar -xvf BASIC_GWAS.tar.gz
 
-# Now running on hyperion:410452.advtrain
+# TODO: Now running on hyperion:410452.advtrain
+# TODO: compare numbers with performance in the original paper. Might need some changes...
+# TODO: understand why ell_infty attacks dont realy present sparsity
 # Generate multiple runs
 for M in 1000 2000 4000 8000 16000;
 do
@@ -427,6 +458,7 @@ do
     python magic-estimate.py -o ./out/results/magic_m"$M"_seed"$SEED" -m $M -r $SEED --grid 100
   done;
 done;
+
 
 #####################
 ## NONLINEAR MODEL ##
