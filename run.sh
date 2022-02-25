@@ -453,6 +453,7 @@ tar -xvf BASIC_GWAS.tar.gz
 # running the script WEBSITE/genomic.prediction.r
 # We can extract the metric (1-R^2).
 #    = mean((test.pheno$HET_2- pred.rr[,1])^2) / mean((test.pheno$HET_2- mean(test.pheno$HET_2))^2)
+# Which we can compute there and
 # Notice that this is the metric we have been plotting in magic-plot.py
 # The value obtained there is:
 # - for 454/50 train/test split is:
@@ -462,13 +463,9 @@ tar -xvf BASIC_GWAS.tar.gz
 # OBS: this may be different for different seeds...
 # Since the cross validation and test set depend on the seed
 
-# TODO:
-#     1. Add glmnet scikitlearn crossvalidation implementation to python script for easy comparisson.
-#     2. Compare with genomic.predictions.r
-#     3. Test what happens if instead of a subsample of x we use the average content of the genome block.
-#        This could be a way of getting more information and improve the prediction without the need
-#        of too much computational power
-#     3. Try to better understand why ell_infty attacks dont realy present sparsity.
+# TODO: Try to better understand why ell_infty attacks dont realy present sparsity.
+# TODO: we notice that in this same example lasso do not really present sparsity neither.
+#  (probably due to the solver not perfectly converging)
 
 # Generate multiple runs
 for M in 1000 2000 4000 8000 16000;

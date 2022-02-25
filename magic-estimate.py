@@ -9,6 +9,8 @@ import numpy.random as rnd
 import tqdm
 from interp_under_attack.adversarial_training import adversarial_training, lasso_cvx, ridge
 
+from sklearn.linear_model import ElasticNetCV
+
 l2advtrain = lambda xx, yy, ee: adversarial_training(xx, yy, 2, ee)
 linfadvtrain = lambda xx, yy, ee: adversarial_training(xx, yy, np.Inf, ee)
 
@@ -22,7 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('--test_size', type=int, default=252,
                        help='number of test samples in the experiment. The number of training points will be 504 minus'
                             'this quantity.')
-    parser.add_argument('-g', '--grid', type=int, default=20,
+    parser.add_argument('-g', '--grid', type=int, default=0,
                         help='number of points each solver will be evaluated on')
     parser.add_argument('-m', '--num_features', type=int, default=2000,
                         help='How many features to use. Naturally deal with 55067 features (genotypes).'
@@ -67,11 +69,13 @@ if __name__ == '__main__':
     # Formulate problem
     X = genotype.values
     y = phenotype[args.output_phenotype].values
+    n_samples, n_genes = X.shape
 
 
     # Reduce size (just for testing quickly)
     rng = rnd.RandomState(seed=args.random_state)
-    selected_features_before = np.arange(X.shape[1]) < args.num_features
+    num_features = np.minimum(args.num_features, n_genes)
+    selected_features_before = np.arange(n_genes) < args.num_features
     selected_features = rnd.permutation(selected_features_before)
     X = X[:, selected_features]
 
@@ -101,12 +105,32 @@ if __name__ == '__main__':
             theta = f(X_train, y_train, a)
             fname = name+'_{:0.8}'.format(a)
             np.save(os.path.join(args.output_folder, fname), theta)
-            df = df.append({'method': name, 'alpha': a, 'file': fname}, ignore_index=True)
+            df = df.append({'method': name, 'alpha': a, 'file': fname, 'cv': False}, ignore_index=True)
             df.to_csv(os.path.join(args.output_folder, 'experiments.csv'), index=False)
         return df
 
-    df = pd.DataFrame(columns=['method', 'alpha', 'file'])
+    df = pd.DataFrame(columns=['method', 'alpha', 'file', 'cv'])
     df = compute_all_values(ridge, 'ridge', df, min_scale=-1, max_scale=6)
     df = compute_all_values(lasso_cvx, 'lasso', df, min_scale=-5, max_scale=1)
     df = compute_all_values(linfadvtrain, 'linfadvtrain', df, min_scale=-6, max_scale=0)
     df = compute_all_values(l2advtrain, 'l2advtrain', df, min_scale=-4, max_scale=1)
+
+    # Add values related to the cross validation
+    regr = ElasticNetCV(cv=10, random_state=0, l1_ratio=1)
+    regr.fit(X_train, y_train)
+    fname = 'lasso_{:0.8}'.format(regr.alpha_)
+    np.save(os.path.join(args.output_folder, fname), regr.coef_)
+    y_pred = X_test @ regr.coef_
+    mse = np.mean((y_test - y_pred) ** 2)
+    print(mse)
+    print(sum(np.abs(regr.coef_ > 0)))
+    df = df.append({'method': 'lasso', 'alpha': regr.alpha_, 'file': fname, 'cv': True}, ignore_index=True)
+    df.to_csv(os.path.join(args.output_folder, 'experiments.csv'), index=False)
+
+    theta = lasso_cvx(X_train, y_train, regr.alpha_)
+    y_pred = X_test @ theta
+    mse = np.mean((y_test - y_pred) ** 2)
+    print(mse)
+    print(sum(np.abs(theta > 0)))
+    print(max(np.abs(regr.coef_ - theta)))
+
