@@ -447,9 +447,29 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,l
 wget http://mtweb.cs.ucl.ac.uk/mus/www/MAGICdiverse/MAGIC_diverse_FILES/BASIC_GWAS.tar.gz
 tar -xvf BASIC_GWAS.tar.gz
 
-# TODO: Now running on hyperion:410452.advtrain
-# TODO: compare numbers with performance in the original paper. Might need some changes...
-# TODO: understand why ell_infty attacks dont realy present sparsity
+
+
+# NOTE: Comparing with the original paper:
+# running the script WEBSITE/genomic.prediction.r
+# We can extract the metric (1-R^2).
+#    = mean((test.pheno$HET_2- pred.rr[,1])^2) / mean((test.pheno$HET_2- mean(test.pheno$HET_2))^2)
+# Notice that this is the metric we have been plotting in magic-plot.py
+# The value obtained there is:
+# - for 454/50 train/test split is:
+#           ridge = 0.73784, lasso = 0.519179, elnet = 0.5166093
+# - for 254/250 train/test split is:
+#           ridge = 0.0.7933152, lasso = 0.5268, elnet = 0.5308153
+# OBS: this may be different for different seeds...
+# Since the cross validation and test set depend on the seed
+
+# TODO:
+#     1. Add glmnet scikitlearn crossvalidation implementation to python script for easy comparisson.
+#     2. Compare with genomic.predictions.r
+#     3. Test what happens if instead of a subsample of x we use the average content of the genome block.
+#        This could be a way of getting more information and improve the prediction without the need
+#        of too much computational power
+#     3. Try to better understand why ell_infty attacks dont realy present sparsity.
+
 # Generate multiple runs
 for M in 1000 2000 4000 8000 16000;
 do

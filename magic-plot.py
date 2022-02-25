@@ -23,8 +23,9 @@ def plot_error_bar(x, y, ax, lbl):
 ls = ['-', ':', '--', '-.']
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
+    import tqdm
     n_seeds = 5
-    folders = ['out/results/magic_m4000_seed{}'.format(i) for i in range(n_seeds)]
+    folders = ['out/results/magic_m8000_seed{}'.format(i) for i in range(n_seeds)]
 
     tps = ['mse_test', 'mse_train', 'sparsity']
     log_x = {t: True for t in ['mse_test', 'mse_train', 'sparsity']}
@@ -41,10 +42,7 @@ if __name__ == '__main__':
         list_df.append(df_aux)
     df = pd.concat(list_df, keys=range(n_seeds), names=['seed', 'n'])
     df.reset_index(0, inplace=True)
-    df.reset_index(0, drop=True)
-
-    # Add path
-
+    df.reset_index(0, drop=True, inplace=True)
 
     # filter method
     methods = np.unique(df['method'])
@@ -52,7 +50,7 @@ if __name__ == '__main__':
     for j, m in enumerate(methods):
         df_method = df[df['method'] == m]
         info = {'alpha': [],'mse_test': [], 'mse_train': [], 'sparsity': []}
-        for i, l in df_method.iterrows():
+        for i, l in tqdm.tqdm(df_method.iterrows()):
             dset = dsets[l.seed]
             X_train, X_test = dset['X_train'], dset['X_test']
             y_train, y_test = dset['y_train'], dset['y_test']
@@ -71,8 +69,9 @@ if __name__ == '__main__':
             info['alpha'].append(l['alpha'])
         method_collected_data[m] = info
 
+    plt.style.use('./plot_style_files/mycolors.mplsty')
     offsets = {'ridge': 1, 'lasso': 1e-6, 'l2advtrain': 1e-5, 'linfadvtrain': 1e-6}
-    fig, all_ax = plt.subplots(len(tps),sharex=True)
+    fig, all_ax = plt.subplots(len(tps), sharex=True)
     for i, tp in enumerate(tps):
         ax = all_ax[i]
         for m, info in method_collected_data.items():
