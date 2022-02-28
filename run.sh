@@ -454,7 +454,7 @@ tar -xvf BASIC_GWAS.tar.gz
 # We can extract the metric (1-R^2).
 #    = mean((test.pheno$HET_2- pred.rr[,1])^2) / mean((test.pheno$HET_2- mean(test.pheno$HET_2))^2)
 # Which we can compute there and
-# Notice that this is the metric we have been plotting in magic-plot.py
+# Notice that this is the metric we have been plotting in magic-merge-experiments.py
 # The value obtained there is:
 # - for 454/50 train/test split is:
 #           ridge = 0.73784, lasso = 0.519179, elnet = 0.5166093
