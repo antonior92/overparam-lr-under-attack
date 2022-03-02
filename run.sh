@@ -22,7 +22,7 @@ rep(){
 python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic \
     --ord 2 --features_kind isotropic --signal_amplitude 4
 python linear-plot.py --file out/results/isotropic \
-    --plot_style $STYLE plot_style_files/one_half.mplsty --ord 2 \
+    --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mylegend.mplsty --ord 2 \
       --save out/figures/isotropic.pdf
 
 # Generate Figure S1
@@ -75,22 +75,23 @@ python linear-plot.py --file out/results/isotropic-sqrt-swepover_train \
 python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior \
     --ord 1.5 2 20 --signal_amplitude 1
 python linear-plot.py --file out/results/isotropic-gaussian-prior \
-  --plot_style $STYLE plot_style_files/one_half.mplsty  \
+  --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mylegend.mplsty \
   plot_style_files/mycolors.mplsty  --plot_type risk_per_eps --second_marker_set --eps 2.0 \
    --fillbetween closest-l2bound \
-  --save out/figures/isotropic-gaussian-prior-variouslp.pdf
+  --save out/figures/isotropic-variouslp.pdf
 
 # Generate Figure 4
 for SCALING in sqrt sqrtlog;
 do
-  python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior-linf-"$SCALING" \
-      --ord inf --eps 1.0 -u 2 --scaling $SCALING
+  python linear-estimate.py --num_test_samples 100 --num_train_samples 100 -o out/results/isotropic-linf-"$SCALING" \
+      --ord 2 inf --eps 0 1.0 -u 2 --scaling $SCALING
 done;
-python linear-plot.py out/results/isotropic-gaussian-prior-linf-sqrt \
-  out/results/isotropic-gaussian-prior-linf-sqrtlog --plot_type advrisk \
+
+python linear-plot.py out/results/isotropic-linf-sqrt out/results/isotropic-linf-sqrtlog --plot_type advrisk --ord inf inf \
   --fillbetween only-show-ub --plot_style $STYLE plot_style_files/one_half.mplsty \
-  --second_marker_set --save out/figures/linf-isotropic.pdf --labels '$\eta(m) = \sqrt{m}$' \
-  '$\eta(m) = \sqrt{\log(m)}$'
+  --second_marker_set --labels '$\eta(m) = \sqrt{m}$' \
+  '$\eta(m) = \sqrt{\log(m)}$' \
+  --save out/figures/linf-isotropic.pdf
 
 ###############################
 ## EQUICORRELATED ATTACKS ##
@@ -152,20 +153,20 @@ python linear-estimate.py  --num_test_samples 500 --num_train_samples 500 -o out
 python linear-plot.py out/results/latent-sqrt out/results/latent-sqrt  out/results/latent-sqrt  \
   --plot_type advrisk --eps 0 0.1 0.1 --ord inf 2 inf --experiment_plot error_bars \
   --remove_bounds --second_marker_set --labels "no adv." '$\ell_2$ adv.' '$\ell_\infty$ adv.' \
-  --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty   \
+  --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
   --save out/figures/latent.pdf
-# Generate Figure 4(a)
+# Generate Figure 5(a)
 python linear-estimate.py  --num_test_samples 500 --num_train_samples 500 -o  out/results/latent-logsqrt  \
   --features_kind latent --ord  2 1.5 20 inf -e 0 0.1 \
   --signal_amplitude 1 --noise_std 0.1 -u 2  --num_latent 20 --scaling sqrtlog
-python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord 2 2 \
+python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord 2 2 --eps 0.1 0.1 \
   --remove_bounds --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' \
-  --plot_style $STYLE plot_style_files/stacked.mplsty  plot_style_files/mycolors.mplsty   \
+  --plot_style $STYLE plot_style_files/stacked.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
   --save out/figures/latent-l2.pdf --remove_xlabel
-# Generate Figure 4(b)
-python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord inf inf \
+# Generate Figure 5(b)
+python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord inf inf --eps 0.1 0.1 \
   --remove_bounds --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' \
-  --plot_style $STYLE plot_style_files/stacked_bottom.mplsty  plot_style_files/mycolors.mplsty \
+  --plot_style $STYLE plot_style_files/stacked_bottom.mplsty  plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty \
   --save out/figures/latent-linf.pdf --remove_legend
 
 
