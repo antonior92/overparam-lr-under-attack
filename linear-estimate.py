@@ -61,16 +61,20 @@ class GenerateData(object):
             raise ValueError
 
         # Define parameter
-        if kind == 'latent':
-            nn = n_latent
-        elif kind == 'mispecif':
-            nn = n_features + n_mispecif
+        if kind != 'latent':
+            if kind == 'mispecif':
+                nn = n_features + n_mispecif
+            else:
+                nn = n_features
+            if datagen_parameter == 'gaussian_prior':
+                self.beta = parameter_norm * (self.scaling / np.sqrt(nn)) * rng.randn(n_features)
+            elif datagen_parameter == 'constant':
+                self.beta = parameter_norm * (self.scaling / np.sqrt(nn)) * np.ones(n_features)
         else:
-            nn = n_features
-        if datagen_parameter == 'gaussian_prior':
-            self.beta = parameter_norm / np.sqrt(nn) * rng.randn(nn)
-        elif datagen_parameter == 'constant':
-            self.beta = parameter_norm / np.sqrt(nn) * np.ones(nn)
+            if datagen_parameter == 'gaussian_prior':
+                self.beta = parameter_norm / np.sqrt(n_latent) * rng.randn(n_latent)
+            elif datagen_parameter == 'constant':
+                self.beta = parameter_norm / np.sqrt(n_latent) * np.ones(n_latent)
 
         # In the case of latent space define transformation
         if kind == 'latent':
