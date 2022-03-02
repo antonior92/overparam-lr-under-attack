@@ -462,11 +462,6 @@ tar -xvf BASIC_GWAS.tar.gz
 #           ridge = 0.0.7933152, lasso = 0.5268, elnet = 0.5308153
 # OBS: this may be different for different seeds...
 # Since the cross validation and test set depend on the seed
-
-# TODO: Try to better understand why ell_infty attacks dont realy present sparsity.
-# TODO: we notice that in this same example lasso do not really present sparsity neither.
-#  (probably due to the solver not perfectly converging)
-
 # Generate multiple runs
 for M in 1000 2000 4000 8000 16000;
 do
@@ -475,6 +470,11 @@ do
     python magic-estimate.py -o ./out/results/magic_m"$M"_seed"$SEED" -m $M -r $SEED --grid 100
   done;
 done;
+
+python magic-merge-experiments.py
+
+#  Generate Fig. 10 and 11
+python magic-plot.py
 
 
 #####################

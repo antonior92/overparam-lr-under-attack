@@ -16,9 +16,14 @@ def get_median_and_quantiles(x, y):
     uerr = np.quantile(y_values, 0.75, axis=1) - m
     return new_x, m, lerr, uerr
 
-def plot_error_bar(new_x, m, lerr, uerr, ax, lbl):
-    l, = ax.plot(new_x, m)
-    ax.fill_between(new_x, m - lerr, m + uerr, color=l.get_color(), alpha=0.4, label=lbl)
+
+def plot_error_bar(new_x, m, lerr, uerr, ax, lbl, logy=False):
+    if logy:
+        l, = ax.plot(new_x, np.log10(m))
+        ax.fill_between(new_x, np.log10(m - lerr), np.log10(m + uerr), color=l.get_color(), alpha=0.4, label=lbl)
+    else:
+        l, = ax.plot(new_x, m)
+        ax.fill_between(new_x, m - lerr, m + uerr, color=l.get_color(), alpha=0.4, label=lbl)
 
 
 if __name__ == '__main__':
@@ -27,7 +32,7 @@ if __name__ == '__main__':
     df = pd.read_csv('out/results/magic_results.csv')
     plt.style.use(['./plot_style_files/mystyle.mplsty',
                    './plot_style_files/mycolors.mplsty',
-                   './plot_style_files/stacked.mplsty',
+                   './plot_style_files/mylegend2.mplsty',
                    ])
     save='out/figures'
 
@@ -51,6 +56,7 @@ if __name__ == '__main__':
     offsets = {'ridge': 1, 'lasso': 1e-6, 'l2advtrain': 1e-5, 'linfadvtrain': 1e-6}
 
     # Plot test error
+    plt.style.use(['./plot_style_files/stacked.mplsty'])
     fig, ax = plt.subplots()
     for m in methods:
         df_aux = df_filtered[df_filtered['method'] == m]
@@ -59,11 +65,12 @@ if __name__ == '__main__':
         new_x, med, lerr, uerr = get_median_and_quantiles(x_axis, y_axis)
         plot_error_bar(1/new_x * offsets[m] , med, lerr, uerr, ax, methods_pretty_names[m])
         ax.set_xscale('log')
-    plt.subplots_adjust(right=0.75)
-    plt.legend(bbox_to_anchor=(1.17, 0.1), loc='lower center')
+        ax.set_ylabel('MSE')
+    plt.subplots_adjust(left=0.14)
     show('magic_test_vs_regul')
 
     # Plot train error
+    plt.style.use(['./plot_style_files/stacked_bottom2.mplsty'])
     fig, ax = plt.subplots()
     for m in methods:
         df_aux = df_filtered[df_filtered['method'] == m]
@@ -73,8 +80,10 @@ if __name__ == '__main__':
         plot_error_bar(1/new_x * offsets[m], med, lerr, uerr, ax, methods_pretty_names[m])
         ax.set_xscale('log')
         ax.set_yscale('log')
-    plt.subplots_adjust(right=0.75)
-    plt.legend(bbox_to_anchor=(1.17, 0.1), loc='lower center')
+        ax.set_ylabel('MSE')
+        ax.set_xlabel('$$\delta$$')
+    plt.subplots_adjust(left=0.14, bottom=0.4)
+    plt.legend(bbox_to_anchor=(0.43, -0.75), loc='lower center', ncol=4)
     show('magic_train_vs_regul')
 
     # Filter by alpha
@@ -91,12 +100,14 @@ if __name__ == '__main__':
     df_concat = pd.concat(all_df)
 
     # Plot barplot
+    plt.style.use(['./plot_style_files/one_half.mplsty'])
     fig, ax = plt.subplots()
     sns.boxplot(x="method", hue="n_features", y="mse_test",
                data=df_concat, ax=ax, palette="Set3")
     ax.set_ylim((0, 1.5))
     ax.set_ylabel('MSE')
     ax.set_xlabel('')
+    ax.set_xticklabels(methods_pretty_names.values())
     plt.subplots_adjust(right=0.8)
     plt.legend(bbox_to_anchor =(1.15, 0.1), loc='lower center')
     show('magic_test_vs_size')
