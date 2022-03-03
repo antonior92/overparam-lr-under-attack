@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
+
 def get_median_and_quantiles(x, y):
     new_x, inverse, counts = np.unique(x, return_inverse=True, return_counts=True)
     y_values = np.zeros([len(new_x), max(counts)])

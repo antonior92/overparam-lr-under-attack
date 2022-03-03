@@ -6,27 +6,31 @@ import numpy as np
 from linear import *
 
 
+def get_quantiles(xaxis, r, quantileslower=0.25, quantilesupper=0.75):
+    new_xaxis, inverse, counts = np.unique(xaxis, return_inverse=True, return_counts=True)
+
+    r_values = np.zeros([len(new_xaxis), max(counts)])
+    secondindex = np.zeros(len(new_xaxis), dtype=int)
+    for n in range(len(xaxis)):
+        i = inverse[n]
+        j = secondindex[i]
+        r_values[i, j] = r[n]
+        secondindex[i] += 1
+    m = np.median(r_values, axis=1)
+    lerr = m - np.quantile(r_values, quantileslower, axis=1)
+    uerr = np.quantile(r_values, quantilesupper, axis=1) - m
+    return new_xaxis, m, lerr, uerr
+
+
 #########
 # Plots #
 #########
-
 def plot_experiments(xaxis, r, ithplot, lbl, plt_type='markers'):
     if plt_type == 'markers':
-        l, = ax.plot(xaxis, r, markers[ithplot], ms=4, label=lbl)
+        l, = ax.plot(xaxis, r, 'o', ms=4, label=lbl)
         return l
-    elif plt_type == 'error_bars' or plt_type == 'median_line':
-        new_xaxis, inverse, counts = np.unique(xaxis, return_inverse=True, return_counts=True)
-
-        r_values = np.zeros([len(new_xaxis), max(counts)])
-        secondindex = np.zeros(len(new_xaxis), dtype=int)
-        for n in range(len(xaxis)):
-            i = inverse[n]
-            j = secondindex[i]
-            r_values[i, j] = r[n]
-            secondindex[i] += 1
-        m = np.median(r_values, axis=1)
-        lerr = m - np.quantile(r_values, 0.25, axis=1)
-        uerr = np.quantile(r_values, 0.75, axis=1) - m
+    else:
+        new_xaxis, m, lerr, uerr = get_quantiles(xaxis, r)
         if plt_type == 'error_bars':
             ec = ax.errorbar(x=new_xaxis, y=m, yerr=[lerr, uerr], capsize=3.5, alpha=0.8,
                              marker='o', markersize=3.5,  ls='', label=lbl)
@@ -38,23 +42,25 @@ def plot_experiments(xaxis, r, ithplot, lbl, plt_type='markers'):
         elif plt_type == 'median_line':
             l, = ax.plot(new_xaxis, m, '-'+ markers[ithplot], label=lbl)
             return l
+        elif plt_type == 'fill_between':
+            l, = ax.plot(new_xaxis, m - lerr, alpha=0.6)
+            ax.plot(new_xaxis, m + uerr, color=l.get_color(), alpha=0.6)
+            ax.fill_between(new_xaxis, m-lerr, m+uerr, alpha=0.3, color=l.get_color())
 
 
-
-def plot_risk_and_exactbounds(ax, i, df, lbl, p, e, xaxis):
-    r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
+def plot_empiricalbounds(ax, df, p, e, xaxis, color):
+    ord_dict= {np.float64(ss.split('-')[1]): ss for ss in df.keys() if 'norm-' in ss}
+    lqnorm = df[ord_dict[p]]
     pred_risk = df['predrisk']
-    lqnorm = df['norm-{:.1f}'.format(p)]
-    # Plot empirical value
-    l = plot_experiments(xaxis, r, i, lbl, args.experiment_plot)
-    if args.remove_bounds:
-        return
     # Plot upper bound
     ub = (np.sqrt(pred_risk) + e * lqnorm) ** 2
     lb = pred_risk + (e * lqnorm) ** 2
 
-    ax.plot(xaxis, ub, '.', color='black', ms=2)
-    ax.plot(xaxis, lb, 's', color='black', ms=2)
+    new_xaxis, mu, _, uerr = get_quantiles(xaxis, ub, quantilesupper=1)
+    _, ml, lerr, _ = get_quantiles(xaxis, lb, quantileslower=0)
+    ax.plot(new_xaxis, ml - lerr, color=color, lw=1)
+    ax.plot(new_xaxis, mu + uerr, color=color, lw=1)
+    ax.fill_between(new_xaxis, ml - lerr, mu + uerr, alpha=0.3, color=color)
 
 
 def plot_risk_and_bounds(ax, i, df, lbl, p, e, xaxis, xaxis_for_bounds, n_features_for_bounds, anorm, arisk):
@@ -62,6 +68,8 @@ def plot_risk_and_bounds(ax, i, df, lbl, p, e, xaxis, xaxis_for_bounds, n_featur
     r = df[ord_eps_dict[(p, e)]]
     # Plot empirical value
     l = plot_experiments(xaxis, r, i, lbl, args.experiment_plot)
+    if args.empirical_bounds:
+        plot_empiricalbounds(ax, df, p, e, xaxis, l.get_color())
     if args.remove_bounds:
         return
     # Plot upper bound
@@ -246,7 +254,9 @@ if __name__ == "__main__":
     parser.add_argument('--remove_legend', action='store_true',
                         help='don include legend')
     parser.add_argument('--remove_bounds', action='store_true',
-                        help='don include legend')
+                        help='remove asymptotic bounds')
+    parser.add_argument('--empirical_bounds', action='store_true',
+                        help='use empirical bounds.')
     parser.add_argument('--second_marker_set', action='store_true',
                         help='don include ylabel')
     parser.add_argument('--experiment_plot', choices=['markers', 'error_bars', 'median_line', 'error_bars_connected'],

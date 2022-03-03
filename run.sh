@@ -162,12 +162,12 @@ python linear-estimate.py  --num_test_samples 500 --num_train_samples 500 -o  ou
 python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord 2 2 --eps 0.1 0.1 \
   --remove_bounds --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' \
   --plot_style $STYLE plot_style_files/stacked.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
-  --save out/figures/latent-l2.pdf --remove_xlabel
+  --save out/figures/latent-l2.pdf --remove_xlabel --empirical_bounds
 # Generate Figure 5(b)
 python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord inf inf --eps 0.1 0.1 \
   --remove_bounds --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' \
   --plot_style $STYLE plot_style_files/stacked_bottom.mplsty  plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty \
-  --save out/figures/latent-linf.pdf --remove_legend
+  --save out/figures/latent-linf.pdf --remove_legend --empirical_bounds
 
 
 # Generate Figure S8
