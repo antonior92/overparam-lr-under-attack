@@ -19,12 +19,11 @@ class AnalyticFunctionC0(object):
 
     def __call__(self, gamma, psi):
         coeffs = self.compute_coeffs(gamma, psi)
-        a, b, c = coeffs
         roots = np.roots(coeffs)
         if (np.real(roots) > 0).any():
             return np.max(np.abs(roots))
         else:
-            return np.NaN
+            return 0
 
 
 compute_c0_scalar = AnalyticFunctionC0()

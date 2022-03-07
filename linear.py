@@ -18,11 +18,17 @@ def asymptotic_risk(proportion, signal_amplitude, noise_std, features_kind, off_
     # This follows from Hastie Thm.1 (p.7) and is the same regardless of the covariance matrix
     # Does not account for the noise
     if features_kind == 'latent':
-        b, v = compute_normalized_bias_and_variance(proportion, proportion_latent)
+        # Underparametrized
+        b_overparametrized, v_overparametrized = compute_normalized_bias_and_variance(proportion, proportion_latent)
         psi = (proportion_latent / proportion)
         noise_std = np.sqrt(noise_std ** 2 + signal_amplitude**2 * psi / (1+psi))  # redefine noise std
         signal_amplitude = np.sqrt(1/psi) / (1 + (1/psi)) * signal_amplitude
 
+        # Overparametrized
+        b_underparametrized = 0
+        v_underparametrized = proportion / (1 - proportion)
+        b = (proportion < 1) * b_underparametrized + (proportion > 1) * b_overparametrized
+        v = (proportion < 1) * v_underparametrized + (proportion > 1) * v_overparametrized
     else:
         # The variance term
         v_underparametrized = proportion / (1 - proportion)
@@ -43,7 +49,6 @@ def asymptotic_risk(proportion, signal_amplitude, noise_std, features_kind, off_
             kappa = compute_kappa(proportion, mispec_factor)
             b = kappa * b
             noise_std = np.sqrt(signal_amplitude ** 2 * (1 - kappa) + noise_std ** 2)
-
     return noise_std ** 2 * v + signal_amplitude ** 2 * b + noise_std ** 2
 
 
