@@ -73,7 +73,7 @@ python linear-plot.py --file out/results/isotropic-sqrt-swepover_train \
 
 # Generate Figure 3
 python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior \
-    --ord 1.5 2 20 --signal_amplitude 1
+    --ord 1 2 inf --signal_amplitude 1
 python linear-plot.py --file out/results/isotropic-gaussian-prior \
   --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mylegend.mplsty \
   plot_style_files/mycolors.mplsty  --plot_type risk_per_eps --second_marker_set --eps 2.0 \
@@ -222,6 +222,11 @@ python linear-plot.py out/results/latent-sqrt-0.1 \
       --plot_style $STYLE plot_style_files/stacked.mplsty  --ord inf  --remove_bounds \
        --save latent-eps-linf-sqrt
 
+########################################
+## Discussion about random projection ##
+########################################
+# Generate Figure 4
+python norm_projections.py
 
 ######################
 ## DIABETES EXAMPLE ##
