@@ -219,7 +219,11 @@ def plot_fn(ax, df, config, ii):
         if args.y_scale == 'log':
             ax.set_yscale('log')
     if not args.remove_legend:
-        plt.legend()
+        if args.out_legend:
+            plt.subplots_adjust(right=0.83)
+            plt.legend(bbox_to_anchor=(1.09, 0.1), loc='lower center')
+        else:
+            plt.legend()
     plt.grid()
 
 
@@ -253,6 +257,8 @@ if __name__ == "__main__":
                         help='don include ylable')
     parser.add_argument('--remove_legend', action='store_true',
                         help='don include legend')
+    parser.add_argument('--out_legend', action='store_true',
+                        help='plot legend outside of the plot')
     parser.add_argument('--remove_bounds', action='store_true',
                         help='remove asymptotic bounds')
     parser.add_argument('--empirical_bounds', action='store_true',

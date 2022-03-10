@@ -64,21 +64,32 @@ python linear-plot.py out/results/isotropic-r4-{sqrt,sqrtlog} out/results/isotro
 # TODO: implement the figure. Linear estimate must now allow the
 # number of features to be constant while the number of datapoints vary.
 # We must also allow different values of signal amplitude in the same plot
-python linear-estimate.py --num_test_samples 1000 --num_train_samples 1000 -o out/results/isotropic-sqrt-swepover_train\
-    --ord 2 --features_kind isotropic --signal_amplitude 4 --scaling sqrt --swep_over num_train_samples -l 0.2 -u 1.5 \
-     --eps 1
-python linear-plot.py --file out/results/isotropic-sqrt-swepover_train \
-       --plot_style $STYLE plot_style_files/one_third_with_ylabel.mplsty --ord 2 --xaxis n
+#python linear-estimate.py --num_test_samples 1000 --num_train_samples 1000 -o out/results/isotropic-sqrt-swepover_train\
+#    --ord 2 --features_kind isotropic --signal_amplitude 4 --scaling sqrt --swep_over num_train_samples -l 0.2 -u 1.5 \
+#     --eps 1
+#python linear-plot.py --file out/results/isotropic-sqrt-swepover_train \
+#       --plot_style $STYLE plot_style_files/one_third_with_ylabel.mplsty --ord 2 --xaxis n
 
 
 # Generate Figure 3
-python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic-gaussian-prior \
+python linear-estimate.py --num_test_samples 100 --num_train_samples 100 -o out/results/isotropic-gaussian-prior \
     --ord 1 2 inf --signal_amplitude 1
-python linear-plot.py --file out/results/isotropic-gaussian-prior \
+python linear-plot.py --file out/results/isotropic-gaussian-prior out/results/isotropic-gaussian-prior out/results/isotropic-gaussian-prior \
+   --labels  "$\ell_\infty$ adv." "$\ell_2$ adv."  "$\ell_1$ adv." \
   --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mylegend.mplsty \
-  plot_style_files/mycolors.mplsty  --plot_type risk_per_eps --second_marker_set --eps 2.0 \
-   --fillbetween closest-l2bound \
-  --save out/figures/isotropic-variouslp.pdf
+  plot_style_files/mycolors.mplsty plot_style_files/stacked.mplsty  --plot_type advrisk --second_marker_set --ord inf 2 1\
+    --eps 2.0 2.0 2.0 --fillbetween closest-l2bound --remove_xlabel --out_legend \
+   --save out/figures/isotropic-variouslp.pdf
+python linear-plot.py --file  out/results/isotropic-gaussian-prior out/results/isotropic-gaussian-prior out/results/isotropic-gaussian-prior \
+  --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mylegend.mplsty \
+  plot_style_files/mycolors.mplsty plot_style_files/stacked_bottom.mplsty \
+   --labels "$\|\hat{\beta}\|_1$" "$\|\hat{\beta}\|_2$" "$\|\hat{\beta}\|_\infty$"  \
+   --plot_type norm --second_marker_set --ord inf 2 1  \
+   --fillbetween closest-l2bound --out_legend \
+   --save out/figures/isotropic-variouslp-norm.pdf
+
+
+
 
 # Generate Figure 4
 for SCALING in sqrt sqrtlog;
