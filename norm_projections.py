@@ -10,7 +10,7 @@ if __name__ == "__main__":
                    './plot_style_files/mylegend2.mplsty',
                    ])
     save='out/figures'
-    n_values = [100, 200, 400, 800]
+    n_values = [800, 400, 200, 100]  # Use decreasing order so the figure looks nice
     n_test_vectors = 100
     n_features = np.array(np.ceil(np.logspace(1, 4)), dtype=int)
 
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     norms = {}
     for n in n_values:
         norms[n] = {'l2_m': [], 'l2_q1': [],'l2_q3': [],
-                 'l1_m': [], 'l1_q1': [],'l1_q3': []}
+                    'l1_m': [], 'l1_q1': [],'l1_q3': []}
         for m in tqdm.tqdm(n_features):
             X = np.random.randn(n, m)
 
