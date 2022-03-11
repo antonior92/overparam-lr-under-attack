@@ -105,10 +105,10 @@ if __name__ == '__main__':
     fig, ax = plt.subplots()
     sns.boxplot(x="method", hue="n_features", y="mse_test",
                data=df_concat, ax=ax, palette="Set3")
-    ax.set_ylim((0, 1.5))
+    ax.set_ylim((0.5, 1.3))
     ax.set_ylabel('MSE')
     ax.set_xlabel('')
     ax.set_xticklabels(methods_pretty_names.values())
-    plt.subplots_adjust(right=0.8)
-    plt.legend(bbox_to_anchor =(1.15, 0.1), loc='lower center')
+    plt.subplots_adjust(bottom=0.08, top=0.95)
+    plt.legend()
     show('magic_test_vs_size')

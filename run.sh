@@ -280,7 +280,7 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0
 
 
 # Figure 9
-RESULTS=out/results/advtrain
+RESULTS=out/results/advtrain_new
 FEATURE_KIND=isotropic
 SCALING=sqrt
 for REGUL_TYPE in advtrain-l2 advtrain-linf ridge lasso;
@@ -295,31 +295,35 @@ done;
 
 
 REGUL_TYPE=advtrain-l2
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.09,0.08,0.07,0.06,0.05,0.03,0.01} \
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.01,0.03,0.05,0.06,0.07,0.08,0.09}\
     --ord  $(rep inf 7) --experiment_plot error_bars \
-    --plot_type norm --remove_bounds --remove_legend --y_scale linear \
-    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty \
+    --plot_type norm --remove_bounds --y_scale linear \
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty  \
+    --out_legend --labels {0.01,0.03,0.05,0.06,0.07,0.08,0.09} \
     --save "$FIGURES"/norm-"$REGUL_TYPE".pdf
 
 REGUL_TYPE=ridge
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.3,0.1,0.05,0.03,0.01,0.008} \
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.008,0.01,0.03,0.05,0.1,0.3,0.5} \
     --ord  $(rep inf 7) --experiment_plot error_bars \
-    --plot_type norm --remove_bounds --remove_legend  --y_scale linear \
-    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty \
+    --plot_type norm --remove_bounds --y_scale linear \
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty  \
+    --out_legend --labels {0.008,0.01,0.03,0.05,0.1,0.3,0.5} \
     --save "$FIGURES"/norm-"$REGUL_TYPE".pdf
 
 REGUL_TYPE=advtrain-linf
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.03,0.02,0.01,0.008,0.007,0.006,0.005} \
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.005,0.006,0.007,0.008,0.01,0.02,0.03} \
     --ord  $(rep inf 7) --experiment_plot error_bars \
-    --plot_type norm --remove_bounds --remove_legend --y_scale linear \
-    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty \
+    --plot_type norm --remove_bounds --out_legend --y_scale linear \
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty \
+    --labels {0.005,0.006,0.007,0.008,0.01,0.02,0.03} \
     --save "$FIGURES"/norm-"$REGUL_TYPE".pdf
 
 REGUL_TYPE=lasso
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.04,0.03,0.02,0.01,0.008,0.007,0.005} \
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.005,0.007,0.008,0.01,0.02,0.03,0.04} \
     --ord  $(rep inf 7) --experiment_plot error_bars  \
-    --plot_type norm --remove_bounds --remove_legend  --y_scale linear \
-    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty \
+    --plot_type norm --remove_bounds --out_legend  --y_scale linear \
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty \
+    --labels {0.005,0.007,0.008,0.01,0.02,0.03,0.04} \
     --save "$FIGURES"/norm-"$REGUL_TYPE".pdf
 
 

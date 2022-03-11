@@ -220,8 +220,8 @@ def plot_fn(ax, df, config, ii):
             ax.set_yscale('log')
     if not args.remove_legend:
         if args.out_legend:
-            plt.subplots_adjust(right=0.83)
-            plt.legend(bbox_to_anchor=(1.09, 0.1), loc='lower center')
+            plt.subplots_adjust(right=0.81)
+            plt.legend(bbox_to_anchor=(0.98, 1.1), loc='upper left')
         else:
             plt.legend()
     plt.grid()
