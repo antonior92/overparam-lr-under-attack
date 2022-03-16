@@ -1,5 +1,5 @@
 figure.figsize:  7.33, 3.1
-figure.subplot.left:   0.125  # the left side of the subplots of the figure
+figure.subplot.left:   0.135  # the left side of the subplots of the figure
 figure.subplot.right:  0.99    # the right side of the subplots of the figure
 figure.subplot.bottom: 0.2   # the bottom of the subplots of the figure
 figure.subplot.top:    0.95   # the top of the subplots of the figure

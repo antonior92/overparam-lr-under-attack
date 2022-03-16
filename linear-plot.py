@@ -105,9 +105,12 @@ def plot_norm(ax, i, df, lbl, p, xaxis, xaxis_for_bounds, n_features_for_bounds,
         ax.plot(xaxis_for_bounds, anorm, '-', color=l.get_color(), lw=2)
     else:
         lb, ub = lp_norm_bounds(p, n_features_for_bounds)
-        ax.fill_between(xaxis_for_bounds, lb * anorm, ub * anorm, color=l.get_color(), alpha=0.2)
-        ax.plot(xaxis_for_bounds, ub * anorm, '-', color=l.get_color(), lw=1)
-        ax.plot(xaxis_for_bounds, lb * anorm, '-', color=l.get_color(), lw=1)
+        if args.fillbetween == 'only-show-ub':
+            ax.plot(xaxis_for_bounds, ub * anorm, '-', color=l.get_color(), lw=1.5)
+        else:
+            ax.fill_between(xaxis_for_bounds, lb * anorm, ub * anorm, color=l.get_color(), alpha=0.2)
+            ax.plot(xaxis_for_bounds, ub * anorm, '-', color=l.get_color(), lw=1)
+            ax.plot(xaxis_for_bounds, lb * anorm, '-', color=l.get_color(), lw=1)
 
 
 def plot_distance(ax, i, df, xaxis, xaxis_for_bounds, adistance):
@@ -206,6 +209,8 @@ def plot_fn(ax, df, config, ii):
     elif args.plot_type == 'train_mse':
         lbl = args.labels[ii] if args.labels is not None else ''
         plot_experiments(xaxis, df['train_mse'], ii, lbl, args.experiment_plot)
+        if not args.remove_ylabel:
+            ax.set_ylabel('Train. MSE')
     # Labels
     # Plot vertical line at the interpolation threshold
     if args.xaxis == 'n-over-m' or args.xaxis == 'm-over-n':

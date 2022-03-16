@@ -97,12 +97,19 @@ do
   python linear-estimate.py --num_test_samples 100 --num_train_samples 100 -o out/results/isotropic-linf-"$SCALING" \
       --ord 2 inf --eps 0 1.0 -u 2 --scaling $SCALING
 done;
-
 python linear-plot.py out/results/isotropic-linf-sqrt out/results/isotropic-linf-sqrtlog --plot_type advrisk --ord inf inf \
   --fillbetween only-show-ub --plot_style $STYLE plot_style_files/one_half.mplsty \
   --second_marker_set --labels '$\eta(m) = \sqrt{m}$' \
   '$\eta(m) = \sqrt{\log(m)}$' \
   --save out/figures/linf-isotropic.pdf
+
+
+
+# Generate Figure 4(extra?)
+python linear-plot.py out/results/isotropic-linf-sqrt out/results/isotropic-linf-sqrtlog --plot_type norm --ord inf inf \
+  --fillbetween only-show-ub --plot_style $STYLE plot_style_files/one_half.mplsty \
+  --second_marker_set --labels '$\eta(m) = \sqrt{m}$' \
+  '$\eta(m) = \sqrt{\log(m)}$'
 
 ###############################
 ## EQUICORRELATED ATTACKS ##
@@ -166,7 +173,7 @@ python linear-plot.py out/results/latent-sqrt out/results/latent-sqrt  out/resul
   --remove_bounds --second_marker_set --labels "no adv." '$\ell_2$ adv.' '$\ell_\infty$ adv.' \
   --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
   --save out/figures/latent.pdf
-# Generate Figure 5(a)
+# Generate Figure 6(a)
 python linear-estimate.py  --num_test_samples 500 --num_train_samples 500 -o  out/results/latent-logsqrt  \
   --features_kind latent --ord  2 1.5 20 inf -e 0 0.1 \
   --signal_amplitude 1 --noise_std 0.1 -u 2  --num_latent 20 --scaling sqrtlog
@@ -174,7 +181,7 @@ python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot
   --remove_bounds --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' \
   --plot_style $STYLE plot_style_files/stacked.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
   --save out/figures/latent-l2.pdf --remove_xlabel --empirical_bounds
-# Generate Figure 5(b)
+# Generate Figure 6(b)
 python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord inf inf --eps 0.1 0.1 \
   --remove_bounds --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' \
   --plot_style $STYLE plot_style_files/stacked_bottom.mplsty  plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty \
@@ -242,7 +249,7 @@ python norm_projections.py
 ######################
 ## DIABETES EXAMPLE ##
 ######################
-# Generate Figure 7
+# Generate Figure 8
 python diabetes_example.py --plot_style $STYLE plot_style_files/stacked_bottom.mplsty --save out/figures
 
 
@@ -250,7 +257,7 @@ python diabetes_example.py --plot_style $STYLE plot_style_files/stacked_bottom.m
 ######################################################
 ## Adversarial training overparametrized: isotropic ##
 ######################################################
-# Generate Figure 8
+# Generate Figure 9
 FEATURE_KIND=isotropic
 SCALING=none
 RESULTS=out/results/advtrain_new
@@ -265,21 +272,30 @@ for REGUL_TYPE in advtrain-l2 advtrain-linf ridge lasso;
   done;
 done;
 
-for REGUL_TYPE in advtrain-l2 lasso ridge;
+REGUL_TYPE=ridge
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
+    --labels "$\delta = "{0.5,0.1,0.05,0.01}"$" --experiment_plot error_bars --y_min -12 --y_max 2 \
+    --plot_type train_mse --remove_bounds --remove_xlabel \
+    --plot_style $STYLE plot_style_files/stacked.mplsty plot_style_files/mylegend.mplsty \
+    --save "$FIGURES"/train_mse-"$REGUL_TYPE".pdf
+
+for REGUL_TYPE in advtrain-l2 lasso;
     do
 python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
     --labels {0.5,0.1,0.05,0.01} --experiment_plot error_bars \
-    --plot_type train_mse --remove_bounds --remove_legend \ %  --save "$FIGURES"/train_mse-"$REGUL_TYPE".pdf \
-    --plot_style $STYLE plot_style_files/stacked.mplsty
+    --plot_type train_mse --remove_bounds --remove_legend  --remove_xlabel\
+    --plot_style $STYLE plot_style_files/stacked.mplsty \
+    --save "$FIGURES"/train_mse-"$REGUL_TYPE".pdf
 done;
 REGUL_TYPE=advtrain-linf
 python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
     --labels "$\delta = "{0.5,0.1,0.05,0.01}"$" --experiment_plot error_bars --y_min -12 --y_max 2 \
-    --plot_type train_mse --remove_bounds --save "$FIGURES"/train_mse-"$REGUL_TYPE".pdf \
-    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty
+    --plot_type train_mse --remove_bounds --remove_legend\
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty \
+    --save "$FIGURES"/train_mse-"$REGUL_TYPE".pdf
 
 
-# Figure 9
+# Figure 10
 RESULTS=out/results/advtrain_new
 FEATURE_KIND=isotropic
 SCALING=sqrt
@@ -328,7 +344,7 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.005
 
 
 
-# Figure 10
+# Figure 11
 RESULTS=out/results/advtrain_new
 FEATURE_KIND=isotropic
 SCALING=sqrt
@@ -360,7 +376,7 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,a
 ###################################################
 ## Adversarial training overparametrized: latent ##
 ###################################################
-# ---- Figure "8" for Latent ----
+# ---- Figure "9" for Latent ----
 # TODO: remove lines and keep only error bars
 FEATURE_KIND=latent
 SCALING=none
@@ -391,7 +407,7 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0
     --plot_style $STYLE plot_style_files/stacked_bottom.mplsty
 
 
-# ---- Figure "9" for Latent ----
+# ---- Figure "10" for Latent ----
 RESULTS=out/results/advtrain_new
 FEATURE_KIND=latent
 SCALING=sqrt
@@ -433,7 +449,7 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.06,
     --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty
 
 
-#  ---- Figure "10" for Latent ----
+#  ---- Figure "11" for Latent ----
 RESULTS=out/results/advtrain_new
 FEATURE_KIND=latent
 SCALING=sqrt
@@ -494,12 +510,12 @@ done;
 
 python magic-merge-experiments.py
 
-#  Generate Fig. 10 and 11
+#  Generate Fig. 12 and 13
 python magic-plot.py
 
 
 #####################
-## NONLINEAR MODEL ##
+## NONLINEAR MODEL ##≈
 #####################
 
 
