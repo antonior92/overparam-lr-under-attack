@@ -377,7 +377,6 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,a
 ## Adversarial training overparametrized: latent ##
 ###################################################
 # ---- Figure "9" for Latent ----
-# TODO: remove lines and keep only error bars
 FEATURE_KIND=latent
 SCALING=none
 RESULTS=out/results/advtrain_new
@@ -518,9 +517,11 @@ python magic-plot.py
 ## NONLINEAR MODEL ##≈
 #####################
 
+# TODO: Add here code to generate the data
 
 python rand-feature-plot.py --file out/results/l2-random-feature.csv --plot_style \
-   $STYLE plot_style_files/one_half.mplsty --save figures/l2-random-feature.pdf
+   $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty   \
+   --save out/figures/l2-random-feature.pdf
 
 
 

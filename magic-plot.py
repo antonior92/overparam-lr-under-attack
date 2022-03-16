@@ -110,5 +110,5 @@ if __name__ == '__main__':
     ax.set_xlabel('')
     ax.set_xticklabels(methods_pretty_names.values())
     plt.subplots_adjust(bottom=0.08, top=0.95)
-    plt.legend()
+    plt.legend(title="\# features, $m$")
     show('magic_test_vs_size')

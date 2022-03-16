@@ -2,9 +2,26 @@ from interp_under_attack.random_features.activation_function_parameters import *
 from interp_under_attack.random_features.analitic_functions_v import AnaliticalVFunctions
 from interp_under_attack.random_features.asymptotics import compute_asymptotics, adversarial_bounds
 from interp_under_attack.random_features.uniform_distribution_over_the_sphere import rand_matrix_asymptotic_l2_norm
-from interp_under_attack.util import frac2int_vec
+from interp_under_attack.util import frac2int_vec, frac2int
 
 markers = ['o', 's', '<', '>', 'h', '*']
+
+
+
+def get_quantiles(xaxis, r, quantileslower=0.25, quantilesupper=0.75):
+    new_xaxis, inverse, counts = np.unique(xaxis, return_inverse=True, return_counts=True)
+
+    r_values = np.zeros([len(new_xaxis), max(counts)])
+    secondindex = np.zeros(len(new_xaxis), dtype=int)
+    for n in range(len(xaxis)):
+        i = inverse[n]
+        j = secondindex[i]
+        r_values[i, j] = r[n]
+        secondindex[i] += 1
+    m = np.median(r_values, axis=1)
+    lerr = m - np.quantile(r_values, quantileslower, axis=1)
+    uerr = np.quantile(r_values, quantilesupper, axis=1) - m
+    return new_xaxis, m, lerr, uerr
 
 
 def log_interp(x, num_points=1000):
@@ -20,7 +37,10 @@ def plot_risk_per_ord(ax, p):
         r = df['advrisk-{:.1f}-{:.1f}'.format(p, e)]
         risk.append(r)
         # Plot empirical value
-        l, = ax.plot(proportion, r, markers[i], ms=4, label='$\delta={}$'.format(e))
+        new_xaxis, m, lerr, uerr = get_quantiles(proportion, r)
+        ec = ax.errorbar(x=new_xaxis, y=m, yerr=[lerr, uerr], capsize=3.5, alpha=0.8,
+                         marker='o', markersize=3.5, ls='', label=r'$\delta={:.1f}$'.format(e))
+        l = ec.lines[0]
         # Plot upper bound
         lb, ub = adversarial_bounds(e, p, arisk, parameter_norm, mnorm, bottleneck, activation)
         if e == 0:
