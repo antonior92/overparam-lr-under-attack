@@ -101,7 +101,7 @@ if __name__ == '__main__':
     df_concat = pd.concat(all_df)
 
     # Plot barplot
-    plt.style.use(['./plot_style_files/one_half.mplsty'])
+    plt.style.use(['./plot_style_files/one_half2.mplsty'])
     fig, ax = plt.subplots()
     sns.boxplot(x="method", hue="n_features", y="mse_test",
                data=df_concat, ax=ax, palette="Set3")
@@ -109,6 +109,6 @@ if __name__ == '__main__':
     ax.set_ylabel('MSE')
     ax.set_xlabel('')
     ax.set_xticklabels(methods_pretty_names.values())
-    plt.subplots_adjust(bottom=0.08, top=0.95)
-    plt.legend(title="\# features, $m$")
+    plt.subplots_adjust(bottom=0.1, right=0.76)
+    plt.legend(title="\# features, $m$",bbox_to_anchor=(0.98, 1), loc='upper left')
     show('magic_test_vs_size')

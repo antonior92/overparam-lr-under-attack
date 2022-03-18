@@ -22,8 +22,8 @@ rep(){
 python linear-estimate.py --num_test_samples 500 --num_train_samples 500 -o out/results/isotropic \
     --ord 2 --features_kind isotropic --signal_amplitude 4
 python linear-plot.py --file out/results/isotropic \
-    --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mylegend.mplsty --ord 2 \
-      --save out/figures/isotropic.pdf
+    --plot_style $STYLE plot_style_files/one_half2.mplsty plot_style_files/mylegend.mplsty --ord 2 \
+    --out_legend --out_legend_bbox_y 1  --save out/figures/isotropic.pdf
 
 # Generate Figure S1
 for RR in 0.5 1 2 4;
@@ -91,21 +91,21 @@ python linear-plot.py --file  out/results/isotropic-gaussian-prior out/results/i
 
 
 
-# Generate Figure 4
+# Generate Figure 5
 for SCALING in sqrt sqrtlog;
 do
   python linear-estimate.py --num_test_samples 100 --num_train_samples 100 -o out/results/isotropic-linf-"$SCALING" \
       --ord 2 inf --eps 0 1.0 -u 2 --scaling $SCALING
 done;
 python linear-plot.py out/results/isotropic-linf-sqrt out/results/isotropic-linf-sqrtlog --plot_type advrisk --ord inf inf \
-  --fillbetween only-show-ub --plot_style $STYLE plot_style_files/one_half.mplsty \
+  --fillbetween only-show-ub --plot_style $STYLE plot_style_files/one_half3.mplsty plot_style_files/mylegend.mplsty \
   --second_marker_set --labels '$\eta(m) = \sqrt{m}$' \
   '$\eta(m) = \sqrt{\log(m)}$' \
   --save out/figures/linf-isotropic.pdf
 
 
 
-# Generate Figure 4(extra?)
+# Generate Figure 5(extra?)
 python linear-plot.py out/results/isotropic-linf-sqrt out/results/isotropic-linf-sqrtlog --plot_type norm --ord inf inf \
   --fillbetween only-show-ub --plot_style $STYLE plot_style_files/one_half.mplsty \
   --second_marker_set --labels '$\eta(m) = \sqrt{m}$' \
@@ -171,7 +171,7 @@ python linear-estimate.py  --num_test_samples 500 --num_train_samples 500 -o out
 python linear-plot.py out/results/latent-sqrt out/results/latent-sqrt  out/results/latent-sqrt  \
   --plot_type advrisk --eps 0 0.1 0.1 --ord inf 2 inf --experiment_plot error_bars \
   --remove_bounds --second_marker_set --labels "no adv." '$\ell_2$ adv.' '$\ell_\infty$ adv.' \
-  --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
+  --plot_style $STYLE plot_style_files/one_half2.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
   --save out/figures/latent.pdf
 # Generate Figure 6(a)
 python linear-estimate.py  --num_test_samples 500 --num_train_samples 500 -o  out/results/latent-logsqrt  \
@@ -364,7 +364,7 @@ done;
 python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,advtrain-linf,lasso,min-l2norm}-long \
     --plot_type advrisk --eps $(rep 0.01 5)  --ord $(rep inf 5) --experiment_plot error_bars \
     --remove_bounds --second_marker_set --labels "adv. train $\ell_2$" "ridge"  "adv. train $\ell_{\infty}$" lasso "min. norm" \
-    --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mycolors.mplsty \
+    --plot_style $STYLE plot_style_files/one_half4.mplsty plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty \
     --save "$FIGURES"/"$FEATURE_KIND"-advrisk-regularized.pdf
 
 python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,advtrain-linf,lasso,min-l2norm}-long \

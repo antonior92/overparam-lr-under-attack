@@ -1,0 +1,7 @@
+figure.figsize:  8, 4.3
+figure.subplot.left:   0.125  # the left side of the subplots of the figure
+figure.subplot.right:  0.99    # the right side of the subplots of the figure
+figure.subplot.bottom: 0.16   # the bottom of the subplots of the figure
+figure.subplot.top:    0.99   # the top of the subplots of the figure
+font.size: 20
+xtick.major.pad: 5

@@ -226,7 +226,7 @@ def plot_fn(ax, df, config, ii):
     if not args.remove_legend:
         if args.out_legend:
             plt.subplots_adjust(right=0.81)
-            plt.legend(bbox_to_anchor=(0.98, 1.1), loc='upper left')
+            plt.legend(bbox_to_anchor=(args.out_legend_bbox_x, args.out_legend_bbox_y), loc='upper left')
         else:
             plt.legend()
     plt.grid()
@@ -264,6 +264,10 @@ if __name__ == "__main__":
                         help='don include legend')
     parser.add_argument('--out_legend', action='store_true',
                         help='plot legend outside of the plot')
+    parser.add_argument('--out_legend_bbox_y', default=1.1, type=float,
+                        help='legend coordinate')
+    parser.add_argument('--out_legend_bbox_x', default=0.98, type=float,
+                        help='legend coordinate')
     parser.add_argument('--remove_bounds', action='store_true',
                         help='remove asymptotic bounds')
     parser.add_argument('--empirical_bounds', action='store_true',
