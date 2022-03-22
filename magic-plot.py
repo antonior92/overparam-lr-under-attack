@@ -51,9 +51,9 @@ if __name__ == '__main__':
 
     df_filtered = df[df['n_features'] == 16000]
     methods = ['ridge', 'l2advtrain','lasso', 'linfadvtrain']
-    tps = ['mse_test', 'mse_train']
+    tps = ['nmse_test', 'nmse_train']
     log_x = {t: True for t in ['mse_test', 'mse_train']}
-    log_y = {'mse_test': False, 'mse_train': True}
+    log_y = {'nmse_test': False, 'nmse_train': True}
     offsets = {'ridge': 1, 'lasso': 1e-6, 'l2advtrain': 1e-5, 'linfadvtrain': 1e-6}
 
     # Plot test error
@@ -62,11 +62,11 @@ if __name__ == '__main__':
     for m in methods:
         df_aux = df_filtered[df_filtered['method'] == m]
         x_axis = np.array(df_aux['alpha'])
-        y_axis = np.array(df_aux['mse_test'])
+        y_axis = np.array(df_aux['nmse_test'])
         new_x, med, lerr, uerr = get_median_and_quantiles(x_axis, y_axis)
         plot_error_bar(1/new_x * offsets[m] , med, lerr, uerr, ax, methods_pretty_names[m])
         ax.set_xscale('log')
-        ax.set_ylabel('MSE')
+        ax.set_ylabel('Normalized MSE')
     plt.subplots_adjust(left=0.14)
     show('magic_test_vs_regul')
 
@@ -76,13 +76,13 @@ if __name__ == '__main__':
     for m in methods:
         df_aux = df_filtered[df_filtered['method'] == m]
         x_axis = np.array(df_aux['alpha'])
-        y_axis = np.array(df_aux['mse_train'])
+        y_axis = np.array(df_aux['nmse_train'])
         new_x, med, lerr, uerr = get_median_and_quantiles(x_axis, y_axis)
         plot_error_bar(1/new_x * offsets[m], med, lerr, uerr, ax, methods_pretty_names[m])
         ax.set_xscale('log')
         ax.set_yscale('log')
-        ax.set_ylabel('MSE')
-        ax.set_xlabel('$$\delta$$')
+        ax.set_ylabel('Train. NMSE')
+        ax.set_xlabel('$$1/\delta$$')
     plt.subplots_adjust(left=0.14, bottom=0.4)
     plt.legend(bbox_to_anchor=(0.43, -0.75), loc='lower center', ncol=4)
     show('magic_train_vs_regul')
@@ -94,7 +94,7 @@ if __name__ == '__main__':
             df_filtered = df[df['n_features'] == n_features]
             df_aux = df_filtered[df_filtered['method'] == m]
             x_axis = np.array(df_aux['alpha'])
-            y_axis = np.array(df_aux['mse_test'])
+            y_axis = np.array(df_aux['nmse_test'])
             new_x, med, lerr, uerr = get_median_and_quantiles(x_axis, y_axis)
             best_alpha = new_x[np.argmin(med)]
             all_df.append(df_aux[df_aux['alpha'] == best_alpha])
@@ -103,12 +103,12 @@ if __name__ == '__main__':
     # Plot barplot
     plt.style.use(['./plot_style_files/one_half2.mplsty'])
     fig, ax = plt.subplots()
-    sns.boxplot(x="method", hue="n_features", y="mse_test",
+    sns.boxplot(x="method", hue="n_features", y="nmse_test",
                data=df_concat, ax=ax, palette="Set3")
-    ax.set_ylim((0.5, 1.3))
-    ax.set_ylabel('MSE')
+    ax.set_ylim((0.4, 1.05))
+    ax.set_ylabel('Normalized MSE')
     ax.set_xlabel('')
     ax.set_xticklabels(methods_pretty_names.values())
     plt.subplots_adjust(bottom=0.1, right=0.76)
-    plt.legend(title="\# features, $m$",bbox_to_anchor=(0.98, 1), loc='upper left')
+    plt.legend(title="\# features, $m$", bbox_to_anchor=(0.98, 1), loc='upper left')
     show('magic_test_vs_size')

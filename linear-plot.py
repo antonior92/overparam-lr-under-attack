@@ -225,7 +225,7 @@ def plot_fn(ax, df, config, ii):
             ax.set_yscale('log')
     if not args.remove_legend:
         if args.out_legend:
-            plt.subplots_adjust(right=0.81)
+            plt.subplots_adjust(right=0.8)
             plt.legend(bbox_to_anchor=(args.out_legend_bbox_x, args.out_legend_bbox_y), loc='upper left')
         else:
             plt.legend()

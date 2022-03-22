@@ -19,10 +19,10 @@ if __name__ == '__main__':
         df_aux['dataset'] = os.path.join(f, 'dataset.npz')
         df_aux['seed'] = s
         df_aux['n_features'] = m
-        if 'mse_test' not in df_aux.keys():
-            df_aux['mse_test'] = -1  # Create columns that will be filled latter on
-        if 'mse_train' not in df_aux.keys():
-            df_aux['mse_train'] = -1
+        if 'nmse_test' not in df_aux.keys():
+            df_aux['nmse_test'] = -1  # Create columns that will be filled latter on
+        if 'nmse_train' not in df_aux.keys():
+            df_aux['nmse_train'] = -1
         list_df.append(df_aux)
     df = pd.concat(list_df, ignore_index=True)
 
@@ -40,10 +40,10 @@ if __name__ == '__main__':
 
         theta = np.load(fname + '.npy')
         y_pred = X_test @ theta
-        mse = np.mean((y_test - y_pred) ** 2)
-        df.loc[i, 'mse_test'] = mse
+        nmse = np.mean((y_test - y_pred) ** 2) / np.mean((y_test) ** 2)
+        df.loc[i, 'nmse_test'] = nmse
 
         y_pred_train = X_train @ theta
-        mse_train = np.mean((y_train - y_pred_train) ** 2)
-        df.loc[i, 'mse_train'] = mse_train
+        nmse_train = np.mean((y_train - y_pred_train) ** 2) / np.mean((y_test) ** 2)
+        df.loc[i, 'nmse_train'] = nmse_train
         df.to_csv(output_file, index=False)

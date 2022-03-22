@@ -264,7 +264,7 @@ python norm_projections.py
 ######################
 ## DIABETES EXAMPLE ##
 ######################
-# Generate Figure 8
+# Generate Figure 7
 python diabetes_example.py --plot_style $STYLE plot_style_files/stacked_bottom.mplsty --save out/figures
 
 
@@ -272,7 +272,7 @@ python diabetes_example.py --plot_style $STYLE plot_style_files/stacked_bottom.m
 ######################################################
 ## Adversarial training overparametrized: isotropic ##
 ######################################################
-# Generate Figure 9
+# Generate Figure S9
 FEATURE_KIND=isotropic
 SCALING=none
 RESULTS=out/results/advtrain_new
@@ -310,7 +310,7 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0
     --save "$FIGURES"/train_mse-"$REGUL_TYPE".pdf
 
 
-# Figure 10
+# Figure S10
 RESULTS=out/results/advtrain_new
 FEATURE_KIND=isotropic
 SCALING=sqrt
@@ -359,7 +359,7 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.005
 
 
 
-# Figure 11
+# Figure S11
 RESULTS=out/results/advtrain_new
 FEATURE_KIND=isotropic
 SCALING=sqrt
@@ -385,13 +385,13 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,a
 python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,advtrain-linf,lasso,min-l2norm}-long \
     --plot_type advrisk --eps $(rep 0.0 5)  --ord $(rep inf 5) --experiment_plot error_bars \
     --remove_bounds --second_marker_set --labels "adv. train $\ell_2$" "ridge"  "adv. train $\ell_{\infty}$" lasso "min. norm" \
-    --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mycolors.mplsty \
+    --plot_style $STYLE plot_style_files/one_half4.mplsty plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
     --save "$FIGURES"/"$FEATURE_KIND"-stdrisk-regularized.pdf
 
 ###################################################
 ## Adversarial training overparametrized: latent ##
 ###################################################
-# ---- Figure "9" for Latent ----
+# ---- Figure 8 ----
 FEATURE_KIND=latent
 SCALING=none
 RESULTS=out/results/advtrain_new
@@ -407,21 +407,33 @@ for REGUL_TYPE in advtrain-l2 advtrain-linf ridge lasso;
   done;
 done;
 
-for REGUL_TYPE in advtrain-l2 lasso ridge;
-    do
+REGUL_TYPE=ridge
 python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
-    --labels {0.5,0.1,0.05,0.01} --experiment_plot error_bars \
+    --labels "$\delta = "{0.5,0.1,0.05,0.01}"$" --experiment_plot error_bars \
+    --plot_type train_mse --remove_bounds \
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty  plot_style_files/mylegend.mplsty plot_style_files/mycolors.mplsty  \
+    --save "$FIGURES"/train_mse-"$REGUL_TYPE"-"$FEATURE_KIND".pdf
+REGUL_TYPE=lasso
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
+    --experiment_plot error_bars \
     --plot_type train_mse --remove_bounds --remove_legend \
-    --plot_style $STYLE plot_style_files/stacked.mplsty
-done;
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty  plot_style_files/mylegend.mplsty plot_style_files/mycolors.mplsty  \
+    --save "$FIGURES"/train_mse-"$REGUL_TYPE"-"$FEATURE_KIND".pdf
 REGUL_TYPE=advtrain-linf
 python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
-    --labels "$\delta = "{0.5,0.1,0.05,0.01}"$" --experiment_plot error_bars --y_min -12 --y_max 2 \
+    --labels "$\delta = "{0.5,0.1,0.05,0.01}"$" --experiment_plot error_bars --y_min -12 --y_max 2  \
     --plot_type train_mse --remove_bounds \
-    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty  plot_style_files/mylegend.mplsty plot_style_files/mycolors.mplsty   \
+    --save "$FIGURES"/train_mse-"$REGUL_TYPE"-"$FEATURE_KIND".pdf
+REGUL_TYPE=advtrain-l2
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
+    --labels "$\delta = "{0.5,0.1,0.05,0.01}"$" --experiment_plot error_bars  \
+    --plot_type train_mse --remove_bounds \
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty  plot_style_files/mylegend.mplsty plot_style_files/mycolors.mplsty  \
+    --save "$FIGURES"/train_mse-"$REGUL_TYPE"-"$FEATURE_KIND".pdf
 
 
-# ---- Figure "10" for Latent ----
+# ---- Figure 9 ----
 RESULTS=out/results/advtrain_new
 FEATURE_KIND=latent
 SCALING=sqrt
@@ -438,37 +450,44 @@ do
 done;
 
 REGUL_TYPE=advtrain-l2
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.4,0.3,0.2,0.1,0.05,0.01} \
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.01,0.05,0.08,0.1,0.2,0.3,0.4} \
     --ord  $(rep inf 7) --experiment_plot error_bars \
-    --plot_type norm --remove_bounds --remove_legend --y_scale linear \
-    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty
-
+    --plot_type norm --remove_bounds --y_scale linear \
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty \
+    --out_legend --labels "$\delta = "{0.01,0.05,0.08,0.1,0.2,0.3,0.4}"$" --out_legend_bbox_x 0.96  \
+    --save "$FIGURES"/norm-"$REGUL_TYPE"-"$FEATURE_KIND".pdf
 
 REGUL_TYPE=ridge
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{1.0,0.5,0.3,0.1,0.05,0.03,0.01} \
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.01,0.03,0.05,0.1,0.3,0.5,1.0} \
     --ord  $(rep inf 7) --experiment_plot error_bars \
-    --plot_type norm --remove_bounds --remove_legend  --y_scale linear \
-    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty
+    --plot_type norm --remove_bounds  --y_scale linear \
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty  \
+    --out_legend --labels "$\delta = "{0.01,0.03,0.05,0.1,0.3,0.5,1.0}"$" --out_legend_bbox_x 0.96 \
+    --save "$FIGURES"/norm-"$REGUL_TYPE"-"$FEATURE_KIND".pdf
 
 REGUL_TYPE=advtrain-linf
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.06,0.05,0.04,0.03,0.02,0.01,0.005} \
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.02,0.03,0.04,0.05,0.06,0.07,0.08} \
     --ord  $(rep inf 7) --experiment_plot error_bars \
-    --plot_type norm --remove_bounds --remove_legend --y_scale linear \
-    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty
+    --plot_type norm --remove_bounds --y_scale linear \
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty  \
+    --out_legend --labels "$\delta = "{0.01,0.03,0.05,0.1,0.3,0.5,1.0}"$" --out_legend_bbox_x 0.96 \
+    --save "$FIGURES"/norm-"$REGUL_TYPE"-"$FEATURE_KIND".pdf
 
 REGUL_TYPE=lasso
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.06,0.05,0.04,0.03,0.02,0.01,0.005} \
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.02,0.03,0.04,0.05,0.06,0.07,0.08} \
     --ord  $(rep inf 7) --experiment_plot error_bars  \
-    --plot_type norm --remove_bounds --remove_legend  --y_scale linear \
-    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty
+    --plot_type norm --remove_bounds  --y_scale linear \
+    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty  \
+    --out_legend --labels "$\delta = "{0.01,0.03,0.05,0.1,0.3,0.5,1.0}"$" --out_legend_bbox_x 0.96 \
+    --save "$FIGURES"/norm-"$REGUL_TYPE"-"$FEATURE_KIND".pdf
 
 
-#  ---- Figure "11" for Latent ----
+#  ---- Figure 10----
 RESULTS=out/results/advtrain_new
 FEATURE_KIND=latent
 SCALING=sqrt
-REGUL_TYPE=(advtrain-l2 ridge advtrain-linf lasso)
-REG=(0.01 0.01 0.03 0.03)
+REGUL_TYPE=(advtrain-l2 ridge advtrain-linf lasso min-l2norm)
+REG=(0.01 0.01 0.03 0.03 0.00)
 for i in 0 1 2 3 4;
     do
     python linear-estimate.py --num_test_samples 200 --num_train_samples 200  --scaling $SCALING \
@@ -479,14 +498,19 @@ for i in 0 1 2 3 4;
           -o "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"${REGUL_TYPE[$i]}"-long
 done;
 
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,lasso,advtrain-linf}-long \
-    --plot_type advrisk --eps $(rep 0.01 4)  --ord $(rep inf 4) --experiment_plot error_bars \
-    --remove_bounds --second_marker_set --y_scale log
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,lasso,advtrain-linf,min-l2norm}-long \
+    --plot_type advrisk --eps $(rep 0.01 5)  --ord $(rep inf 5) --experiment_plot error_bars \
+    --remove_bounds --second_marker_set --y_scale log --labels "adv. train $\ell_2$" "ridge"  "adv. train $\ell_{\infty}$" lasso "min. norm" \
+    --plot_style $STYLE plot_style_files/one_half4.mplsty plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty \
+    --save "$FIGURES"/"$FEATURE_KIND"-advrisk-regularized.pdf
 
 
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,lasso,advtrain-linf}-long \
-    --plot_type advrisk --eps $(rep 0.0 4)  --ord $(rep inf 4) --experiment_plot error_bars \
-    --remove_bounds --second_marker_set --y_scale log --labels {advtrain-l2,ridge,lasso,advtrain-linf}
+# Not show anywhere... Equivalent to supplement material Fig S11(b)
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,lasso,advtrain-linf,min-l2norm}-long \
+    --plot_type advrisk --eps $(rep 0.0 5)  --ord $(rep inf 5) --experiment_plot error_bars \
+    --remove_bounds --second_marker_set --y_scale log --labels {advtrain-l2,ridge,lasso,advtrain-linf} --labels "adv. train $\ell_2$" "ridge"  "adv. train $\ell_{\infty}$" lasso "min. norm" \
+    --plot_style $STYLE plot_style_files/one_half4.mplsty plot_style_files/mylegend.mplsty \
+    --save "$FIGURES"/"$FEATURE_KIND"-stdrisk-regularized.pdf --y_max 1.3 --y_min -3.5
 
 
 
@@ -524,19 +548,8 @@ done;
 
 python magic-merge-experiments.py
 
-#  Generate Fig. 12 and 13
+#  Generate Fig. 11 and 12
 python magic-plot.py
-
-
-#####################
-## NONLINEAR MODEL ##≈
-#####################
-
-# TODO: Add here code to generate the data
-
-python rand-feature-plot.py --file out/results/l2-random-feature.csv --plot_style \
-   $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty   \
-   --save out/figures/l2-random-feature.pdf
 
 
 
@@ -575,24 +588,3 @@ python linear-plot.py out/results/latent-sqrt \
 ## Test mispecif (TODO: fix.)
 python linear-estimate.py --features_kind mispecif --num_train_samples 100 --num_test_samples 100 -u 1.5 --mispec_factor 3 --signal_amplitude 2 -e 0 --dont_shuffle
 python linear-plot.py performance --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mycolors.mplsty
-
-## Test Regularized
-REGUL_TYPE=advtrain-l2
-for REG in 1 0.05 0.1 0.005 0.01;
-  do python linear-estimate.py --num_test_samples 200 --num_train_samples 200 \
-      --features_kind isotropic --signal_amplitude 4 --training $REGUL_TYPE --regularization $REG \
-      -o out/results/"$REGUL_TYPE"-"$REG"
-done;
-python linear-plot.py out/results/"$REGUL_TYPE"-{1,0.5,0.1,0.05,0.01} --ord 2 2 2 2 2 --eps 0.1 0.1 0.1 0.1 0.1 \
-  --plot_type advrisk --remove_bounds --labels {1,0.5,0.1,0.05,0.01}
-python linear-plot.py out/results/"$REGUL_TYPE"-{1,0.5,0.1,0.05,0.01}  --ord 2 2 2 2 2 --eps 0.5 0.5 0.5 0.5 0.5 \
-  --plot_type train_mse --remove_bounds --labels {1,0.5,0.1,0.05,0.01}
-python linear-plot.py out/results/"$REGUL_TYPE"-{1,0.5,0.1,0.05,0.01}  --ord 2 2 2 2 2 --eps 0.5 0.5 0.5 0.5 0.5 \
-  --plot_type norm --remove_bounds --labels {1,0.5,0.1,0.05,0.01}
-
-
-python linear-estimate.py --num_test_samples 40 --num_train_samples 40 \
-      --features_kind isotropic --signal_amplitude 4 --training lasso --regularization 0.000005 \
-      -n 50 -r 4
-python linear-plot.py performance --plot_type train_mse --remove_bounds --eps 0.5
-python linear-plot.py performance --remove_bounds
