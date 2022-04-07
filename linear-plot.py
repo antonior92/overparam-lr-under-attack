@@ -214,7 +214,7 @@ def plot_fn(ax, df, config, ii):
     # Labels
     # Plot vertical line at the interpolation threshold
     if args.xaxis == 'n-over-m' or args.xaxis == 'm-over-n':
-        ax.axvline(1, ls='--')
+        ax.axvline(1, ls='--', color='black')
     if not args.remove_xlabel:
         ax.set_xlabel(xlabel)
     if args.y_max:
@@ -229,7 +229,6 @@ def plot_fn(ax, df, config, ii):
             plt.legend(bbox_to_anchor=(args.out_legend_bbox_x, args.out_legend_bbox_y), loc='upper left')
         else:
             plt.legend()
-    plt.grid()
 
 
 if __name__ == "__main__":

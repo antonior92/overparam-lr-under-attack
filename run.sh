@@ -166,8 +166,8 @@ python linear-estimate.py  --num_test_samples 200 --num_train_samples 200 -o out
   --features_kind latent --ord 2 1.5 20 inf -e 0 0.1 \
   --signal_amplitude 1 --noise_std 0.1 -u 2  --num_latent 20 --scaling sqrt -r 10
 python linear-plot.py out/results/latent-sqrt out/results/latent-sqrt  out/results/latent-sqrt  \
-  --plot_type advrisk --eps 0 0.1 0.1 --ord inf 2 inf --experiment_plot error_bars \
-  --remove_bounds --second_marker_set --labels "no adv." '$\ell_2$ adv.' '$\ell_\infty$ adv.' \
+  --plot_type advrisk --eps 0.1 0.1 0 --ord   inf 2 inf --experiment_plot error_bars \
+  --remove_bounds --second_marker_set --labels  '$\ell_\infty$ adv.' '$\ell_2$ adv.' "no adv." \
   --plot_style $STYLE plot_style_files/one_half2.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
   --save out/figures/latent.pdf
 # Generate Figure 6(a)
@@ -193,7 +193,7 @@ python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot
 python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord inf inf --eps 0.1 0.1 \
  --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' --fillbetween only-show-ub \
   --plot_style $STYLE plot_style_files/one_third_with_ylabel.mplsty  plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty \
-  --save out/figures/latent-linf-asympt.pdf
+  --remove_legend --save out/figures/latent-linf-asympt.pdf
 
 
 # Generate Figure S7
@@ -243,18 +243,6 @@ python linear-plot.py  $(rep out/results/latent-sqrtlog-0.1 4)   --plot_type adv
     --save out/figures/latent-eps-linf-sqrtlog.pdf
 
 
-for SCALING in sqrt sqrtlog;
-  do for ORD in 2 inf;
-  do
-  python linear-plot.py out/results/latent-"$SCALING"-0.1 \
-      --plot_style $STYLE plot_style_files/stacked.mplsty  --ord $ORD  --remove_bounds \
-       --save latent-eps-l"$ORD"-"$SCALING" --remove_legend
-  done;
-done;
-python linear-plot.py out/results/latent-sqrt-0.1 \
-      --plot_style $STYLE plot_style_files/stacked.mplsty  --ord inf  --remove_bounds \
-       --save latent-eps-linf-sqrt
-
 ########################################
 ## Discussion about random projection ##
 ########################################
@@ -264,7 +252,7 @@ python norm_projections.py
 ######################
 ## DIABETES EXAMPLE ##
 ######################
-# Generate Figure 7
+# Generate Figure XX
 python diabetes_example.py --plot_style $STYLE plot_style_files/stacked_bottom.mplsty --save out/figures
 
 
@@ -272,7 +260,7 @@ python diabetes_example.py --plot_style $STYLE plot_style_files/stacked_bottom.m
 ######################################################
 ## Adversarial training overparametrized: isotropic ##
 ######################################################
-# Generate Figure S9
+# Generate Figure X(Will be moved to follow up paper)
 FEATURE_KIND=isotropic
 SCALING=none
 RESULTS=out/results/advtrain_new
@@ -310,7 +298,7 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0
     --save "$FIGURES"/train_mse-"$REGUL_TYPE".pdf
 
 
-# Figure S10
+# Figure S9
 RESULTS=out/results/advtrain_new
 FEATURE_KIND=isotropic
 SCALING=sqrt
@@ -359,7 +347,7 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.005
 
 
 
-# Figure S11
+# Figure S10
 RESULTS=out/results/advtrain_new
 FEATURE_KIND=isotropic
 SCALING=sqrt
@@ -376,22 +364,22 @@ for i in 0 1 2 3 4;
 done;
 
 
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,advtrain-linf,lasso,min-l2norm}-long \
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{min-l2norm,advtrain-l2,ridge,advtrain-linf,lasso}-long \
     --plot_type advrisk --eps $(rep 0.01 5)  --ord $(rep inf 5) --experiment_plot error_bars \
-    --remove_bounds --second_marker_set --labels "adv. train $\ell_2$" "ridge"  "adv. train $\ell_{\infty}$" lasso "min. norm" \
-    --plot_style $STYLE plot_style_files/one_half4.mplsty plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty \
+    --remove_bounds --second_marker_set --labels "min. norm"  "adv. train $\ell_2$" "ridge"  "adv. train $\ell_{\infty}$" lasso \
+    --plot_style $STYLE plot_style_files/one_half4.mplsty plot_style_files/mycolors2.mplsty plot_style_files/mylegend.mplsty \
     --save "$FIGURES"/"$FEATURE_KIND"-advrisk-regularized.pdf
 
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,advtrain-linf,lasso,min-l2norm}-long \
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{min-l2norm,advtrain-l2,ridge,advtrain-linf,lasso}-long \
     --plot_type advrisk --eps $(rep 0.0 5)  --ord $(rep inf 5) --experiment_plot error_bars \
-    --remove_bounds --second_marker_set --labels "adv. train $\ell_2$" "ridge"  "adv. train $\ell_{\infty}$" lasso "min. norm" \
-    --plot_style $STYLE plot_style_files/one_half4.mplsty plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
+    --remove_bounds --second_marker_set --remove_legend \
+    --plot_style $STYLE plot_style_files/one_half4.mplsty plot_style_files/mycolors2.mplsty  plot_style_files/mylegend.mplsty \
     --save "$FIGURES"/"$FEATURE_KIND"-stdrisk-regularized.pdf
 
 ###################################################
 ## Adversarial training overparametrized: latent ##
 ###################################################
-# ---- Figure 8 ----
+# ---- Figure XX ---- (It will go to the next paper)
 FEATURE_KIND=latent
 SCALING=none
 RESULTS=out/results/advtrain_new
@@ -433,7 +421,7 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0
     --save "$FIGURES"/train_mse-"$REGUL_TYPE"-"$FEATURE_KIND".pdf
 
 
-# ---- Figure 9 ----
+# ---- Figure 7 ----
 RESULTS=out/results/advtrain_new
 FEATURE_KIND=latent
 SCALING=sqrt
@@ -482,7 +470,7 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.02,
     --save "$FIGURES"/norm-"$REGUL_TYPE"-"$FEATURE_KIND".pdf
 
 
-#  ---- Figure 10----
+#  ---- Figure 8----
 RESULTS=out/results/advtrain_new
 FEATURE_KIND=latent
 SCALING=sqrt
@@ -498,14 +486,14 @@ for i in 0 1 2 3 4;
           -o "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"${REGUL_TYPE[$i]}"-long
 done;
 
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,lasso,advtrain-linf,min-l2norm}-long \
+python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{min-l2norm,advtrain-l2,ridge,lasso,advtrain-linf}-long \
     --plot_type advrisk --eps $(rep 0.01 5)  --ord $(rep inf 5) --experiment_plot error_bars \
-    --remove_bounds --second_marker_set --y_scale log --labels "adv. train $\ell_2$" "ridge"  "adv. train $\ell_{\infty}$" lasso "min. norm" \
-    --plot_style $STYLE plot_style_files/one_half4.mplsty plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty \
+    --remove_bounds --second_marker_set --y_scale log --labels "min. norm" "adv. train $\ell_2$" "ridge"  "adv. train $\ell_{\infty}$" lasso  \
+    --plot_style $STYLE plot_style_files/one_half4.mplsty plot_style_files/mycolors2.mplsty plot_style_files/mylegend.mplsty \
     --save "$FIGURES"/"$FEATURE_KIND"-advrisk-regularized.pdf
 
 
-# Not show anywhere... Equivalent to supplement material Fig S11(b)
+# Not show anywhere... Equivalent to supplement material Fig S10(b)
 python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,lasso,advtrain-linf,min-l2norm}-long \
     --plot_type advrisk --eps $(rep 0.0 5)  --ord $(rep inf 5) --experiment_plot error_bars \
     --remove_bounds --second_marker_set --y_scale log --labels {advtrain-l2,ridge,lasso,advtrain-linf} --labels "adv. train $\ell_2$" "ridge"  "adv. train $\ell_{\infty}$" lasso "min. norm" \
@@ -548,25 +536,11 @@ done;
 
 python magic-merge-experiments.py
 
-#  Generate Fig. 11 and 12
+#  Generate Fig. XX
 python magic-plot.py
 
 
-
-## SOME ADDITIONAL TESTS!!
-
-
-## TEST
-python linear-estimate.py --num_test_samples 200 --num_train_samples 200 -o test  \
-  --features_kind latent --ord 2 1.5 20 inf -e 0 0.1 -r 10 \
-  --signal_amplitude 0.1 --noise_std 10 -u 2  --num_latent 20 --scaling none
-python linear-plot.py performance --plot_type advrisk --eps 0  --ord inf
-python linear-plot.py performance  --plot_type norm
-
-
-
 ## Presentation
-
 python linear-plot.py out/results/latent-sqrt \
   --plot_type advrisk --eps 0 --ord inf \
   --second_marker_set --remove_legend \
@@ -584,7 +558,3 @@ python linear-plot.py out/results/latent-sqrt \
   --second_marker_set --remove_legendm --fillbetween only-show-ub --remove_bounds \
   --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty   \
   --save latent_space_l2risk.pdf
-
-## Test mispecif (TODO: fix.)
-python linear-estimate.py --features_kind mispecif --num_train_samples 100 --num_test_samples 100 -u 1.5 --mispec_factor 3 --signal_amplitude 2 -e 0 --dont_shuffle
-python linear-plot.py performance --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mycolors.mplsty
