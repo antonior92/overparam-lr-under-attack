@@ -251,55 +251,11 @@ python linear-plot.py  $(rep out/results/latent-sqrtlog-0.1 4)   --plot_type adv
 # Generate Figure 4
 python norm_projections.py
 
-######################
-## DIABETES EXAMPLE ##
-######################
-# Generate Figure XX
-python diabetes_example.py --plot_style $STYLE plot_style_files/stacked_bottom.mplsty --save out/figures
-
 
 # TODO: fix to isotropic / Figure out why runs from hyperion seem more noisy
 ######################################################
 ## Adversarial training overparametrized: isotropic ##
 ######################################################
-# Generate Figure X(Will be moved to follow up paper)
-FEATURE_KIND=isotropic
-SCALING=none
-RESULTS=out/results/advtrain_new
-for REGUL_TYPE in advtrain-l2 advtrain-linf ridge lasso;
-    do
-  for REG in 1 0.5 0.1 0.05 0.01;
-        do
-    python linear-estimate.py --num_test_samples 200 --num_train_samples 200  --scaling $SCALING \
-      --features_kind $FEATURE_KIND --signal_amplitude 4 --ord 2 1.5 20 inf \
-      --training $REGUL_TYPE --regularization $REG -ord 2 1.5 20 inf \
-      -o "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-"$REG"
-  done;
-done;
-
-REGUL_TYPE=ridge
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
-    --labels "$\delta = "{0.5,0.1,0.05,0.01}"$" --experiment_plot error_bars --y_min -12 --y_max 2 \
-    --plot_type train_mse --remove_bounds --remove_xlabel \
-    --plot_style $STYLE plot_style_files/stacked.mplsty plot_style_files/mylegend.mplsty \
-    --save "$FIGURES"/train_mse-"$REGUL_TYPE".pdf
-
-for REGUL_TYPE in advtrain-l2 lasso;
-    do
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
-    --labels {0.5,0.1,0.05,0.01} --experiment_plot error_bars \
-    --plot_type train_mse --remove_bounds --remove_legend  --remove_xlabel\
-    --plot_style $STYLE plot_style_files/stacked.mplsty \
-    --save "$FIGURES"/train_mse-"$REGUL_TYPE".pdf
-done;
-REGUL_TYPE=advtrain-linf
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
-    --labels "$\delta = "{0.5,0.1,0.05,0.01}"$" --experiment_plot error_bars --y_min -12 --y_max 2 \
-    --plot_type train_mse --remove_bounds --remove_legend\
-    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty \
-    --save "$FIGURES"/train_mse-"$REGUL_TYPE".pdf
-
-
 # Figure S9
 RESULTS=out/results/advtrain_new
 FEATURE_KIND=isotropic
@@ -381,47 +337,6 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{min-l2norm,advtrain
 ###################################################
 ## Adversarial training overparametrized: latent ##
 ###################################################
-# ---- Figure XX ---- (It will go to the next paper)
-FEATURE_KIND=latent
-SCALING=none
-RESULTS=out/results/advtrain_new
-for REGUL_TYPE in advtrain-l2 advtrain-linf ridge lasso;
-    do
-  for REG in 1 0.5 0.1 0.05 0.01;
-        do
-    python linear-estimate.py --num_test_samples 200 --num_train_samples 200  --scaling $SCALING \
-      --features_kind $FEATURE_KIND --signal_amplitude 1  --noise_std 0.1 -l -0.5 --eps 0.5 0.1 0.05 0.01 0.005 0.001 0.0 \
-      --ord 2 1.5 20 inf --training $REGUL_TYPE \
-      --regularization $REG -ord 2 1.5 20 inf \
-      -o "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-"$REG"
-  done;
-done;
-
-REGUL_TYPE=ridge
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
-    --labels "$\delta = "{0.5,0.1,0.05,0.01}"$" --experiment_plot error_bars \
-    --plot_type train_mse --remove_bounds \
-    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty  plot_style_files/mylegend.mplsty plot_style_files/mycolors.mplsty  \
-    --save "$FIGURES"/train_mse-"$REGUL_TYPE"-"$FEATURE_KIND".pdf
-REGUL_TYPE=lasso
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
-    --experiment_plot error_bars \
-    --plot_type train_mse --remove_bounds --remove_legend \
-    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty  plot_style_files/mylegend.mplsty plot_style_files/mycolors.mplsty  \
-    --save "$FIGURES"/train_mse-"$REGUL_TYPE"-"$FEATURE_KIND".pdf
-REGUL_TYPE=advtrain-linf
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
-    --labels "$\delta = "{0.5,0.1,0.05,0.01}"$" --experiment_plot error_bars --y_min -12 --y_max 2  \
-    --plot_type train_mse --remove_bounds \
-    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty  plot_style_files/mylegend.mplsty plot_style_files/mycolors.mplsty   \
-    --save "$FIGURES"/train_mse-"$REGUL_TYPE"-"$FEATURE_KIND".pdf
-REGUL_TYPE=advtrain-l2
-python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-"$REGUL_TYPE"-{0.5,0.1,0.05,0.01} \
-    --labels "$\delta = "{0.5,0.1,0.05,0.01}"$" --experiment_plot error_bars  \
-    --plot_type train_mse --remove_bounds \
-    --plot_style $STYLE plot_style_files/stacked_bottom.mplsty  plot_style_files/mylegend.mplsty plot_style_files/mycolors.mplsty  \
-    --save "$FIGURES"/train_mse-"$REGUL_TYPE"-"$FEATURE_KIND".pdf
-
 
 # ---- Figure 7 ----
 RESULTS=out/results/advtrain_new
@@ -501,45 +416,6 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,ridge,l
     --remove_bounds --second_marker_set --y_scale log --labels {advtrain-l2,ridge,lasso,advtrain-linf} --labels "adv. train $\ell_2$" "ridge"  "adv. train $\ell_{\infty}$" lasso "min. norm" \
     --plot_style $STYLE plot_style_files/one_half4.mplsty plot_style_files/mylegend.mplsty \
     --save "$FIGURES"/"$FEATURE_KIND"-stdrisk-regularized.pdf --y_max 1.3 --y_min -3.5
-
-
-
-
-###################
-## MAGIC example ##
-###################
-
-wget http://mtweb.cs.ucl.ac.uk/mus/www/MAGICdiverse/MAGIC_diverse_FILES/BASIC_GWAS.tar.gz
-tar -xvf BASIC_GWAS.tar.gz
-
-
-
-# NOTE: Comparing with the original paper:
-# running the script WEBSITE/genomic.prediction.r
-# We can extract the metric (1-R^2).
-#    = mean((test.pheno$HET_2- pred.rr[,1])^2) / mean((test.pheno$HET_2- mean(test.pheno$HET_2))^2)
-# Which we can compute there and
-# Notice that this is the metric we have been plotting in magic-merge-experiments.py
-# The value obtained there is:
-# - for 454/50 train/test split is:
-#           ridge = 0.73784, lasso = 0.519179, elnet = 0.5166093
-# - for 254/250 train/test split is:
-#           ridge = 0.0.7933152, lasso = 0.5268, elnet = 0.5308153
-# OBS: this may be different for different seeds...
-# Since the cross validation and test set depend on the seed
-# Generate multiple runs
-for M in 1000 2000 4000 8000 16000;
-do
-  for SEED in 0 1 2 3 4;
-  do
-    python magic-estimate.py -o ./out/results/magic_m"$M"_seed"$SEED" -m $M -r $SEED --grid 100
-  done;
-done;
-
-python magic-merge-experiments.py
-
-#  Generate Fig. XX
-python magic-plot.py
 
 
 ## Presentation
