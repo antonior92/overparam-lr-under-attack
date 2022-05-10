@@ -5,3 +5,4 @@ figure.subplot.bottom: 0.16   # the bottom of the subplots of the figure
 figure.subplot.top:    0.99   # the top of the subplots of the figure
 font.size: 18
 xtick.major.pad: 5
+legend.fontsize: small
