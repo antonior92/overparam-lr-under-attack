@@ -26,6 +26,9 @@ def train(X, y, type='min-l2norm', regularization=0.0):
         estim_param = adversarial_training(X, y, 2, regularization)
     elif type == 'advtrain-linf':
         estim_param = adversarial_training(X, y, np.Inf, regularization)
+    elif type == 'equal_coef':
+        _, n_features = X.shape
+        estim_param = 1 / np.sqrt(n_features) * np.ones(n_features )
     return estim_param
 
 
@@ -45,6 +48,7 @@ class GenerateData(object):
         self.kind, self.datagen_parameter = kind, datagen_parameter
         self.off_diag, self.noise_std = off_diag, noise_std
         self.n_mispecif = n_mispecif   # this is alpha in Hasties section 5.3
+        self.parameter_norm = parameter_norm
 
         # Random state
         rng = np.random.RandomState(seed)
@@ -98,6 +102,11 @@ class GenerateData(object):
             e = rng.randn(n_samples)
             y = z @ theta + noise_std * e
             X = z @ w.T + u
+            return X, y
+
+        if kind == 'motivation_latent':
+            y = rng.randn(n_samples)
+            X = self.parameter_norm /  self.scaling * rng.randn(n_samples, n_features) + 1 / self.scaling * y[:, None]
             return X, y
 
         # Get random components
@@ -222,9 +231,9 @@ if __name__ == '__main__':
                         help='standard deviation of the additive noise added.')
     parser.add_argument('--regularization', type=float, default=0.0,
                         help='amount of regularization added during training')
-    parser.add_argument('--training', choices=['min-l2norm', 'ridge', 'advtrain-l2', 'advtrain-linf', 'lasso'],
+    parser.add_argument('--training', choices=['min-l2norm', 'ridge', 'advtrain-l2', 'advtrain-linf', 'lasso', 'equal_coef'],
                         default='min-l2norm', help='amount of regularization added during training')
-    parser.add_argument('-f', '--features_kind', choices=['isotropic', 'equicorrelated', 'latent', 'mispecif'],
+    parser.add_argument('-f', '--features_kind', choices=['isotropic', 'equicorrelated', 'latent', 'mispecif', 'motivation_latent'],
                         default='isotropic', help='how the features are generated')
     parser.add_argument('--datagen_parameter', choices=['gaussian_prior', 'constant'], default='gaussian_prior',
                         help='how the features are generated')

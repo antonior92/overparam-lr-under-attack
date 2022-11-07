@@ -485,4 +485,16 @@ python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot
   --plot_style $STYLE plot_style_files/one_fourth_with_ylabel4.mplsty  plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty \
   --remove_legend --save latent-l1norm.pdf
 
-
+# Motivation example
+python linear-estimate.py -o out/results/motivation -f motivation_latent --scaling sqrt --ord inf --eps 0 0.1 -u 2 --training equal_coef
+python linear-estimate.py -o out/results/motivation2 -f motivation_latent --scaling sqrt --ord inf --eps 0 0.1 -u 2
+python linear-plot.py  out/results/motivation out/results/motivation  \
+  --plot_type advrisk --eps 0.1 0 --ord  inf inf  --experiment_plot error_bars \
+  --remove_bounds --second_marker_set --labels '$\ell_\infty$-adv.' "risk" \
+  --plot_style $STYLE plot_style_files/one_half2.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
+  --save out/figures/optimal-motivation.pdf
+python linear-plot.py  out/results/motivation2 out/results/motivation2  \
+  --plot_type advrisk --eps 0.1 0 --ord  inf inf  --experiment_plot error_bars \
+  --remove_bounds --second_marker_set --labels  '$\ell_\infty$-adv.' "risk"   \
+  --plot_style $STYLE plot_style_files/one_half2.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
+  --save out/figures/min-l2norm-motivation.pdf
