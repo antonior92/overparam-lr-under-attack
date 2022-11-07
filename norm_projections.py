@@ -9,10 +9,11 @@ if __name__ == "__main__":
                    './plot_style_files/mycolors.mplsty',
                    './plot_style_files/mylegend2.mplsty',
                    ])
-    save='out/figures'
+    save=''#'out/figures'
     n_values = [800, 400, 200, 100]  # Use decreasing order so the figure looks nice
     n_test_vectors = 100
     n_features = np.array(np.ceil(np.logspace(1, 4)), dtype=int)
+    type_of_vector = 'ones'  # options: gaussian, ones
 
     def show(name):
         if save:
@@ -30,8 +31,13 @@ if __name__ == "__main__":
             u, s, vh = linalg.svd(X, full_matrices=False, compute_uv=True)
 
             orth_proj = vh.T @ vh
+            if type_of_vector == 'gaussian':
+                u = np.random.randn(m, n_test_vectors)
+            elif type_of_vector == 'ones':
+                u = np.ones((m, n_test_vectors))
+            else:
+                raise ValueError()
 
-            u = np.random.randn(m, n_test_vectors)
             proj_u = orth_proj @ u
             values = np.linalg.norm(proj_u, ord=2, axis=0) / np.linalg.norm(u, ord=2, axis=0)
             norms[n]['l2_m'].append(np.median(values))
@@ -42,7 +48,7 @@ if __name__ == "__main__":
             norms[n]['l1_q1'].append(np.quantile(values, q=0.25))
             norms[n]['l1_q3'].append(np.quantile(values, q=0.75))
 
-    plt.style.use(['./plot_style_files/stacked.mplsty'])
+    plt.style.use(['./plot_style_files/stacked_bottom.mplsty'])
     plt.figure()
     for n in n_values:
         m = np.array(norms[n]['l2_m'])
@@ -73,3 +79,4 @@ if __name__ == "__main__":
     plt.ylabel(r'$$\|\Phi \beta\|_1$$')
     plt.legend(loc='upper left')
     show('projl1')
+

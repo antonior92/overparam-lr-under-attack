@@ -293,7 +293,7 @@ if __name__ == "__main__":
             config = json.load(f)
         plot_fn(ax, df, config, ii)
     if args.save:
-        plt.savefig(args.save)
+        plt.savefig(args.save, transparent=True)
     else:
         plt.show()
 

@@ -169,7 +169,7 @@ python linear-estimate.py  --num_test_samples 200 --num_train_samples 200 -o out
   --signal_amplitude 1 --noise_std 0.1 -u 2  --num_latent 20 --scaling sqrt -r 10
 python linear-plot.py out/results/latent-sqrt out/results/latent-sqrt  out/results/latent-sqrt  \
   --plot_type advrisk --eps 0.1 0.1 0 --ord   inf 2 inf --experiment_plot error_bars \
-  --remove_bounds --second_marker_set --labels  '$\ell_\infty$ adv.' '$\ell_2$ adv.' "no adv." \
+  --remove_bounds --second_marker_set --labels  '$\ell_\infty$-adv.' '$\ell_2$-adv.' "risk" \
   --plot_style $STYLE plot_style_files/one_half2.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
   --save out/figures/latent.pdf
 # Generate Figure 6(a)
@@ -424,8 +424,6 @@ python linear-plot.py out/results/latent-sqrt \
   --second_marker_set --remove_legend \
   --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty   \
   --save latent_space_risk.pdf
-
-
 python linear-plot.py out/results/latent-sqrt \
   --plot_type advrisk --eps 0.1 --ord inf \
   --second_marker_set --remove_legend --fillbetween only-show-ub --remove_bounds \
@@ -433,6 +431,58 @@ python linear-plot.py out/results/latent-sqrt \
   --save latent_space_linfrisk.pdf
 python linear-plot.py out/results/latent-sqrt \
   --plot_type advrisk --eps 0.1 --ord 2 \
-  --second_marker_set --remove_legendm --fillbetween only-show-ub --remove_bounds \
+  --second_marker_set --remove_legend --fillbetween only-show-ub --remove_bounds \
   --plot_style $STYLE plot_style_files/one_half.mplsty  plot_style_files/mycolors.mplsty   \
   --save latent_space_l2risk.pdf
+
+## Presentation - JOB TALK
+python linear-estimate.py  --num_test_samples 200 --num_train_samples 200 -o out/results/latent-none  \
+  --features_kind latent --ord 2 1.5 20 inf -e 0 0.1 \
+  --signal_amplitude 1 --noise_std 0.1 -u 2  --num_latent 20 --scaling  none -r 10
+
+python linear-plot.py out/results/latent-none \
+  --plot_type norm  --ord inf \
+  --second_marker_set --remove_legend --fillbetween only-show-ub --remove_bounds \
+  --plot_style $STYLE plot_style_files/one_fourth_with_ylabel4.mplsty  plot_style_files/mycolors.mplsty \
+  --save latent_norm1.pdf
+
+python linear-plot.py out/results/latent-none \
+  --plot_type norm  --ord 2 \
+  --second_marker_set --remove_legend --fillbetween only-show-ub --remove_bounds \
+  --plot_style $STYLE  plot_style_files/one_fourth_with_ylabel4.mplsty   plot_style_files/mycolors.mplsty \
+  --save latent_norm2.pdf
+
+
+python linear-plot.py out/results/latent-sqrt \
+  --plot_type advrisk --eps 0.1 --ord inf \
+  --second_marker_set --remove_legend --fillbetween only-show-ub --remove_bounds \
+  --plot_style $STYLE plot_style_files/one_fourth_with_ylabel4.mplsty plot_style_files/mycolors.mplsty   \
+  --save latent_space_linfrisk.pdf
+python linear-plot.py out/results/latent-sqrt \
+  --plot_type advrisk --eps 0.1 --ord 2 \
+  --second_marker_set --remove_legend --fillbetween only-show-ub --remove_bounds \
+  --plot_style $STYLE plot_style_files/one_fourth_with_ylabel4.mplsty plot_style_files/mycolors.mplsty   \
+  --save latent_space_l2risk.pdf
+
+
+
+## Presentation - UBC
+python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord 2 2 --eps 0.1 0.1 \
+  --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' \
+  --plot_style $STYLE plot_style_files/one_fourth_with_ylabel4.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
+  --save latent-l2-asympt.pdf
+python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord inf inf --eps 0.1 0.1 \
+ --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' --fillbetween only-show-ub \
+  --plot_style $STYLE plot_style_files/one_fourth_with_ylabel4.mplsty  plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty \
+  --remove_legend --save latent-linf-asympt.pdf
+
+python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type  norm --ord 2 2 --eps 0.1 0.1 \
+  --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$'  \
+  --plot_style $STYLE plot_style_files/one_fourth_with_ylabel4.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
+  --save latent-l2norm.pdf
+python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type norm --ord inf inf --eps 0.1 0.1 \
+ --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' --fillbetween only-show-ub \
+  --plot_style $STYLE plot_style_files/one_fourth_with_ylabel4.mplsty  plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty \
+  --remove_legend --save latent-l1norm.pdf
+
+

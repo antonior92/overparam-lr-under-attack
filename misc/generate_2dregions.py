@@ -42,6 +42,6 @@ if __name__ == '__main__':
     ax.set_yticks([])
     ax.set_yticklabels([])
     if args.save:
-        plt.savefig(args.save)
+        plt.savefig(args.save, transparent=True)
     else:
         plt.show()
