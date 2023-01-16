@@ -181,21 +181,24 @@ def plot_fn(ax, df, config, ii):
             lbl = '$\delta={}$'.format(e)
             plot_risk_and_bounds(ax, i, df, lbl, p, e, xaxis, xaxis_for_bounds, n_features_for_bounds, anorm, arisk)
         if not args.remove_ylabel:
-            ax.set_ylabel('Risk')
+            ax.set_ylabel('Adv. Risk')
     elif args.plot_type == 'risk_per_eps':
         e = args.eps[0] if args.eps is not None else config['epsilon'][-1]
         for i, p in enumerate(config['ord']):
-            lbl = '$\\ell_{}$'.format('\\infty' if p == np.Inf else r'{' + str(int(p)) + r'}')
+            lbl = '$\\ell_{}$-'.format('\\infty' if p == np.Inf else r'{' + str(int(p)) + r'}')
             plot_risk_and_bounds(ax, i, df, lbl, p, e, xaxis, xaxis_for_bounds, n_features_for_bounds, anorm, arisk)
         if not args.remove_ylabel:
-            ax.set_ylabel('Risk')
+            ax.set_ylabel('Adv. Risk')
     elif args.plot_type == 'advrisk':
         e = args.eps[ii] if args.eps is not None else config['epsilon'][-1]
         p = args.ord[ii] if args.ord is not None else config['ord'][0]
         lbl = args.labels[ii] if args.labels is not None else ''
         plot_risk_and_bounds(ax, ii, df,  lbl, p, e, xaxis, xaxis_for_bounds, n_features_for_bounds, anorm, arisk)
         if not args.remove_ylabel:
-            ax.set_ylabel('Risk')
+            if args.ylabel is None:
+                ax.set_ylabel('Risk')
+            else:
+                ax.set_ylabel(args.ylabel)
     elif args.plot_type == 'norm':
         p = args.ord[ii] if args.ord is not None else config['ord'][0]
         lbl = args.labels[ii] if args.labels is not None else ''
@@ -225,7 +228,7 @@ def plot_fn(ax, df, config, ii):
             ax.set_yscale('log')
     if not args.remove_legend:
         if args.out_legend:
-            #plt.subplots_adjust(right=0.7)
+            plt.subplots_adjust(right=0.8)
             plt.legend(bbox_to_anchor=(args.out_legend_bbox_x, args.out_legend_bbox_y), loc='upper left')
         else:
             plt.legend()
@@ -247,6 +250,8 @@ if __name__ == "__main__":
                         help='labels to be used in the legend')
     parser.add_argument('-n', '--num_points', default=1000, type=int,
                         help='number of points')
+    parser.add_argument('--ylabel', default=None,
+                        help='ylabel')
     parser.add_argument('--xaxis', choices=['m-over-n', 'n-over-m', 'n', 'm'], default='m-over-n',
                         help='what to show in the x-axis')
     parser.add_argument('--y_min', default=None, type=float,

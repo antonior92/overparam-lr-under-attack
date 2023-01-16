@@ -46,7 +46,7 @@ RRR=0.5
 SCALING=none
 python linear-plot.py --file out/results/isotropic-r"$RRR"-"$SCALING" \
     --plot_style $STYLE plot_style_files/one_sixth_with_ylabel2.mplsty plot_style_files/mylegend.mplsty  --ord 2 \
-    --save out/figures/isotropic-r"$RRR"-"$SCALING".pdf
+    --save out/figures/isotropic-r"$RRR"-"$SCALING".pdf  --ylabel "Adv. Risk"
 
 
 # Generate Figure S2 (a)
@@ -66,10 +66,10 @@ python linear-plot.py out/results/isotropic-r2-{sqrt,sqrtlog} out/results/isotro
 python linear-estimate.py --num_test_samples 100 --num_train_samples 100 -o out/results/isotropic-gaussian-prior \
     --ord 1 2 inf --signal_amplitude 1 -r 10
 python linear-plot.py --file out/results/isotropic-gaussian-prior out/results/isotropic-gaussian-prior out/results/isotropic-gaussian-prior \
-   --labels  "$\ell_\infty$ adv." "$\ell_2$ adv."  "$\ell_1$ adv." \
+   --labels  '$\ell_\infty$-adv.' '$\ell_2$-adv.'  '$\ell_1$ -adv.' \
   --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mylegend.mplsty \
   plot_style_files/mycolors.mplsty plot_style_files/stacked.mplsty  --plot_type advrisk --second_marker_set --ord inf 2 1 \
-    --eps 2.0 2.0 2.0 --fillbetween closest-l2bound --remove_xlabel --out_legend \
+    --eps 2.0 2.0 2.0 --fillbetween closest-l2bound --remove_xlabel --out_legend --ylabel "Adv. Risk" \
    --save out/figures/isotropic-variouslp.pdf
 python linear-plot.py --file  out/results/isotropic-gaussian-prior out/results/isotropic-gaussian-prior out/results/isotropic-gaussian-prior \
   --plot_style $STYLE plot_style_files/one_half.mplsty plot_style_files/mylegend.mplsty \
@@ -90,7 +90,7 @@ done;
 python linear-plot.py out/results/isotropic-linf-sqrt out/results/isotropic-linf-sqrtlog --plot_type advrisk --ord inf inf \
   --fillbetween only-show-ub --plot_style $STYLE plot_style_files/one_half3.mplsty plot_style_files/mylegend.mplsty \
   --second_marker_set --labels '$\eta(m) = \sqrt{m}$' \
-  '$\eta(m) = \sqrt{\log(m)}$' \
+  '$\eta(m) = \sqrt{\log(m)}$' --ylabel "Adv. Risk" \
   --save out/figures/linf-isotropic.pdf
 
 
@@ -106,13 +106,13 @@ do
   #    --ord 1.5 2 20  --features_kind equicorrelated --signal_amplitude 4 --scaling $SCALING -r 10
   python linear-plot.py --file out/results/equicorrelated-"$SCALING" \
       --plot_style $STYLE plot_style_files/one_sixth_with_ylabel.mplsty  plot_style_files/mylegend.mplsty --ord 2 --remove_legend \
-      --save out/figures/equicorrelated-"$SCALING".pdf
+      --save out/figures/equicorrelated-"$SCALING".pdf --ylabel "Adv. Risk"
 done
 SCALING=sqrt
 python linear-plot.py --file out/results/equicorrelated-"$SCALING" \
     --plot_style $STYLE plot_style_files/one_sixth_with_external_legend.mplsty  plot_style_files/mylegend.mplsty --ord 2 \
      --out_legend --out_legend_bbox_y 1 --out_legend_bbox_x 0.96 \
-    --save out/figures/equicorrelated-"$SCALING".pdf
+    --save out/figures/equicorrelated-"$SCALING".pdf --ylabel "Adv. Risk"
 
 
 # Generate Figure S5 (a)
@@ -120,26 +120,26 @@ python linear-plot.py --file out/results/equicorrelated \
    --plot_type risk_per_eps --second_marker_set --eps 2.0 \
    --fillbetween closest-l2bound \
    --plot_style $STYLE plot_style_files/one_sixth_with_ylabel.mplsty  plot_style_files/mylegend.mplsty  plot_style_files/mycolors.mplsty \
-   --save out/figures/equicorrelated-variouslp.pdf
+   --save out/figures/equicorrelated-variouslp.pdf --ylabel "Adv. Risk"
 # Generate Figure S5 (b) and (c)
 SCALING=none
 python linear-plot.py --file out/results/equicorrelated-"$SCALING" --scaling \
   --plot_type risk_per_eps --second_marker_set --eps 2.0 --y_min 0.5 --y_max 6.3  \
   --fillbetween closest-l2bound --remove_legend \
   --plot_style $STYLE plot_style_files/one_sixth_with_ylabel.mplsty  plot_style_files/mylegend.mplsty  plot_style_files/mycolors.mplsty \
-  --save out/figures/equicorrelated-variouslp-"$SCALING".pdf
+  --save out/figures/equicorrelated-variouslp-"$SCALING".pdf --ylabel "Adv. Risk"
 SCALING=sqrt
 python linear-plot.py --file out/results/equicorrelated-"$SCALING" --scaling \
   --plot_type risk_per_eps --second_marker_set --eps 2.0 \
   --fillbetween closest-l2bound \
   --plot_style $STYLE plot_style_files/one_sixth_with_ylabel.mplsty  plot_style_files/mylegend.mplsty  plot_style_files/mycolors.mplsty \
-  --save out/figures/equicorrelated-variouslp-"$SCALING".pdf
+  --save out/figures/equicorrelated-variouslp-"$SCALING".pdf --ylabel "Adv. Risk"
 SCALING=sqrtlog
 python linear-plot.py --file out/results/equicorrelated-"$SCALING" --scaling \
   --plot_type risk_per_eps --second_marker_set --eps 2.0  \
   --fillbetween closest-l2bound --remove_legend  \
   --plot_style $STYLE plot_style_files/one_sixth_with_ylabel.mplsty  plot_style_files/mylegend.mplsty  plot_style_files/mycolors.mplsty \
-  --save out/figures/equicorrelated-variouslp-"$SCALING".pdf
+  --save out/figures/equicorrelated-variouslp-"$SCALING".pdf --ylabel "Adv. Risk"
 
 # Generate Figure S6
 for SCALING in sqrt sqrtlog;
@@ -151,7 +151,7 @@ python linear-plot.py out/results/equicorrelated-linf-{sqrt,sqrtlog}-0.5 --plot_
   --fillbetween only-show-ub --plot_style $STYLE plot_style_files/one_fourth_with_ylabel.mplsty plot_style_files/mylegend.mplsty \
   --second_marker_set --labels '$\eta(m) = \sqrt{m}$' \
   '$\eta(m) = \sqrt{\log(m)}$' --y_min -0.6 --y_max 4.4 \
-  --save out/figures/linf-equicorrelated.pdf
+  --save out/figures/linf-equicorrelated.pdf --ylabel "Adv. Risk"
 
 python linear-plot.py out/results/equicorrelated-linf-{sqrt,sqrtlog}-0.5 --ord inf inf \
   --fillbetween only-show-ub --plot_style $STYLE plot_style_files/one_fourth_with_ylabel.mplsty plot_style_files/mylegend.mplsty \
@@ -179,23 +179,23 @@ python linear-estimate.py  --num_test_samples 200 --num_train_samples 200 -o  ou
 python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord 2 2 --eps 0.1 0.1 \
   --remove_bounds --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' \
   --plot_style $STYLE plot_style_files/stacked.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
-  --save out/figures/latent-l2.pdf --remove_xlabel --empirical_bounds
+  --save out/figures/latent-l2.pdf --remove_xlabel --empirical_bounds  --ylabel "Adv. Risk"
 # Generate Figure 7(b)
 python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord inf inf --eps 0.1 0.1 \
   --remove_bounds --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' \
   --plot_style $STYLE plot_style_files/stacked_bottom.mplsty  plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty \
-  --save out/figures/latent-linf.pdf --remove_legend --empirical_bounds
+  --save out/figures/latent-linf.pdf --remove_legend --empirical_bounds --ylabel "Adv. Risk"
 
 
 # Generate Figure S7
 python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord 2 2 --eps 0.1 0.1 \
   --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' --y_min -1.5 --y_max 2.3\
   --plot_style $STYLE plot_style_files/one_fourth_with_ylabel.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
-  --save out/figures/latent-l2-asympt.pdf
+  --save out/figures/latent-l2-asympt.pdf --ylabel "Adv. Risk"
 python linear-plot.py  out/results/latent-sqrt out/results/latent-logsqrt --plot_type advrisk --ord inf inf --eps 0.1 0.1 \
  --second_marker_set --labels '$\eta(m) = \sqrt{m}$' '$\eta(m) = \sqrt{\log(m)}$' --fillbetween only-show-ub \
   --plot_style $STYLE plot_style_files/one_fourth_with_ylabel.mplsty  plot_style_files/mycolors.mplsty plot_style_files/mylegend.mplsty \
-  --remove_legend --save out/figures/latent-linf-asympt.pdf
+  --remove_legend --save out/figures/latent-linf-asympt.pdf --ylabel "Adv. Risk"
 
 
 # Generate Figure S8
@@ -210,19 +210,19 @@ done
 python linear-plot.py  out/results/latent-sqrt-{1,0.5,0.1,0}  --plot_type advrisk --ord 2 2 2 2 --eps 0.1 0.1 0.1 0.1 \
     --second_marker_set  --remove_legend   \
     --plot_style $STYLE plot_style_files/one_fourth_with_ylabel.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
-    --save out/figures/latent-noise-l2-sqrt.pdf
+    --save out/figures/latent-noise-l2-sqrt.pdf --ylabel "Adv. Risk"
 python linear-plot.py  out/results/latent-sqrt-{1,0.5,0.1,0}  --plot_type advrisk --ord inf inf inf inf --eps 0.1 0.1 0.1 0.1 \
     --second_marker_set --remove_legend --fillbetween only-show-ub  \
     --plot_style $STYLE plot_style_files/one_fourth_with_ylabel.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
-    --save out/figures/latent-noise-linf-sqrt.pdf
+    --save out/figures/latent-noise-linf-sqrt.pdf --ylabel "Adv. Risk"
 python linear-plot.py  out/results/latent-sqrtlog-{1,0.5,0.1,0}  --plot_type advrisk --ord 2 2 2 2 --eps 0.1 0.1 0.1 0.1 \
     --second_marker_set --remove_legend  \
     --plot_style $STYLE plot_style_files/one_fourth_with_ylabel3.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
-    --save out/figures/latent-noise-l2-sqrtlog.pdf
+    --save out/figures/latent-noise-l2-sqrtlog.pdf --ylabel "Adv. Risk"
 python linear-plot.py  out/results/latent-sqrtlog-{1,0.5,0.1,0}  --plot_type advrisk --ord inf inf inf inf --eps 0.1 0.1 0.1 0.1 \
     --second_marker_set --labels '$\sigma_\xi = 1$' '$\sigma_\xi = 0.5$' '$\sigma_\xi = 0.1$' '$\sigma_\xi = 0$' --fillbetween only-show-ub  \
     --plot_style $STYLE plot_style_files/one_fourth_with_ylabel.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
-    --save out/figures/latent-noise-linf-sqrtlog.pdf
+    --save out/figures/latent-noise-linf-sqrtlog.pdf --ylabel "Adv. Risk"
 
 
 
@@ -230,19 +230,19 @@ python linear-plot.py  out/results/latent-sqrtlog-{1,0.5,0.1,0}  --plot_type adv
 python linear-plot.py  $(rep out/results/latent-sqrt-0.1 4)  --plot_type advrisk --ord 2 2 2 2 --eps 0 0.1 0.5 2.0 \
     --second_marker_set  --remove_legend  \
     --plot_style $STYLE plot_style_files/one_fourth_with_ylabel.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
-    --save out/figures/latent-eps-l2-sqrt.pdf
+    --save out/figures/latent-eps-l2-sqrt.pdf --ylabel "Adv. Risk"
 python linear-plot.py  $(rep out/results/latent-sqrt-0.1 4)  --plot_type advrisk --ord inf inf inf inf --eps 0 0.1 0.5 2.0  \
     --second_marker_set --remove_legend --fillbetween only-show-ub  \
     --plot_style $STYLE plot_style_files/one_fourth_with_ylabel.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
-    --save out/figures/latent-eps-linf-sqrt.pdf
+    --save out/figures/latent-eps-linf-sqrt.pdf --ylabel "Adv. Risk"
 python linear-plot.py  $(rep out/results/latent-sqrtlog-0.1 4)  --plot_type advrisk --ord 2 2 2 2 --eps 0 0.1 0.5 2.0  \
     --second_marker_set --remove_legend  \
     --plot_style $STYLE plot_style_files/one_fourth_with_ylabel.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
-    --save out/figures/latent-eps-l2-sqrtlog.pdf
+    --save out/figures/latent-eps-l2-sqrtlog.pdf --ylabel "Adv. Risk"
 python linear-plot.py  $(rep out/results/latent-sqrtlog-0.1 4)   --plot_type advrisk --ord inf inf inf inf --eps 0 0.1 0.5 2.0  \
     --second_marker_set --labels '$\delta =$ '{2.0,0.1,0.1,0} --fillbetween only-show-ub  \
     --plot_style $STYLE plot_style_files/one_fourth_with_ylabel.mplsty  plot_style_files/mycolors.mplsty  plot_style_files/mylegend.mplsty \
-    --save out/figures/latent-eps-linf-sqrtlog.pdf
+    --save out/figures/latent-eps-linf-sqrtlog.pdf --ylabel "Adv. Risk"
 
 
 ########################################
@@ -252,7 +252,6 @@ python linear-plot.py  $(rep out/results/latent-sqrtlog-0.1 4)   --plot_type adv
 python norm_projections.py
 
 
-# TODO: fix to isotropic / Figure out why runs from hyperion seem more noisy
 ######################################################
 ## Adversarial training overparametrized: isotropic ##
 ######################################################
@@ -326,13 +325,13 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{min-l2norm,advtrain
     --plot_type advrisk --eps $(rep 0.01 5)  --ord $(rep inf 5) --experiment_plot error_bars \
     --remove_bounds --second_marker_set  --remove_legend \
     --plot_style $STYLE plot_style_files/one_fourth_with_ylabel.mplsty plot_style_files/mycolors2.mplsty plot_style_files/mylegend.mplsty \
-    --save "$FIGURES"/"$FEATURE_KIND"-advrisk-regularized.pdf
+    --save "$FIGURES"/"$FEATURE_KIND"-advrisk-regularized.pdf --ylabel "Adv. Risk"
 
 python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{min-l2norm,advtrain-l2,ridge,advtrain-linf,lasso}-long \
     --plot_type advrisk --eps $(rep 0.0 5)  --ord $(rep inf 5) --experiment_plot error_bars \
     --remove_bounds --second_marker_set  --labels "min. norm"  "adv. train $\ell_2$" "ridge"  "adv. train $\ell_{\infty}$" lasso \
     --plot_style $STYLE plot_style_files/one_fourth_with_ylabel.mplsty plot_style_files/mycolors2.mplsty  plot_style_files/mylegend.mplsty \
-    --save "$FIGURES"/"$FEATURE_KIND"-stdrisk-regularized.pdf
+    --save "$FIGURES"/"$FEATURE_KIND"-stdrisk-regularized.pdf --ylabel "Adv. Risk"
 
 ###################################################
 ## Adversarial training overparametrized: latent ##
@@ -407,13 +406,13 @@ python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{advtrain-l2,advtrai
     --plot_type advrisk --eps $(rep 0.01 2)  --ord $(rep inf 2) --experiment_plot error_bars \
     --remove_bounds --empirical_bounds --y_scale log --labels  "adv. train $\ell_2$" "adv. train $\ell_{\infty}$" \
     --plot_style $STYLE plot_style_files/one_half4.mplsty plot_style_files/mycolors2.mplsty plot_style_files/mylegend.mplsty \
-    --save "$FIGURES"/"$FEATURE_KIND"-advrisk-advtrain.pdf
+    --save "$FIGURES"/"$FEATURE_KIND"-advrisk-advtrain.pdf --ylabel "Adv. Risk"
 
 python linear-plot.py "$RESULTS"/"$SCALING"-"$FEATURE_KIND"-{ridge,lasso}-long \
     --plot_type advrisk --eps $(rep 0.01 2)  --ord $(rep inf 2) --experiment_plot error_bars \
     --remove_bounds --empirical_bounds --y_scale log --labels ridge lasso  \
     --plot_style $STYLE plot_style_files/one_half4.mplsty plot_style_files/mycolors2.mplsty plot_style_files/mylegend.mplsty \
-    --save "$FIGURES"/"$FEATURE_KIND"-advrisk-regularized.pdf
+    --save "$FIGURES"/"$FEATURE_KIND"-advrisk-regularized.pdf --ylabel "Adv. Risk"
 
 
 # ----- Motivation example ------
