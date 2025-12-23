@@ -8,20 +8,10 @@ Links: [arXiv](https://arxiv.org/abs/2204.06274) - [IEEE](https://ieeexplore.iee
 
 
 ## Running instructions
-- To run the experiments described in the paper run:
-```bash
-sh run_experiments.sh
-```
-The folder `results/` will be created and the results of the experiments
-will be saved in `.csv` format.
+The bash script `run.sh` runs all the experiments described in the paper. It includes comments indicating the command used to generate each figure. I would suggest running the ones you are interested in (and not the full script, since it can be quite long).
 
-- To generate the figures
-```bash
-sh generate_figures.sh
-```
-It read the results of the empirical experiments from `results/` and use them to generate
-the figures. The folder `figures/` will be created and the results of the experiments
-will be saved in `.pdf` format.
+The folders `results/` and `figures/` will be created. Experiments are typically run in two stages. First, a compute-intensive step is executed, and the resulting experiments are saved in `.csv` format inside the `results/` folder.
+Later, a plotting function reads these files and generates the corresponding figures (in `.pdf` format), which are saved in the `figures/` folder.
 
 ## Requirements
 This code was tested on python 3.7. It uses numpy, sympy, pandas
