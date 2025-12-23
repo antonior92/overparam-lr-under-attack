@@ -1,10 +1,11 @@
-# High-dimensional analysis of the adversarial error
+# Overparametrized Linear Regresiong under Adversarial Attacks
 
 Companion code to the paper:
 ```
-High-dimensional analysis of the adversarial error:
-  double-descent behavior and model-size dependency
+“Overparameterized Linear Regression under Adversarial Attacks,” A. H. Ribeiro and T. B. Schön. IEEE Transactions on Signal Processing, 2023, doi: 10.1109/TSP.2023.3246228.
 ```
+Links: [arXiv](https://arxiv.org/abs/2204.06274) - [IEEE](https://ieeexplore.ieee.org/document/10048547)
+
 
 ## Running instructions
 - To run the experiments described in the paper run:
